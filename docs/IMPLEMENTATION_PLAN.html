@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio Build Sequence</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --paper:      #F4F5F3;
+    --surface:    #FFFFFF;
+    --sunken:     #EAECE8;
+    --ink:        #16191A;
+    --graphite:   #575E60;
+    --faint:      #7C8385;
+    --rule:       #D6DAD5;
+    --rule-soft:  #E4E7E2;
+    --accent:     #0F6E5C;
+    --accent-dim: #DCEAE5;
+    --warn:       #A24A16;
+    --warn-dim:   #F5E7DC;
+
+    --mono: ui-monospace, "Cascadia Mono", "Cascadia Code", "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
+    --serif: Georgia, "Iowan Old Style", "Source Serif 4", "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+
+    --measure: 70ch;
+    --rail: 8.5rem;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #101312; --surface: #171B1A; --sunken: #0B0E0D;
+      --ink: #E7EBE7; --graphite: #A2ABA7; --faint: #7A8481;
+      --rule: #2A302E; --rule-soft: #212624;
+      --accent: #46BFA2; --accent-dim: #14302A;
+      --warn: #E2924F; --warn-dim: #332415;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #101312; --surface: #171B1A; --sunken: #0B0E0D;
+    --ink: #E7EBE7; --graphite: #A2ABA7; --faint: #7A8481;
+    --rule: #2A302E; --rule-soft: #212624;
+    --accent: #46BFA2; --accent-dim: #14302A;
+    --warn: #E2924F; --warn-dim: #332415;
+    color-scheme: dark;
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--serif); font-size: 17px; line-height: 1.6;
+    margin: 0; padding: 0 1.5rem 8rem;
+    -webkit-font-smoothing: antialiased;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .sheet { max-width: 74rem; margin: 0 auto; display: flex; flex-direction: column; }
+
+  /* masthead */
+  .masthead { border-bottom: 2px solid var(--ink); padding: 4.5rem 0 1.25rem; display: flex; flex-direction: column; gap: 1.4rem; }
+  .stamp { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; }
+  h1 { font-family: var(--mono); font-size: clamp(2.1rem, 6vw, 3.3rem); line-height: 1.02; letter-spacing: -0.035em; font-weight: 700; margin: 0; text-wrap: balance; }
+  .dek { font-size: 1.12rem; color: var(--graphite); max-width: 58ch; margin: 0; }
+  .meta-strip { display: flex; flex-wrap: wrap; border-top: 1px solid var(--rule); margin-top: 0.4rem; }
+  .meta-strip > div { flex: 1 1 10rem; padding: 0.85rem 1.25rem 0.85rem 0; border-right: 1px solid var(--rule-soft); display: flex; flex-direction: column; gap: 0.2rem; }
+  .meta-strip > div:last-child { border-right: 0; }
+  .meta-strip dt { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+  .meta-strip dd { margin: 0; font-family: var(--mono); font-size: 0.9rem; color: var(--ink); }
+
+  /* sections */
+  section { display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); gap: 0 2.5rem; border-bottom: 1px solid var(--rule); padding: 3rem 0 3.25rem; }
+  .rail { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); display: flex; flex-direction: column; gap: 0.35rem; position: sticky; top: 1.5rem; align-self: start; height: max-content; }
+  .rail b { font-size: 1.5rem; letter-spacing: -0.02em; color: var(--accent); font-weight: 700; line-height: 1; }
+  .rail .dur { color: var(--graphite); letter-spacing: 0.1em; }
+  .body-col { display: flex; flex-direction: column; gap: 1.05rem; min-width: 0; }
+
+  h2 { font-family: var(--mono); font-size: clamp(1.3rem, 3vw, 1.7rem); letter-spacing: -0.025em; font-weight: 700; margin: 0; text-wrap: balance; }
+  h3 { font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); font-weight: 700; margin: 1rem 0 -0.4rem; }
+  p { margin: 0; max-width: var(--measure); }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  code { font-family: var(--mono); font-size: 0.85em; background: var(--sunken); padding: 0.08em 0.36em; color: var(--ink); }
+  ul, ol { margin: 0; padding-left: 1.2rem; max-width: var(--measure); }
+  li { margin-bottom: 0.38rem; }
+  li::marker { color: var(--faint); }
+  strong { font-weight: 700; }
+
+  .objective { font-size: 1.02rem; color: var(--ink); border-left: 3px solid var(--accent); padding-left: 0.9rem; max-width: var(--measure); }
+
+  /* task list */
+  .tasks { display: flex; flex-direction: column; border-top: 1px solid var(--rule-soft); max-width: var(--measure); }
+  .tasks > div { display: grid; grid-template-columns: 3.1rem minmax(0,1fr); gap: 0 0.85rem; padding: 0.58rem 0; border-bottom: 1px solid var(--rule-soft); align-items: baseline; }
+  .tasks .tid { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .tasks .tbody { font-size: 0.95rem; }
+  .tasks .tbody em { font-style: normal; font-family: var(--mono); font-size: 0.86em; color: var(--graphite); }
+
+  /* exit criteria */
+  .exit { border: 1px solid var(--accent); background: var(--accent-dim); padding: 0.95rem 1.15rem; max-width: var(--measure); display: flex; flex-direction: column; gap: 0.5rem; }
+  .exit .label { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); }
+  .exit ul { margin: 0; font-size: 0.94rem; }
+  .exit li { margin-bottom: 0.3rem; }
+
+  .note { border-left: 3px solid var(--accent); background: var(--surface); padding: 0.9rem 1.15rem; max-width: var(--measure); display: flex; flex-direction: column; gap: 0.45rem; }
+  .note.alert { border-left-color: var(--warn); }
+  .note .label { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); }
+  .note.alert .label { color: var(--warn); }
+  .note p, .note ul { font-size: 0.95rem; }
+
+  pre { font-family: var(--mono); font-size: 0.755rem; line-height: 1.6; background: var(--surface); border: 1px solid var(--rule-soft); padding: 1rem 1.15rem; margin: 0.25rem 0; overflow-x: auto; color: var(--ink); tab-size: 2; max-width: 100%; }
+  pre b { color: var(--accent); font-weight: 400; }
+  pre i { color: var(--faint); font-style: normal; }
+
+  .scroll { overflow-x: auto; margin: 0.35rem 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; font-family: var(--sans); font-size: 0.86rem; line-height: 1.5; }
+  th, td { text-align: left; padding: 0.55rem 1rem 0.55rem 0; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--faint); border-bottom: 1px solid var(--rule); font-weight: 400; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .rules { list-style: none; padding: 0; display: flex; flex-direction: column; max-width: var(--measure); border-top: 1px solid var(--rule-soft); }
+  .rules li { display: grid; grid-template-columns: 2.4rem minmax(0,1fr); gap: 0 0.85rem; padding: 0.7rem 0; margin: 0; border-bottom: 1px solid var(--rule-soft); }
+  .rules .k { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); padding-top: 0.2rem; }
+  .rules .v { font-size: 0.96rem; }
+  .rules .v b { font-family: var(--mono); font-size: 0.93em; }
+
+  footer { padding-top: 2.5rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--faint); }
+
+  @media (max-width: 760px) {
+    body { padding: 0 1.15rem 5rem; font-size: 16.5px; }
+    section { grid-template-columns: 1fr; gap: 1rem; padding: 2.4rem 0 2.6rem; }
+    .rail { position: static; flex-direction: row; align-items: baseline; gap: 0.7rem; }
+    .rail b { font-size: 1.05rem; }
+    .tasks > div { grid-template-columns: 2.6rem minmax(0,1fr); }
+    .meta-strip > div { border-right: 0; border-bottom: 1px solid var(--rule-soft); flex-basis: 100%; }
+  }
+
+  @page { size: A4; margin: 14mm 13mm 16mm; }
+
+  @media print {
+    :root {
+      --paper: #FFFFFF; --surface: #FAFBF9; --sunken: #F0F2EE;
+      --ink: #101314; --graphite: #4A5153; --faint: #6E7679;
+      --rule: #C9CEC8; --rule-soft: #E0E3DE;
+      --accent: #0C5A4C; --accent-dim: #E9F2EE;
+      --warn: #8C3F12; --warn-dim: #F7EBE1;
+      color-scheme: light;
+    }
+    body { padding: 0; font-size: 10pt; line-height: 1.45; background: #fff; }
+    .sheet { max-width: none; }
+    .masthead { padding-top: 0; break-after: avoid; }
+    h1 { font-size: 26pt; }
+    .dek { font-size: 10.5pt; }
+    section { grid-template-columns: 5.4rem minmax(0,1fr); gap: 0 1.3rem; padding: 1.4rem 0 1.5rem; }
+    .rail { position: static; }
+    .rail b { font-size: 1.1rem; }
+    h2 { font-size: 13.5pt; break-after: avoid; }
+    h3 { break-after: avoid; }
+    table { min-width: 0; font-size: 8.4pt; }
+    .scroll { overflow: visible; }
+    thead { display: table-header-group; }
+    tr, .tasks > div, .exit, .note, .rules li, pre { break-inside: avoid; }
+    pre { font-size: 7.1pt; white-space: pre-wrap; overflow: visible; }
+    p, li, td { orphans: 2; widows: 2; }
+    a { text-decoration: none; }
+    footer { padding-top: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <div class="stamp">
+      <span>Implementation Plan</span>
+      <span>MD Faiz &mdash; Portfolio</span>
+      <span>Companion to Blueprint Rev. B</span>
+    </div>
+    <h1>Build Sequence</h1>
+    <p class="dek">Eight phases, run one at a time. Each phase has an objective, an ordered task list, the code contracts it must satisfy, and an exit gate you can verify yourself before we move on. Nothing is implemented until you say &ldquo;start Phase 0&rdquo;.</p>
+    <dl class="meta-strip">
+      <div><dt>Phases</dt><dd>0 &rarr; 6, plus roadmap</dd></div>
+      <div><dt>Effort</dt><dd>~8 working days</dd></div>
+      <div><dt>Running cost</dt><dd>&#8377;0 &mdash; permanently</dd></div>
+      <div><dt>Data source</dt><dd>Your CV only</dd></div>
+      <div><dt>Shippable at</dt><dd>End of Phase 4</dd></div>
+    </dl>
+  </header>
+
+  <!-- ===== HOW WE WORK ===== -->
+  <section>
+    <div class="rail"><b>&sect;</b><span>Working<br>Agreement</span></div>
+    <div class="body-col">
+      <h2>How each phase runs</h2>
+      <p>One phase per session. I build it, then hand you the exit checklist. You verify against it &mdash; every criterion is something you can see or run yourself, not something you have to take my word for. Only once it passes do we open the next phase.</p>
+      <p>If a phase reveals something the plan got wrong, we amend the plan first and the code second. The plan stays the source of truth.</p>
+
+      <h3>Standing rules &mdash; every phase, no exceptions</h3>
+      <ul class="rules">
+        <li><span class="k">R1</span><span class="v"><b>No facts in components.</b> No name, date, email, URL, number, or sentence about you appears inside <code>components/</code>. It comes from <code>content/</code> as props. Enforced by a pre-commit scan.</span></li>
+        <li><span class="k">R2</span><span class="v"><b>No raw colours or sizes.</b> Every colour, space, radius, and font size is a design token. No hex codes, no arbitrary Tailwind values in class names. Enforced by lint.</span></li>
+        <li><span class="k">R3</span><span class="v"><b>No magic motion numbers.</b> Every duration, delay, stagger, spring, and particle count comes from <code>config/motion.ts</code>. A bare number in a transition prop fails lint.</span></li>
+        <li><span class="k">R4</span><span class="v"><b>One reader of the environment.</b> <code>process.env</code> is referenced in exactly one file, <code>config/env.ts</code>, and validated there. Enforced by lint.</span></li>
+        <li><span class="k">R5</span><span class="v"><b>Derived, never duplicated.</b> If a value can be computed from content, it is computed &mdash; counts, durations, metadata, suggestions, the search index. Nothing is typed in twice.</span></li>
+        <li><span class="k">R6</span><span class="v"><b>Typed strictly.</b> <code>strict</code> plus <code>noUncheckedIndexedAccess</code>. No <code>any</code>. Schemas infer the types, so data and types can never drift apart.</span></li>
+        <li><span class="k">R7</span><span class="v"><b>Nothing metered.</b> No dependency that can generate a bill may enter the project. If a library needs an account, it does not go in.</span></li>
+        <li><span class="k">R8</span><span class="v"><b>Accessible by default.</b> Keyboard reachable, visible focus, semantic landmarks, and a real static alternative under reduced motion &mdash; built in as we go, never retrofitted.</span></li>
+      </ul>
+
+      <h3>Code conventions</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Area</th><th>Convention</th></tr></thead>
+          <tbody>
+            <tr><td>Files</td><td><code>PascalCase.tsx</code> for components, <code>camelCase.ts</code> for logic, <code>kebab-case</code> for routes.</td></tr>
+            <tr><td>Exports</td><td>Named exports everywhere except Next.js route files, which require default. Makes every import greppable.</td></tr>
+            <tr><td>Components</td><td>Server Components by default. <code>'use client'</code> only where interaction or canvas demands it, and pushed as deep in the tree as possible.</td></tr>
+            <tr><td>Props</td><td>Explicit interface per component, no prop spreading of unknown shapes. Content types come from the schema, never redeclared.</td></tr>
+            <tr><td>Logic</td><td>Pure functions in <code>lib/</code>, unit-testable without React. Components render; they do not compute.</td></tr>
+            <tr><td>Comments</td><td>Only to record a constraint the code cannot express. Not to narrate what the next line does.</td></tr>
+            <tr><td>Commits</td><td>Conventional commits, one phase task per commit, so the history reads as this plan.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PHASE 0 ===== -->
+  <section>
+    <div class="rail"><b>00</b><span>Foundation</span><span class="dur">0.5 day</span></div>
+    <div class="body-col">
+      <h2>A deployed, empty, correctly-wired shell</h2>
+      <p class="objective">Nothing visible gets built in this phase. The point is that every rule above becomes <em>mechanically enforced</em> before there is any code to break it. Rules added after the fact never hold.</p>
+
+      <h3>Tasks</h3>
+      <div class="tasks">
+        <div><span class="tid">0.1</span><span class="tbody">Scaffold Next.js 15 &mdash; TypeScript, App Router, Tailwind v4, ESLint, <code>src/</code> directory. <em>npm create next-app@latest</em></span></div>
+        <div><span class="tid">0.2</span><span class="tbody"><code>git init</code>, initial commit, push to a GitHub repo.</span></div>
+        <div><span class="tid">0.3</span><span class="tbody">Tighten <code>tsconfig</code>: <code>strict</code>, <code>noUncheckedIndexedAccess</code>, <code>noImplicitOverride</code>, path alias <code>@/*</code>.</span></div>
+        <div><span class="tid">0.4</span><span class="tbody">Install runtime deps: <code>zod</code>, <code>motion</code>, <code>lucide-react</code>, <code>clsx</code>, <code>tailwind-merge</code>. Dev: <code>vitest</code>, <code>@playwright/test</code>, <code>prettier</code>, <code>husky</code>, <code>lint-staged</code>.</span></div>
+        <div><span class="tid">0.5</span><span class="tbody">Create the full directory skeleton with placeholder barrel files, so structure exists before content does.</span></div>
+        <div><span class="tid">0.6</span><span class="tbody">Write <code>config/env.ts</code> &mdash; the single validated reader of <code>process.env</code>.</span></div>
+        <div><span class="tid">0.7</span><span class="tbody">ESLint rules that enforce R1&ndash;R4: ban <code>process.env</code> outside <code>config/</code>, ban hex literals and arbitrary values in <code>className</code>, ban numeric literals in <code>transition</code> props.</span></div>
+        <div><span class="tid">0.8</span><span class="tbody">Write <code>scripts/check-literals.ts</code> &mdash; scans <code>components/</code> for prose, dates, URLs, and emails; exits non-zero on a hit.</span></div>
+        <div><span class="tid">0.9</span><span class="tbody">Husky pre-commit hook: typecheck &rarr; lint &rarr; literal scan &rarr; tests.</span></div>
+        <div><span class="tid">0.10</span><span class="tbody">Import the repo into Vercel; confirm the automatic preview-per-branch deploy works.</span></div>
+      </div>
+
+      <h3>Contract &mdash; <code>config/env.ts</code></h3>
+      <pre><i>// The ONLY file in the project permitted to read process.env.</i>
+<i>// Everything else imports the parsed, typed object.</i>
+
+import { z } from 'zod'
+
+const schema = z.object({
+  NEXT_PUBLIC_SITE_URL: z.string().url().default('http://localhost:3000'),
+  NEXT_PUBLIC_ENABLE_BLOG: z.enum(['true','false']).default('false'),
+  NEXT_PUBLIC_ENABLE_ANALYTICS: z.enum(['true','false']).default('false'),
+})
+
+const parsed = schema.safeParse(process.env)
+if (!parsed.success) {
+  <i>// Fail loudly at build, never silently at runtime.</i>
+  throw new Error('Invalid environment:\n' + parsed.error.toString())
+}
+
+export const env = parsed.data
+
+<b>// Note: no secrets. There is no API key anywhere in this project.</b>
+<b>// A fresh clone runs with zero configuration.</b></pre>
+
+      <div class="exit">
+        <span class="label">Exit gate &mdash; Phase 0</span>
+        <ul>
+          <li><code>npm run build</code> completes with no errors or warnings.</li>
+          <li>A live Vercel URL serves a blank styled page.</li>
+          <li>Adding <code>process.env.FOO</code> to any component <strong>fails lint</strong>.</li>
+          <li>Committing a component containing <code>#1B4DE4</code> or the word &ldquo;Faiz&rdquo; <strong>is blocked by the pre-commit hook</strong>.</li>
+          <li>A fresh <code>git clone</code> plus <code>npm install</code> plus <code>npm run dev</code> works with no <code>.env</code> file at all.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PHASE 1 ===== -->
+  <section>
+    <div class="rail"><b>01</b><span>Content<br>Layer</span><span class="dur">0.5 day</span></div>
+    <div class="body-col">
+      <h2>Every fact from your CV, typed and validated</h2>
+      <p class="objective">After this phase, your entire professional identity exists as validated data. Nothing else in the codebase will ever need to know a fact about you again.</p>
+
+      <h3>Tasks</h3>
+      <div class="tasks">
+        <div><span class="tid">1.1</span><span class="tbody">Write <code>content/schema.ts</code> &mdash; Zod schemas for every content type.</span></div>
+        <div><span class="tid">1.2</span><span class="tbody">Enter real data: <code>profile.ts</code>, <code>experience.ts</code> (both internships), <code>projects.ts</code> (all four), <code>skills.ts</code>, <code>achievements.ts</code>, <code>education.ts</code>.</span></div>
+        <div><span class="tid">1.3</span><span class="tbody">Seed <code>content/vocabulary.ts</code> &mdash; synonyms and aliases the assistant will use in Phase 5. Grows over time; starts small.</span></div>
+        <div><span class="tid">1.4</span><span class="tbody">Define <code>content/sections.ts</code> &mdash; the ordered section registry that drives nav, scroll-spy, page composition, and footer.</span></div>
+        <div><span class="tid">1.5</span><span class="tbody">Write <code>content/index.ts</code> &mdash; parses everything on import, cross-validates references, throws with a readable message on bad data.</span></div>
+        <div><span class="tid">1.6</span><span class="tbody">Write <code>content/derived.ts</code> &mdash; computed statistics. Nothing here is typed by hand.</span></div>
+        <div><span class="tid">1.7</span><span class="tbody">Write <code>content/format.ts</code> &mdash; date and duration formatters. Dates are stored as ISO, never as display strings.</span></div>
+        <div><span class="tid">1.8</span><span class="tbody">Write <code>content.test.ts</code> &mdash; validation passes, cross-references resolve, derived stats match expectations.</span></div>
+      </div>
+
+      <h3>Contract &mdash; core schemas</h3>
+      <pre><i>// content/schema.ts &mdash; the contract. Types are inferred from these,</i>
+<i>// so the data and the types can never drift apart.</i>
+
+export const LinkSchema = z.object({
+  label: z.string().min(1),
+  href:  z.string().url(),
+  kind:  z.enum(['repo','live','doc','social','email']),
+})
+
+export const ExperienceSchema = z.object({
+  id:         z.string().regex(/^[a-z0-9-]+$/),
+  org:        z.string().min(1),
+  role:       z.string().min(1),
+  start:      z.string().regex(/^\d{4}-\d{2}$/),        <i>// ISO year-month</i>
+  end:        z.string().regex(/^\d{4}-\d{2}$/).nullable(), <i>// null = present</i>
+  summary:    z.string().min(1),
+  highlights: z.array(z.string()).min(1),
+  stack:      z.array(z.string()).default([]),
+})
+
+export const ProjectSchema = z.object({
+  id:         z.string().regex(/^[a-z0-9-]+$/),
+  name:       z.string().min(1),
+  year:       z.number().int(),
+  problem:    z.string().min(1),   <i>// what needed solving</i>
+  approach:   z.string().min(1),   <i>// what you built</i>
+  outcome:    z.string().min(1),   <i>// what it achieved</i>
+  stack:      z.array(z.string()).min(1),
+  highlights: z.array(z.string()).default([]),
+  links:      z.array(LinkSchema).default([]),
+  featured:   z.boolean().default(true),
+})
+
+export const SkillClusterSchema = z.object({
+  id:       z.string(),
+  title:    z.string(),
+  blurb:    z.string(),
+  items:    z.array(z.string()).min(1),
+  evidence: z.array(z.string()).default([]),  <i>// project ids &mdash; cross-checked below</i>
+  level:    z.number().min(0).max(100).optional(), <i>// only if you choose bars</i>
+})
+
+export const SectionSchema = z.object({
+  id:       z.string(),
+  navLabel: z.string(),
+  order:    z.number().int(),
+  stage:    z.enum(['attention','understanding','proof','interaction','connection']),
+  enabled:  z.boolean().default(true),
+})</pre>
+
+      <h3>Contract &mdash; cross-reference validation</h3>
+      <pre><i>// content/index.ts &mdash; catches broken references at BUILD time,</i>
+<i>// not as a blank space on the live page.</i>
+
+const projectIds = new Set(projects.map(p =&gt; p.id))
+
+skills.forEach(cluster =&gt; {
+  cluster.evidence.forEach(id =&gt; {
+    if (!projectIds.has(id)) {
+      throw new Error(
+        `Skill cluster "${cluster.id}" cites unknown project "${id}". ` +
+        `Known projects: ${[...projectIds].join(', ')}`
+      )
+    }
+  })
+})</pre>
+
+      <h3>Contract &mdash; derived statistics</h3>
+      <pre><i>// content/derived.ts &mdash; R5 in practice. Add a project, and the hero</i>
+<i>// counters update themselves. They cannot drift out of sync.</i>
+
+export const stats = {
+  projectCount:    projects.length,
+  technologyCount: new Set(projects.flatMap(p =&gt; p.stack)).size,
+  placementCount:  achievements.filter(a =&gt; a.kind === 'placement').length,
+  experienceMonths: monthsSince(earliestStart(experience)),
+}</pre>
+
+      <div class="note alert">
+        <span class="label">One trap to avoid</span>
+        <p><code>experienceMonths</code> depends on today&rsquo;s date. Computing it in a Client Component causes a hydration mismatch, because the server and the browser can evaluate it at different moments. It is computed once in a Server Component and passed down as a plain number. Same rule for anything time-dependent.</p>
+      </div>
+
+      <div class="exit">
+        <span class="label">Exit gate &mdash; Phase 1</span>
+        <ul>
+          <li><code>npm test</code> passes; all content validates.</li>
+          <li>Changing a skill cluster&rsquo;s evidence to a non-existent project id <strong>fails the build with a message naming the bad id and listing valid ones</strong>.</li>
+          <li>Deleting a project makes <code>stats.projectCount</code> drop by one, with no other file edited.</li>
+          <li>Every fact matches your CV. You read the six content files and confirm them line by line &mdash; this is the moment to catch anything wrong.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PHASE 2 ===== -->
+  <section>
+    <div class="rail"><b>02</b><span>Design &amp;<br>Motion System</span><span class="dur">1.5 days</span></div>
+    <div class="body-col">
+      <h2>The visual and motion vocabulary, before any section exists</h2>
+      <p class="objective">Building sections first and extracting a system later is how sites end up with fourteen slightly different greys. The system comes first, and every section afterwards is an application of it.</p>
+
+      <div class="note">
+        <span class="label">Decision gate at the start</span>
+        <p>Task 2.1 is a review with you: I present two or three complete visual directions &mdash; palette, type pairing, and a hero mock for each &mdash; and you pick one. Nothing else in this phase starts until you have. This is the cheapest possible moment to change direction.</p>
+      </div>
+
+      <h3>Tasks</h3>
+      <div class="tasks">
+        <div><span class="tid">2.1</span><span class="tbody"><strong>Direction review with you.</strong> Palette, display and body typefaces, hero composition. You choose one.</span></div>
+        <div><span class="tid">2.2</span><span class="tbody">Write the token layer in <code>styles/globals.css</code> using Tailwind v4 <code>@theme</code> &mdash; colour, spacing, radii, type scale, shadows, easing curves, durations, both themes.</span></div>
+        <div><span class="tid">2.3</span><span class="tbody">Self-host fonts: subset to the characters actually used, <code>@font-face</code> with <code>font-display: swap</code>, preload the display face. No external font request &mdash; that would be a third-party dependency and a privacy leak.</span></div>
+        <div><span class="tid">2.4</span><span class="tbody">Write <code>config/motion.ts</code> &mdash; the single home for every timing value in the project.</span></div>
+        <div><span class="tid">2.5</span><span class="tbody">Build hooks: <code>useReducedMotion</code>, <code>useInView</code>, <code>useScrollProgress</code>, <code>usePointer</code>.</span></div>
+        <div><span class="tid">2.6</span><span class="tbody">Build <code>chrome/Nav</code> &mdash; generated entirely from the section registry, with scroll-spy and a sliding active indicator.</span></div>
+        <div><span class="tid">2.7</span><span class="tbody">Build <code>chrome/ThemeToggle</code> using the native View Transitions API, with a graceful fallback.</span></div>
+        <div><span class="tid">2.8</span><span class="tbody">Build <code>chrome/ScrollProgress</code> and <code>chrome/Footer</code> (footer links also from the registry).</span></div>
+        <div><span class="tid">2.9</span><span class="tbody">Build UI primitives: <code>Button</code> (with magnetic variant), <code>Chip</code>, <code>Reveal</code>, <code>SectionShell</code>. None of them contain content.</span></div>
+        <div><span class="tid">2.10</span><span class="tbody">Accessibility pass: skip link, landmarks, focus-visible rings on the token system, tab order.</span></div>
+      </div>
+
+      <h3>Contract &mdash; <code>config/motion.ts</code></h3>
+      <pre><i>// L3. Every timing value in the project lives here.</i>
+<i>// Tuning the feel of the whole site means editing this one file.</i>
+
+export const duration = {
+  instant: 0.15, fast: 0.28, base: 0.45, slow: 0.7, ambient: 1.2,
+} as const
+
+export const ease = {
+  out:    [0.16, 1, 0.30, 1],
+  inOut:  [0.65, 0, 0.35, 1],
+  spring: { type: 'spring', stiffness: 260, damping: 28 },
+} as const
+
+export const stagger = { tight: 0.04, base: 0.06, loose: 0.09 } as const
+
+export const reveal = { distance: 24, threshold: 0.25, once: true } as const
+
+export const brain = {
+  rotationSpeed: 0.0025,   <i>// rad/frame &rarr; one turn in ~42s</i>
+  pointCount:    { desktop: 220, mobile: 120 },
+  edgeCap:       350,
+  pulseInterval: 800,      <i>// ms between signal pulses</i>
+  parallaxDeg:   6,
+  dprCap:        2,
+} as const
+
+export const typewriter = { charDelay: 18, thinkingPause: 300 } as const</pre>
+
+      <h3>Contract &mdash; nav is generated, never written</h3>
+      <pre><i>// Nav.tsx &mdash; the entire navigation, derived. Removing a section from</i>
+<i>// content/sections.ts removes it from the nav, the page, the scroll-spy,</i>
+<i>// and the footer simultaneously. There is no second list to update.</i>
+
+const items = sections
+  .filter(s =&gt; s.enabled)
+  .sort((a, b) =&gt; a.order - b.order)
+
+<b>// There is no hard-coded array of links anywhere in this file.</b></pre>
+
+      <div class="exit">
+        <span class="label">Exit gate &mdash; Phase 2</span>
+        <ul>
+          <li>Setting <code>enabled: false</code> on a section removes it from nav, footer, and page in one edit.</li>
+          <li>Both light and dark themes pass WCAG AA contrast on every text pair.</li>
+          <li>Enabling &ldquo;reduce motion&rdquo; in the OS makes the shell completely still &mdash; not faster, <strong>still</strong> &mdash; and nothing is missing or broken.</li>
+          <li>The entire site is navigable by keyboard alone, with a visible focus ring at every stop.</li>
+          <li>Lighthouse accessibility on the shell: 100.</li>
+          <li>Network tab shows <strong>zero</strong> third-party requests.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PHASE 3 ===== -->
+  <section>
+    <div class="rail"><b>03</b><span>Hero &amp;<br>Neural Brain</span><span class="dur">1.5 days</span></div>
+    <div class="body-col">
+      <h2>The centrepiece</h2>
+      <p class="objective">The first three seconds decide whether the rest gets read. This phase is the rotating neural brain and the entrance choreography around it.</p>
+
+      <h3>Tasks</h3>
+      <div class="tasks">
+        <div><span class="tid">3.1</span><span class="tbody"><code>visuals/brain/geometry.ts</code> &mdash; deterministic point generation from a seeded PRNG, sampled across a brain-shaped volume (two lobes plus stem). Same seed, same brain, every load.</span></div>
+        <div><span class="tid">3.2</span><span class="tbody"><code>visuals/brain/project.ts</code> &mdash; Y-axis rotation, perspective projection, depth sorting.</span></div>
+        <div><span class="tid">3.3</span><span class="tbody"><code>visuals/brain/render.ts</code> &mdash; the draw loop: points sized and faded by depth, synapse edges between near neighbours, glow from a pre-rendered sprite.</span></div>
+        <div><span class="tid">3.4</span><span class="tbody"><code>visuals/brain/pulse.ts</code> &mdash; a signal travelling along a random edge on an interval. This is the detail that makes it read as neural rather than decorative.</span></div>
+        <div><span class="tid">3.5</span><span class="tbody"><code>visuals/BaseRing.ts</code> &mdash; the glowing platform from your reference, with a slow rotating gradient sweep.</span></div>
+        <div><span class="tid">3.6</span><span class="tbody"><code>components/visuals/NeuralBrain.tsx</code> &mdash; canvas host: DPR handling, resize observer, IntersectionObserver gating, tab-blur pause, reduced-motion static frame, theme-aware recolouring.</span></div>
+        <div><span class="tid">3.7</span><span class="tbody"><code>sections/Hero</code> &mdash; headline with per-word stagger, tagline, two actions, derived stat row, assistant teaser line, scroll cue.</span></div>
+        <div><span class="tid">3.8</span><span class="tbody">Orchestrate the page-load sequence as one timeline, not eight independent animations.</span></div>
+        <div><span class="tid">3.9</span><span class="tbody">Performance pass on a real mid-range phone. Profile, then tune particle counts in <code>motion.ts</code>.</span></div>
+      </div>
+
+      <h3>Contract &mdash; canvas reads colour from tokens</h3>
+      <pre><i>// Canvas cannot use CSS variables directly. Rather than hard-coding</i>
+<i>// colours (which would break R2 and the theme toggle), read the computed</i>
+<i>// token values from the host element and re-read whenever the theme changes.</i>
+
+function readPalette(host: HTMLElement) {
+  const s = getComputedStyle(host)
+  return {
+    point:  s.getPropertyValue('--brain-point').trim(),
+    edge:   s.getPropertyValue('--brain-edge').trim(),
+    pulse:  s.getPropertyValue('--brain-pulse').trim(),
+  }
+}
+
+<i>// Re-read on theme change so the brain recolours without a reload.</i>
+<b>// No colour literal appears anywhere in the visuals directory.</b></pre>
+
+      <h3>Contract &mdash; the render loop must be interruptible</h3>
+      <pre><i>// Three independent reasons to stop drawing. All of them must work,</i>
+<i>// or the canvas silently burns battery on a backgrounded tab.</i>
+
+if (prefersReducedMotion) { drawStaticFrame(); return }  <i>// never animates</i>
+if (!isInViewport)        { pause() }                    <i>// IntersectionObserver</i>
+if (document.hidden)      { pause() }                    <i>// visibilitychange</i></pre>
+
+      <div class="exit">
+        <span class="label">Exit gate &mdash; Phase 3</span>
+        <ul>
+          <li>Sustained <strong>60 fps on a mid-range Android phone</strong>, measured &mdash; not on your laptop.</li>
+          <li>The brain completes one rotation in roughly 42 seconds. Slow and ambient, not spinning.</li>
+          <li>Scrolling past the hero stops the render loop entirely (verify in the performance profiler).</li>
+          <li>Switching to another browser tab stops it too.</li>
+          <li>Reduced motion renders one clean static frame &mdash; the hero still looks finished, not empty.</li>
+          <li>Toggling the theme recolours the brain without a page reload.</li>
+          <li>The stat row shows numbers derived from content, matching your CV exactly.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PHASE 4 ===== -->
+  <section>
+    <div class="rail"><b>04</b><span>Journey,<br>Projects,<br>Contact</span><span class="dur">2 days</span></div>
+    <div class="body-col">
+      <h2>The three remaining content sections</h2>
+      <p class="objective">At the end of this phase you have a complete portfolio you could send to a recruiter, whether or not the assistant ever gets built.</p>
+
+      <h3>Tasks &mdash; 4A Journey</h3>
+      <div class="tasks">
+        <div><span class="tid">4.1</span><span class="tbody">Narrative block: your story in two short paragraphs, composed from profile content.</span></div>
+        <div><span class="tid">4.2</span><span class="tbody">Timeline: SVG path that draws itself as you scroll, with both internships as nodes. Real dates from content, formatted at render.</span></div>
+        <div><span class="tid">4.3</span><span class="tbody">Skill clusters with evidence links (or bars, per your decision), staggered on entry.</span></div>
+        <div><span class="tid">4.4</span><span class="tbody">Education and achievements, understated &mdash; supporting evidence, not headline material.</span></div>
+      </div>
+
+      <h3>Tasks &mdash; 4B Projects</h3>
+      <div class="tasks">
+        <div><span class="tid">4.5</span><span class="tbody">Project composition: problem &rarr; approach &rarr; outcome &rarr; stack &rarr; links. Vertical, one at a time, generous spacing. Not a grid of cards.</span></div>
+        <div><span class="tid">4.6</span><span class="tbody">Entry choreography: clip-path wipe, staggered content, pointer-tracking light on hover.</span></div>
+        <div><span class="tid">4.7</span><span class="tbody">Stack chips rendered from <code>project.stack</code>, deduplicated and consistently styled.</span></div>
+        <div><span class="tid">4.8</span><span class="tbody">Graceful handling when a project has no live or repo link &mdash; the layout must not leave a hole.</span></div>
+      </div>
+
+      <h3>Tasks &mdash; 4C Contact</h3>
+      <div class="tasks">
+        <div><span class="tid">4.9</span><span class="tbody">Availability statement and email, from profile content.</span></div>
+        <div><span class="tid">4.10</span><span class="tbody"><code>visuals/wave.ts</code> &mdash; the signal wave from your reference, amplifying as the section enters view.</span></div>
+        <div><span class="tid">4.11</span><span class="tbody">Social links from <code>profile.links</code>, with icons mapped by <code>kind</code> &mdash; adding a link is a content edit, not a code edit.</span></div>
+        <div><span class="tid">4.12</span><span class="tbody">Full responsive pass across all sections: 360&nbsp;px, 768&nbsp;px, 1024&nbsp;px, 1440&nbsp;px, 1920&nbsp;px.</span></div>
+      </div>
+
+      <div class="note">
+        <span class="label">Choreography discipline</span>
+        <p>Each section enters <em>differently</em>: the timeline draws, projects wipe, clusters stagger, the wave amplifies. The same fade-up applied five times is the single clearest tell of a generated site, and it is what most portfolio templates do.</p>
+      </div>
+
+      <div class="exit">
+        <span class="label">Exit gate &mdash; Phase 4</span>
+        <ul>
+          <li><strong>The portfolio is complete and shippable.</strong> Every section renders real CV data.</li>
+          <li>Lighthouse on mobile: Performance &ge; 95, Accessibility 100, Best Practices 100, SEO 100.</li>
+          <li>The literal scan finds <strong>zero</strong> content strings in <code>components/</code>.</li>
+          <li>Adding a fifth project to <code>projects.ts</code> makes it appear in the Projects section, updates the hero counter, and updates the technology count &mdash; with no other file touched.</li>
+          <li>No horizontal scroll at any width from 320&nbsp;px upward.</li>
+          <li>Cumulative Layout Shift below 0.05 with all animations running.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PHASE 5 ===== -->
+  <section>
+    <div class="rail"><b>05</b><span>Portfolio<br>Assistant</span><span class="dur">1.5 days</span></div>
+    <div class="body-col">
+      <h2>The zero-cost answer engine</h2>
+      <p class="objective">A real retrieval system running entirely in the visitor&rsquo;s browser. No API, no key, no server, no bill &mdash; and it cannot invent a fact, because every sentence is composed from validated content.</p>
+
+      <h3>Tasks</h3>
+      <div class="tasks">
+        <div><span class="tid">5.1</span><span class="tbody"><code>assistant/passages.ts</code> &mdash; turn the content layer into ~35 retrievable passages: one per project, per role, per skill cluster, per achievement, plus profile and contact.</span></div>
+        <div><span class="tid">5.2</span><span class="tbody"><code>assistant/tokenize.ts</code> &mdash; lowercase, strip punctuation, remove stopwords, light suffix stemming, then expand through the vocabulary map.</span></div>
+        <div><span class="tid">5.3</span><span class="tbody"><code>scripts/build-index.ts</code> &mdash; build step producing a static BM25 index (~25&nbsp;KB), written to <code>lib/assistant/index.generated.json</code> and committed.</span></div>
+        <div><span class="tid">5.4</span><span class="tbody"><code>assistant/retrieve.ts</code> &mdash; BM25 scoring with parameters from config, returning ranked hits with scores.</span></div>
+        <div><span class="tid">5.5</span><span class="tbody"><code>assistant/intents.ts</code> &mdash; ordered matchers: project-detail, skill-check, experience, education, achievements, availability, contact, overview.</span></div>
+        <div><span class="tid">5.6</span><span class="tbody"><code>assistant/compose.ts</code> &mdash; one composer per intent, each returning structured answer blocks built from content.</span></div>
+        <div><span class="tid">5.7</span><span class="tbody"><code>assistant/suggest.ts</code> &mdash; suggested questions generated from content, filtered by the section currently in view.</span></div>
+        <div><span class="tid">5.8</span><span class="tbody"><code>assistant/fixtures.test.ts</code> &mdash; ~40 question&rarr;expected-topic pairs including misspellings, unknown topics, and deliberate misses.</span></div>
+        <div><span class="tid">5.9</span><span class="tbody"><code>sections/Assistant</code> &mdash; the conversational UI: input, thinking dots, typewriter reveal, rich answer blocks, suggestion chips.</span></div>
+        <div><span class="tid">5.10</span><span class="tbody">Vocabulary tuning pass &mdash; run realistic questions, add the aliases that were missing. This is data editing, not coding.</span></div>
+      </div>
+
+      <h3>Contract &mdash; the answer pipeline</h3>
+      <pre><i>// Every type here is structural. Answers are data, rendered by components.</i>
+<i>// No composer ever returns a formatted HTML string.</i>
+
+type PassageKind =
+  | 'profile' | 'experience' | 'project'
+  | 'skill'   | 'achievement' | 'education' | 'contact'
+
+type Passage = {
+  id: string
+  kind: PassageKind
+  title: string
+  text: string          <i>// searchable body</i>
+  tags: string[]        <i>// entities: technologies, org names</i>
+  sectionId: string     <i>// where to jump on click</i>
+}
+
+type AnswerBlock =
+  | { type: 'text';     value: string }
+  | { type: 'chips';    values: string[] }
+  | { type: 'project';  id: string }
+  | { type: 'timeline'; ids: string[] }
+  | { type: 'link';     label: string; href: string }
+
+type Answer = {
+  blocks: AnswerBlock[]
+  confidence: number    <i>// drives the fallback path</i>
+  sources: string[]     <i>// passage ids &mdash; provable grounding</i>
+}
+
+type Intent = {
+  id: string
+  test: (query: NormalizedQuery) =&gt; boolean
+  compose: (query: NormalizedQuery, hits: Hit[]) =&gt; Answer
+}</pre>
+
+      <h3>Contract &mdash; answers are composed, never canned</h3>
+      <pre><i>// Every sentence is slot-filled from validated data. Change the CV,</i>
+<i>// and the answer changes with it. There is no answers.json to maintain.</i>
+
+const composeProjectDetail = (project: Project): Answer =&gt; ({
+  blocks: [
+    { type: 'text',    value: `${project.name} &mdash; ${project.problem}` },
+    { type: 'text',    value: project.approach },
+    { type: 'chips',   values: project.stack },
+    { type: 'text',    value: project.outcome },
+    { type: 'project', id: project.id },
+    ...project.links.map(l =&gt; ({ type: 'link' as const, ...l })),
+  ],
+  confidence: 1,
+  sources: [`project:${project.id}`],
+})</pre>
+
+      <h3>Contract &mdash; the honest fallback</h3>
+      <pre><i>// The single most important behaviour. When it does not know,</i>
+<i>// it says so and offers something useful instead of guessing.</i>
+
+if (topScore &lt; threshold &amp;&amp; !matchedIntent) {
+  return {
+    blocks: [
+      { type: 'text',  value: notFoundMessage(query.raw) },
+      { type: 'chips', values: suggestTopics() },   <i>// generated from content</i>
+    ],
+    confidence: 0,
+    sources: [],
+  }
+}</pre>
+
+      <div class="exit">
+        <span class="label">Exit gate &mdash; Phase 5</span>
+        <ul>
+          <li>All ~40 fixtures pass in CI.</li>
+          <li>&ldquo;Tell me about the API monitoring platform&rdquo; returns its real stack and outcome.</li>
+          <li>&ldquo;Do you know Docker?&rdquo; answers yes and names the projects that prove it.</li>
+          <li>&ldquo;Have you used Kubernetes?&rdquo; answers honestly that you have not, and names the closest things you do use.</li>
+          <li>&ldquo;What is your favourite film?&rdquo; deflects gracefully with three useful suggestions.</li>
+          <li><strong>Disconnect the network entirely and it still works.</strong> This is the proof that nothing is metered.</li>
+          <li>Answers render in under 50&nbsp;ms; any perceived delay is the deliberate pause, not the engine.</li>
+          <li>Adding a fifth project makes the assistant able to answer questions about it with <strong>no code change</strong>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PHASE 6 ===== -->
+  <section>
+    <div class="rail"><b>06</b><span>Ship</span><span class="dur">0.5 day</span></div>
+    <div class="body-col">
+      <h2>Public, findable, and shareable</h2>
+      <p class="objective">Everything that only matters once a stranger visits.</p>
+
+      <h3>Tasks</h3>
+      <div class="tasks">
+        <div><span class="tid">6.1</span><span class="tbody">Metadata generated from content &mdash; title, description, keywords, canonical URL.</span></div>
+        <div><span class="tid">6.2</span><span class="tbody"><code>opengraph-image.tsx</code> &mdash; social preview card rendered from your name, role, and derived stats. No image file to keep in sync.</span></div>
+        <div><span class="tid">6.3</span><span class="tbody"><code>sitemap.ts</code> and <code>robots.ts</code>, both derived from the section registry.</span></div>
+        <div><span class="tid">6.4</span><span class="tbody">JSON-LD <code>Person</code> schema from profile content &mdash; helps you surface in search for your own name.</span></div>
+        <div><span class="tid">6.5</span><span class="tbody">Favicon and app icon set.</span></div>
+        <div><span class="tid">6.6</span><span class="tbody">Analytics behind the feature flag, shipped off. Turn on only if you want it.</span></div>
+        <div><span class="tid">6.7</span><span class="tbody">Domain: connect a custom one, or confirm the free subdomain. Per your decision.</span></div>
+        <div><span class="tid">6.8</span><span class="tbody"><code>README.md</code> &mdash; a real runbook: how to add a project, edit a fact, tune the assistant vocabulary, adjust motion, deploy.</span></div>
+        <div><span class="tid">6.9</span><span class="tbody">Cross-browser and device matrix: Chrome, Safari, Firefox, Edge &middot; Android and iOS.</span></div>
+        <div><span class="tid">6.10</span><span class="tbody">Final Lighthouse run and a manual accessibility walkthrough with keyboard only.</span></div>
+      </div>
+
+      <div class="exit">
+        <span class="label">Exit gate &mdash; Phase 6</span>
+        <ul>
+          <li>Pasting the URL into LinkedIn and WhatsApp shows a correct preview card.</li>
+          <li>Searching your name plus &ldquo;portfolio&rdquo; finds the site once indexed.</li>
+          <li>A stranger can clone the repo and run it with <strong>no configuration and no accounts</strong>.</li>
+          <li>The README lets <em>you</em>, six months from now, add a project without re-reading any source file.</li>
+          <li>Every gate in Blueprint &sect;10 is met and recorded.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PHASE 7 ===== -->
+  <section>
+    <div class="rail"><b>07</b><span>Beyond<br>v1</span><span class="dur">ongoing</span></div>
+    <div class="body-col">
+      <h2>How this grows over the next few years</h2>
+      <p class="objective">Not scheduled work &mdash; a map of what the architecture makes cheap later, so nothing built now blocks anything wanted later. Every item below stays at zero cost.</p>
+
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Horizon</th><th>Addition</th><th>Why it is cheap</th></tr></thead>
+          <tbody>
+            <tr><td class="num">0&ndash;3 months</td><td>Turn the blog flag on; MDX case studies for the strongest two projects</td><td>The shell is already built and the section registry already supports it.</td></tr>
+            <tr><td class="num">0&ndash;3 months</td><td>Generate your r&eacute;sum&eacute; PDF <em>from</em> the content layer</td><td>The data is already typed and validated. The CV stops being a separate document that drifts.</td></tr>
+            <tr><td class="num">3&ndash;12 months</td><td>Per-project deep-dive pages</td><td>Projects are already addressable by id with a schema that supports long-form fields.</td></tr>
+            <tr><td class="num">3&ndash;12 months</td><td>Assistant analytics &mdash; which questions get asked, stored locally</td><td>Tells you what recruiters actually want to know, so you write the content they are looking for.</td></tr>
+            <tr><td class="num">Year 2</td><td>Publish the answer engine as an open-source package</td><td>It is already isolated, pure, and tested. This becomes a portfolio item in its own right.</td></tr>
+            <tr><td class="num">Year 2&ndash;3</td><td>Optional LLM upgrade behind the existing flag</td><td>The flag and the fallback are built in Phase 5. If a free tier ever becomes dependable, it is a config change &mdash; and the zero-cost engine remains the default.</td></tr>
+            <tr><td class="num">Year 2&ndash;3</td><td>Extract the content layer into a reusable template</td><td>The whole architecture is already content-agnostic. Someone else&rsquo;s data, same site.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <span class="label">The point of the architecture</span>
+        <p>Every row above is cheap for the same reason: content is data, the structure is derived, and nothing is hard-coded. That constraint you set at the start is what buys all of this &mdash; a portfolio you update in one file for the next several years, instead of a site you rebuild every time your career moves.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SUMMARY ===== -->
+  <section>
+    <div class="rail"><b>&#8721;</b><span>Sequence</span></div>
+    <div class="body-col">
+      <h2>The whole plan at a glance</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Phase</th><th>Output</th><th>Effort</th><th>Blocked by</th></tr></thead>
+          <tbody>
+            <tr><td class="num">0 &middot; Foundation</td><td>Deployed empty shell, rules mechanically enforced</td><td class="num">0.5 d</td><td>&mdash;</td></tr>
+            <tr><td class="num">1 &middot; Content</td><td>Your CV as validated data</td><td class="num">0.5 d</td><td>Your project links, if any</td></tr>
+            <tr><td class="num">2 &middot; System</td><td>Tokens, motion config, nav, chrome</td><td class="num">1.5 d</td><td><strong>Your direction pick</strong></td></tr>
+            <tr><td class="num">3 &middot; Hero</td><td>Rotating neural brain, entrance</td><td class="num">1.5 d</td><td><strong>Brain decision</strong></td></tr>
+            <tr><td class="num">4 &middot; Sections</td><td><strong>Complete shippable portfolio</strong></td><td class="num">2 d</td><td><strong>Skills decision</strong></td></tr>
+            <tr><td class="num">5 &middot; Assistant</td><td>Zero-cost answer engine</td><td class="num">1.5 d</td><td>&mdash;</td></tr>
+            <tr><td class="num">6 &middot; Ship</td><td>Public and findable</td><td class="num">0.5 d</td><td><strong>Domain decision</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note alert">
+        <span class="label">Before Phase 0 starts</span>
+        <p>Only two of the four open decisions block early phases, and neither blocks Phase 0 or 1 &mdash; so we can begin immediately and settle them as we go. What would genuinely help now: your <strong>GitHub and LinkedIn URLs</strong>, and any <strong>live or repository links</strong> for the four projects. A &ldquo;view source&rdquo; link is worth more to a reviewer than any description on the page.</p>
+      </div>
+
+      <p><strong>Say &ldquo;start Phase 0&rdquo; and I will begin.</strong> Nothing is written until then.</p>
+    </div>
+  </section>
+
+  <footer>Implementation Plan &middot; Companion to Blueprint Rev. B &middot; Nothing implemented yet</footer>
+</div>
+
+</body>
+</html>

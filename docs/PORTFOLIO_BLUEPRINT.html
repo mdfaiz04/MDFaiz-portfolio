@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faiz Portfolio Blueprint</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --paper:      #F4F5F3;
+    --surface:    #FFFFFF;
+    --sunken:     #EAECE8;
+    --ink:        #16191A;
+    --graphite:   #575E60;
+    --faint:      #7C8385;
+    --rule:       #D6DAD5;
+    --rule-soft:  #E4E7E2;
+    --accent:     #0F6E5C;
+    --accent-dim: #DCEAE5;
+    --warn:       #A24A16;
+    --warn-dim:   #F5E7DC;
+
+    --mono: ui-monospace, "Cascadia Mono", "Cascadia Code", "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
+    --serif: Georgia, "Iowan Old Style", "Source Serif 4", "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+
+    --measure: 68ch;
+    --rail: 8.5rem;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #101312; --surface: #171B1A; --sunken: #0B0E0D;
+      --ink: #E7EBE7; --graphite: #A2ABA7; --faint: #7A8481;
+      --rule: #2A302E; --rule-soft: #212624;
+      --accent: #46BFA2; --accent-dim: #14302A;
+      --warn: #E2924F; --warn-dim: #332415;
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #101312; --surface: #171B1A; --sunken: #0B0E0D;
+    --ink: #E7EBE7; --graphite: #A2ABA7; --faint: #7A8481;
+    --rule: #2A302E; --rule-soft: #212624;
+    --accent: #46BFA2; --accent-dim: #14302A;
+    --warn: #E2924F; --warn-dim: #332415;
+    color-scheme: dark;
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--serif); font-size: 17px; line-height: 1.62;
+    margin: 0; padding: 0 1.5rem 8rem;
+    -webkit-font-smoothing: antialiased;
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+
+  .sheet { max-width: 74rem; margin: 0 auto; display: flex; flex-direction: column; }
+
+  /* ---- masthead ---- */
+
+  .masthead { border-bottom: 2px solid var(--ink); padding: 4.5rem 0 1.25rem; display: flex; flex-direction: column; gap: 1.5rem; }
+  .stamp {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--accent);
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem;
+  }
+  h1 {
+    font-family: var(--mono); font-size: clamp(2.1rem, 6vw, 3.4rem);
+    line-height: 1.02; letter-spacing: -0.035em; font-weight: 700;
+    margin: 0; text-wrap: balance;
+  }
+  .dek { font-size: 1.14rem; color: var(--graphite); max-width: 56ch; margin: 0; }
+
+  .meta-strip { display: flex; flex-wrap: wrap; border-top: 1px solid var(--rule); margin-top: 0.5rem; }
+  .meta-strip > div {
+    flex: 1 1 11rem; padding: 0.85rem 1.25rem 0.85rem 0;
+    border-right: 1px solid var(--rule-soft);
+    display: flex; flex-direction: column; gap: 0.2rem;
+  }
+  .meta-strip > div:last-child { border-right: 0; }
+  .meta-strip dt { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+  .meta-strip dd { margin: 0; font-family: var(--mono); font-size: 0.9rem; color: var(--ink); }
+
+  .revnote {
+    border-left: 3px solid var(--warn); background: var(--warn-dim);
+    padding: 0.9rem 1.15rem; display: flex; flex-direction: column; gap: 0.35rem;
+    margin-top: 0.5rem;
+  }
+  .revnote .label { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--warn); }
+  .revnote p { font-size: 0.96rem; color: var(--ink); max-width: none; }
+  .revnote ul { font-size: 0.94rem; max-width: none; margin-top: 0.1rem; }
+
+  /* ---- sections ---- */
+
+  section {
+    display: grid; grid-template-columns: var(--rail) minmax(0, 1fr);
+    gap: 0 2.5rem; border-bottom: 1px solid var(--rule);
+    padding: 3.25rem 0 3.5rem;
+  }
+  .rail {
+    font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--faint);
+    display: flex; flex-direction: column; gap: 0.35rem;
+    position: sticky; top: 1.5rem; align-self: start; height: max-content;
+  }
+  .rail b { font-size: 1.5rem; letter-spacing: -0.02em; color: var(--accent); font-weight: 700; line-height: 1; }
+
+  .body-col { display: flex; flex-direction: column; gap: 1.15rem; min-width: 0; }
+
+  h2 { font-family: var(--mono); font-size: clamp(1.35rem, 3vw, 1.75rem); letter-spacing: -0.025em; font-weight: 700; margin: 0; text-wrap: balance; }
+  h3 { font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); font-weight: 700; margin: 1.1rem 0 -0.35rem; }
+  p { margin: 0; max-width: var(--measure); }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--sunken); padding: 0.08em 0.36em; color: var(--ink); }
+  ul, ol { margin: 0; padding-left: 1.2rem; max-width: var(--measure); }
+  li { margin-bottom: 0.4rem; }
+  li::marker { color: var(--faint); }
+  strong { font-weight: 700; }
+
+  /* ---- tables ---- */
+
+  .scroll { overflow-x: auto; margin: 0.4rem 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 36rem; font-family: var(--sans); font-size: 0.87rem; line-height: 1.5; }
+  th, td { text-align: left; padding: 0.6rem 1rem 0.6rem 0; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  thead th { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--faint); border-bottom: 1px solid var(--rule); font-weight: 400; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.zero { font-family: var(--mono); color: var(--accent); font-weight: 700; white-space: nowrap; }
+  .tag { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.09em; text-transform: uppercase; padding: 0.14rem 0.42rem; white-space: nowrap; }
+  .tag.keep { background: var(--accent-dim); color: var(--accent); }
+  .tag.fix  { background: var(--warn-dim);   color: var(--warn); }
+
+  /* ---- callouts ---- */
+
+  .note { border-left: 3px solid var(--accent); background: var(--surface); padding: 0.95rem 1.2rem; max-width: var(--measure); display: flex; flex-direction: column; gap: 0.5rem; }
+  .note.alert { border-left-color: var(--warn); }
+  .note .label { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); }
+  .note.alert .label { color: var(--warn); }
+  .note p { font-size: 0.97rem; }
+  .note ul { font-size: 0.95rem; }
+
+  /* ---- verdict list ---- */
+
+  .verdicts { list-style: none; padding: 0; display: flex; flex-direction: column; max-width: var(--measure); border-top: 1px solid var(--rule-soft); }
+  .verdicts li { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); gap: 0 0.9rem; padding: 0.8rem 0; margin: 0; border-bottom: 1px solid var(--rule-soft); }
+  .verdicts .k { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); padding-top: 0.28rem; font-variant-numeric: tabular-nums; }
+  .verdicts .v { font-size: 0.99rem; }
+  .verdicts .v b { font-family: var(--mono); font-size: 0.93em; letter-spacing: -0.01em; }
+
+  /* ---- code / tree ---- */
+
+  pre { font-family: var(--mono); font-size: 0.78rem; line-height: 1.65; background: var(--surface); border: 1px solid var(--rule-soft); padding: 1.1rem 1.25rem; margin: 0.3rem 0; overflow-x: auto; color: var(--ink); tab-size: 2; }
+  pre b { color: var(--accent); font-weight: 400; }
+  pre i { color: var(--faint); font-style: normal; }
+
+  /* ---- phase ledger ---- */
+
+  .phases { display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
+  .phase { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) 5rem; gap: 0 1.25rem; padding: 1.05rem 0; border-bottom: 1px solid var(--rule-soft); align-items: baseline; }
+  .phase .p-id { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .phase .p-body { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+  .phase .p-title { font-family: var(--mono); font-size: 0.98rem; font-weight: 700; letter-spacing: -0.015em; }
+  .phase .p-desc { font-size: 0.92rem; color: var(--graphite); }
+  .phase .p-exit { font-size: 0.86rem; color: var(--ink); border-left: 2px solid var(--rule); padding-left: 0.75rem; }
+  .phase .p-exit em { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); font-style: normal; display: block; }
+  .phase .p-cost { font-family: var(--mono); font-size: 0.78rem; color: var(--faint); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---- decisions ---- */
+
+  .decision { border-top: 1px solid var(--rule-soft); padding: 1rem 0; display: flex; flex-direction: column; gap: 0.4rem; max-width: var(--measure); }
+  .decision:last-of-type { border-bottom: 1px solid var(--rule-soft); }
+  .decision .q { font-family: var(--mono); font-size: 0.95rem; font-weight: 700; letter-spacing: -0.015em; }
+  .decision .a { font-size: 0.93rem; color: var(--graphite); }
+  .decision .a b { color: var(--ink); }
+
+  footer { padding-top: 2.5rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--faint); }
+
+  @media (max-width: 760px) {
+    body { padding: 0 1.15rem 5rem; font-size: 16.5px; }
+    section { grid-template-columns: 1fr; gap: 1.1rem; padding: 2.5rem 0 2.75rem; }
+    .rail { position: static; flex-direction: row; align-items: baseline; gap: 0.7rem; }
+    .rail b { font-size: 1.05rem; }
+    .phase { grid-template-columns: 1fr; gap: 0.55rem; }
+    .phase .p-cost { text-align: left; }
+    .meta-strip > div { border-right: 0; border-bottom: 1px solid var(--rule-soft); flex-basis: 100%; }
+  }
+
+  /* ---- print / PDF ---- */
+
+  @page { size: A4; margin: 14mm 13mm 16mm; }
+
+  @media print {
+    :root {
+      --paper: #FFFFFF; --surface: #FAFBF9; --sunken: #F0F2EE;
+      --ink: #101314; --graphite: #4A5153; --faint: #6E7679;
+      --rule: #C9CEC8; --rule-soft: #E0E3DE;
+      --accent: #0C5A4C; --accent-dim: #E2EFEA;
+      --warn: #8C3F12; --warn-dim: #F7EBE1;
+      color-scheme: light;
+    }
+    body { padding: 0; font-size: 10.2pt; line-height: 1.5; background: #fff; }
+    .sheet { max-width: none; }
+    .masthead { padding-top: 0; break-after: avoid; }
+    h1 { font-size: 27pt; }
+    .dek { font-size: 11pt; }
+    section { grid-template-columns: 5.6rem minmax(0, 1fr); gap: 0 1.4rem; padding: 1.5rem 0 1.6rem; break-inside: auto; }
+    .rail { position: static; }
+    .rail b { font-size: 1.15rem; }
+    h2 { font-size: 14pt; break-after: avoid; }
+    h3 { break-after: avoid; }
+    table { min-width: 0; font-size: 8.6pt; }
+    .scroll { overflow: visible; }
+    thead { display: table-header-group; }
+    tr, .phase, .decision, .note, .revnote, .verdicts li, pre { break-inside: avoid; }
+    pre { font-size: 7.4pt; white-space: pre-wrap; overflow: visible; }
+    p, li, td { orphans: 2; widows: 2; }
+    a { text-decoration: none; }
+    footer { padding-top: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+
+
+<div class="sheet">
+
+  <header class="masthead">
+    <div class="stamp">
+      <span>Technical Plan</span>
+      <span>MD Faiz &mdash; AI &amp; Software Engineer</span>
+      <span>Rev. B &middot; 15 Aug 2026</span>
+    </div>
+    <h1>Portfolio Blueprint</h1>
+    <p class="dek">A premium, heavily animated, config-driven AI engineer portfolio: five screens that move a visitor from attention to connection, with a grounded portfolio assistant that costs nothing to run. No implementation yet &mdash; this is the contract we build against.</p>
+    <dl class="meta-strip">
+      <div><dt>Stack</dt><dd>Next.js 15 &middot; TS &middot; Tailwind v4</dd></div>
+      <div><dt>Assistant</dt><dd>In-browser answer engine</dd></div>
+      <div><dt>Running cost</dt><dd>&#8377;0 / $0 &mdash; forever</dd></div>
+      <div><dt>Estimate</dt><dd>~8 working days</dd></div>
+      <div><dt>Blockers</dt><dd>4 open decisions</dd></div>
+    </dl>
+
+    <div class="revnote">
+      <span class="label">What changed since Rev. A</span>
+      <ul>
+        <li><strong>The reference image is now styling-only.</strong> You&rsquo;ve confirmed its data was generated placeholder text. The r&eacute;sum&eacute; is the sole source of truth &mdash; this closes three of the six open decisions outright.</li>
+        <li><strong>The assistant no longer calls any paid API.</strong> Rewritten in &sect;05 as an in-browser retrieval and answer-composition engine. Zero cost, zero keys, zero rate limits, and it cannot hallucinate. Removes the server route, secrets layer, spend caps, and abuse hardening entirely.</li>
+        <li><strong>Motion is promoted from polish to architecture.</strong> &sect;06 is now a full motion system spec, including a real rotating neural-brain hero rather than a spinning flat image.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ============ 00 VERDICT ============ -->
+  <section>
+    <div class="rail"><b>00</b><span>Verdict</span></div>
+    <div class="body-col">
+      <h2>The six calls that shape everything else</h2>
+      <ul class="verdicts">
+        <li><span class="k">01</span><span class="v"><b>Content is data, not markup.</b> Every fact about you lives in one typed, schema-validated layer. Components receive props; they never contain a name, date, email, or URL. This is the literal reading of your &ldquo;never hard code anything&rdquo; rule, and it is what makes the rest possible.</span></li>
+        <li><span class="k">02</span><span class="v"><b>The r&eacute;sum&eacute; is the only source of truth.</b> The reference image contributes look &mdash; palette weight, scale, spacing, the brain motif, the wave &mdash; and nothing else. Every number, name, date, and address comes from the CV.</span></li>
+        <li><span class="k">03</span><span class="v"><b>The assistant runs entirely in the browser and costs nothing.</b> A real retrieval engine (BM25 index + intent routing + answer composition) over your portfolio data. No API, no key, no server, no subscription, no free tier to expire. It answers in under 50&nbsp;ms, works offline, and is <em>structurally incapable</em> of inventing a fact.</span></li>
+        <li><span class="k">04</span><span class="v"><b>Motion is a first-class feature, not a final coat of paint.</b> A generated 3D neural brain rotating slowly in the hero, scroll-linked section choreography, magnetic interactions, and a living contact wave &mdash; all compositor-only, all with genuine reduced-motion alternatives.</span></li>
+        <li><span class="k">05</span><span class="v"><b>Total running cost is zero.</b> Static site, free hosting tier, no database, no API, no CMS, no analytics vendor. The only optional expense in the entire project is a custom domain, and even that has a free alternative. Full ledger in &sect;07.</span></li>
+        <li><span class="k">06</span><span class="v"><b>Ship in seven phases, each independently deployable.</b> A complete, animated, shippable portfolio exists at the end of Phase 4. The assistant is Phase 5 &mdash; additive, not load-bearing.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 01 SOURCE OF TRUTH ============ -->
+  <section>
+    <div class="rail"><b>01</b><span>Source of<br>Truth</span></div>
+    <div class="body-col">
+      <h2>Which source governs what</h2>
+      <p>Now that the mockup&rsquo;s data is confirmed placeholder, the rule is clean: <strong>the image governs appearance, the CV governs facts.</strong> Nothing from the image enters the content layer.</p>
+
+      <div class="scroll">
+        <table>
+          <thead><tr><th>From the reference image</th><th>From the r&eacute;sum&eacute;</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Dark luminous ground &middot; large display type &middot; generous whitespace &middot; five-section rhythm &middot; the neural-brain hero motif &middot; the contact-section wave &middot; nav and footer structure</td>
+              <td>Name, role, location, email &middot; both internships with real dates &middot; all four projects with real stacks &middot; every skill and tool &middot; both competition placements &middot; education and CGPA &middot; interests</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The figures we will actually ship</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Mockup claimed</th><th>Reality per CV</th><th>What goes on the page</th></tr></thead>
+          <tbody>
+            <tr><td>2+ years experience</td><td>Feb 2026 &rarr; present</td><td class="num">6 months, two internships</td></tr>
+            <tr><td>15+ projects</td><td>4 documented</td><td class="num">4 shipped projects</td></tr>
+            <tr><td>3 hackathons won</td><td>Top-12 IndiaSkills (Cloud); 5th, VISAI 2026</td><td class="num">2 competition placements</td></tr>
+            <tr><td>10+ technologies</td><td>Countable from the CV skills list</td><td class="num">The real count, computed from content</td></tr>
+            <tr><td>&ldquo;Meeting Bot&rdquo;</td><td>No CV entry &mdash; placeholder</td><td class="num">Dropped</td></tr>
+            <tr><td>mdfaiz44@gmail.com</td><td>faiz31807@gmail.com</td><td class="num">The CV address</td></tr>
+            <tr><td>Timeline 2023 / 2024</td><td>India Space Lab Feb&ndash;Mar 2026; Metawurks AI Apr 2026&ndash;present</td><td class="num">Real dates</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <span class="label">One derived-not-typed detail</span>
+        <p>The stat counters compute themselves. &ldquo;4 shipped projects&rdquo; is <code>projects.length</code>; the technology count is the deduplicated union of every project&rsquo;s stack; the experience duration is derived from the earliest start date. You add a fifth project and the hero updates itself &mdash; and it can never drift out of sync with the section below it.</p>
+      </div>
+
+      <div class="note alert">
+        <span class="label">The one place the image contradicts your brief</span>
+        <p>Your brief says <em>&ldquo;avoid excessive cards, crowded sections, or dashboard-like layouts.&rdquo;</em> The image&rsquo;s section 02 is five cards with percentage bars &mdash; a dashboard. I plan to follow your written brief: skills become grouped capability clusters, each linking to the project that proves it. &ldquo;Artificial Intelligence &mdash; 90%&rdquo; is a number you assigned yourself; &ldquo;RAG pipelines, agentic systems, MCP servers &rarr; <em>see Newsroom AI</em>&rdquo; is verifiable. The schema keeps an optional <code>level</code> field, so the bars are one flag away if you disagree. This is decision 1 in &sect;08.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 CONTRACT ============ -->
+  <section>
+    <div class="rail"><b>02</b><span>The<br>Contract</span></div>
+    <div class="body-col">
+      <h2>What &ldquo;never hard code anything&rdquo; means in practice</h2>
+      <p>Taken literally the rule is unbuildable &mdash; some string has to exist somewhere. Taken usefully: <strong>every value has exactly one home, and that home is chosen by what makes the value change.</strong> With the paid API gone, the secrets layer disappears entirely &mdash; six layers, not seven.</p>
+
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Layer</th><th>Holds</th><th>Changes when</th><th>Enforced by</th></tr></thead>
+          <tbody>
+            <tr><td class="num">L1 Content</td><td>Your facts &mdash; profile, experience, projects, skills, achievements, education, links</td><td>Your career changes</td><td>Zod schemas; import throws on invalid data</td></tr>
+            <tr><td class="num">L2 Tokens</td><td>Colour, type scale, spacing, radii, easing curves, animation durations</td><td>The design changes</td><td>Tailwind v4 <code>@theme</code>; lint bans arbitrary hex in class names</td></tr>
+            <tr><td class="num">L3 Motion</td><td>Every duration, delay, stagger, spring constant, particle count, rotation speed</td><td>The feel is tuned</td><td>A single <code>motion.ts</code> config; no magic numbers inside components</td></tr>
+            <tr><td class="num">L4 Environment</td><td>Site URL, feature flags, build mode</td><td>The deploy target changes</td><td>One <code>env.ts</code> that Zod-parses <code>process.env</code>; nothing else may read it</td></tr>
+            <tr><td class="num">L5 Structure</td><td>Section order, ids, nav labels, journey stage</td><td>You reorder the story</td><td>A single ordered <code>sections</code> registry that generates nav, scroll-spy and footer</td></tr>
+            <tr><td class="num">L6 Derived</td><td>SEO metadata, OG image, sitemap, JSON-LD, stat counters, the assistant&rsquo;s search index, its suggested questions</td><td>Never directly &mdash; computed from L1</td><td>Pure functions and a build step; no hand-written duplicates</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <span class="label">The distinction that matters</span>
+        <p>Your name and email belong in <strong>L1 content</strong>, not L4 environment. They are versioned facts about you, not deployment variables &mdash; they should live in git with a review trail. Environment is only for what genuinely differs between local, preview, and production. Putting identity in env vars is a common over-correction that makes the project harder to run, not more configurable.</p>
+        <p>L3 is new in this revision and earns its place: an animated site accumulates magic numbers faster than anything else. <code>0.6</code>, <code>0.09</code>, <code>[0.16, 1, 0.3, 1]</code> scattered across twenty components is exactly the hardcoding you asked me to avoid, and it makes the feel impossible to tune coherently.</p>
+      </div>
+
+      <p>The measurable test: <em>grep the components directory for a quoted sentence, a date, a hex colour, a URL, or a bare duration. Zero hits.</em> That check runs pre-commit, so the rule enforces itself rather than depending on discipline.</p>
+    </div>
+  </section>
+
+  <!-- ============ 03 STACK ============ -->
+  <section>
+    <div class="rail"><b>03</b><span>Stack</span></div>
+    <div class="body-col">
+      <h2>Choices, and what I rejected</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Concern</th><th>Choice</th><th>Why this, not that</th></tr></thead>
+          <tbody>
+            <tr><td>Framework</td><td>Next.js 15, App Router, React 19</td><td>Your CV claims Next.js &mdash; the portfolio should be built in the stack it advertises. Gives RSC, image optimisation, metadata API, and free Vercel deploy. <em>Considered and rejected:</em> Astro would ship less JS, but the credibility of demonstrating your own stated stack outweighs it.</td></tr>
+            <tr><td>Language</td><td>TypeScript, <code>strict</code></td><td>The content schema <em>is</em> the safety net. Without strict mode the whole L1 layer is decorative.</td></tr>
+            <tr><td>Styling</td><td>Tailwind CSS v4</td><td>v4&rsquo;s CSS-first <code>@theme</code> makes tokens actual CSS variables &mdash; the no-hardcode rule becomes structural instead of aspirational.</td></tr>
+            <tr><td>Motion</td><td><code>motion</code> (Framer Motion 12)</td><td>Declarative orchestration, layout animations, scroll-linked values, and a first-class reduced-motion hook. ~34&nbsp;KB gz, imported per-section. Rejected GSAP &mdash; heavier licence surface for no gain here.</td></tr>
+            <tr><td>Hero visual</td><td>Canvas 2D, hand-written</td><td>~6&nbsp;KB of code replaces a ~500&nbsp;KB PNG, is crisp at every resolution, themes with your tokens, and actually rotates in 3D. See &sect;06.</td></tr>
+            <tr><td>Search</td><td>Hand-rolled BM25, ~4&nbsp;KB</td><td>Full control over scoring, tokenisation, and the index format. Rejected Fuse.js (fuzzy matching, not relevance ranking) and Lunr (~29&nbsp;KB for features we don&rsquo;t need).</td></tr>
+            <tr><td>Validation</td><td>Zod</td><td>One library validates content, env, and the search index shape. Types are inferred, so schema and TS never drift.</td></tr>
+            <tr><td>Icons</td><td><code>lucide-react</code></td><td>Tree-shakeable, consistent stroke weight. Icon names come from content, so swapping one is a data edit.</td></tr>
+            <tr><td>Testing</td><td>Vitest + Playwright smoke</td><td>The high-value suite is the assistant&rsquo;s question fixture set (&sect;05) &mdash; roughly 40 question&rarr;expected-answer pairs that run in CI.</td></tr>
+            <tr><td>Host</td><td>Vercel Hobby (free)</td><td>Preview deploy per branch, edge CDN, zero config. Nothing is Vercel-locked &mdash; with no server route the site can static-export to Cloudflare Pages, Netlify, or GitHub Pages unchanged.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">
+        <span class="label">Deliberately not included</span>
+        <p><strong>No LLM API</strong> &mdash; see &sect;05. <strong>No CMS</strong> &mdash; you are the only author; a typed file in git is faster and better-reviewed. <strong>No database</strong> &mdash; nothing persists. <strong>No auth</strong> &mdash; nothing is private. <strong>No smooth-scroll library</strong> (Lenis, Locomotive) &mdash; hijacking native scroll breaks trackpad feel, keyboard navigation, and screen readers; the premium feel comes from what happens <em>during</em> the scroll, not from replacing it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 SHAPE ============ -->
+  <section>
+    <div class="rail"><b>04</b><span>Repository</span></div>
+    <div class="body-col">
+      <h2>Where everything lives</h2>
+      <pre>faiz-portfolio/
+&#9500;&#9472; src/
+&#9474;  &#9500;&#9472; app/
+&#9474;  &#9474;  &#9500;&#9472; layout.tsx &middot; page.tsx      <i>page maps the section registry &rarr; components</i>
+&#9474;  &#9474;  &#9500;&#9472; opengraph-image.tsx      <i>OG card rendered from content</i>
+&#9474;  &#9474;  &#9492;&#9472; sitemap.ts &middot; robots.ts       <i>no /api directory &mdash; nothing server-side</i>
+&#9474;  &#9500;&#9472; config/
+&#9474;  &#9474;  &#9500;&#9472; env.ts                   <i>the ONLY file that reads process.env</i>
+&#9474;  &#9474;  &#9500;&#9472; <b>motion.ts</b>                <i>L3 &mdash; every duration, spring, stagger</i>
+&#9474;  &#9474;  &#9492;&#9472; features.ts &middot; site.ts
+&#9474;  &#9500;&#9472; content/                    <b>&larr; L1. every fact about you.</b>
+&#9474;  &#9474;  &#9500;&#9472; schema.ts                <i>Zod &mdash; the contract</i>
+&#9474;  &#9474;  &#9500;&#9472; profile.ts &middot; experience.ts &middot; projects.ts
+&#9474;  &#9474;  &#9500;&#9472; skills.ts &middot; achievements.ts &middot; education.ts
+&#9474;  &#9474;  &#9500;&#9472; <b>vocabulary.ts</b>            <i>synonyms + aliases for the assistant</i>
+&#9474;  &#9474;  &#9500;&#9472; <b>sections.ts</b>              <i>ordered registry &rarr; nav, scroll-spy, footer</i>
+&#9474;  &#9474;  &#9492;&#9472; index.ts                 <i>validates on import; build fails on bad data</i>
+&#9474;  &#9500;&#9472; lib/assistant/              <b>&larr; runs 100% in the browser</b>
+&#9474;  &#9474;  &#9500;&#9472; passages.ts              <i>content &rarr; retrievable passages</i>
+&#9474;  &#9474;  &#9500;&#9472; index.build.ts           <i>build step &rarr; static BM25 index JSON</i>
+&#9474;  &#9474;  &#9500;&#9472; tokenize.ts              <i>normalise, stem, expand via vocabulary</i>
+&#9474;  &#9474;  &#9500;&#9472; retrieve.ts              <i>BM25 scoring</i>
+&#9474;  &#9474;  &#9500;&#9472; intents.ts               <i>ordered intent matchers</i>
+&#9474;  &#9474;  &#9500;&#9472; compose.ts               <i>matches + content &rarr; rich answer blocks</i>
+&#9474;  &#9474;  &#9492;&#9472; <b>fixtures.test.ts</b>         <i>~40 question &rarr; expected-topic pairs</i>
+&#9474;  &#9500;&#9472; lib/visuals/
+&#9474;  &#9474;  &#9500;&#9472; brain.ts                 <i>the rotating neural point-cloud</i>
+&#9474;  &#9474;  &#9492;&#9472; wave.ts                  <i>contact-section signal wave</i>
+&#9474;  &#9500;&#9472; components/
+&#9474;  &#9474;  &#9500;&#9472; sections/  <i>Hero &middot; Journey &middot; Projects &middot; Assistant &middot; Contact</i>
+&#9474;  &#9474;  &#9500;&#9472; chrome/    <i>Nav &middot; Footer &middot; ThemeToggle &middot; ScrollProgress &middot; Cursor</i>
+&#9474;  &#9474;  &#9492;&#9472; ui/        <i>primitives &mdash; no content, ever</i>
+&#9474;  &#9492;&#9472; styles/globals.css          <b>&larr; L2. @theme tokens.</b>
+&#9492;&#9472; scripts/build-index.ts         <i>runs before next build</i></pre>
+      <p>Note what is <em>absent</em>: no <code>app/api/</code>, no <code>.env.example</code> full of secrets, no rate-limit module. Removing the paid API removed an entire tier of the system.</p>
+    </div>
+  </section>
+
+  <!-- ============ 05 ASSISTANT ============ -->
+  <section>
+    <div class="rail"><b>05</b><span>The<br>Assistant</span></div>
+    <div class="body-col">
+      <h2>A real answer engine, for exactly zero rupees</h2>
+      <p>You want an assistant that answers questions about your portfolio and costs nothing. Three ways to get there &mdash; I evaluated all of them.</p>
+
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Approach</th><th>Real cost</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Hosted LLM API (Claude, GPT, Gemini paid tiers)</td><td class="num">$8&ndash;40 / 1k questions</td>
+              <td><span class="tag fix">rejected</span> You&rsquo;ve ruled out spending. Also needs a server, a key, rate limiting, and abuse monitoring.</td>
+            </tr>
+            <tr>
+              <td>Free-tier LLM API (Groq, Google AI Studio, OpenRouter free models)</td><td class="num">$0 today</td>
+              <td><span class="tag fix">not default</span> Free <em>today</em>. Still needs a key, a server route, and it can be throttled or withdrawn without notice. Kept as an optional flag, shipped off.</td>
+            </tr>
+            <tr>
+              <td>Browser-local LLM (WebLLM, transformers.js)</td><td class="num">$0</td>
+              <td><span class="tag fix">rejected</span> 300&nbsp;MB&ndash;1.5&nbsp;GB model download on first visit. It would destroy your load time and be unusable on mid-range phones &mdash; actively damaging the thing it&rsquo;s meant to impress.</td>
+            </tr>
+            <tr>
+              <td><strong>In-browser retrieval &amp; answer composition</strong></td><td class="zero">$0 &mdash; permanently</td>
+              <td><span class="tag keep">chosen</span> ~10&nbsp;KB of code and a ~25&nbsp;KB index. Answers in under 50&nbsp;ms, works offline, cannot hallucinate, nothing to rate-limit because there is nothing to abuse.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <span class="label">Why this is the better answer, not just the cheaper one</span>
+        <p>Every portfolio chatbot on the internet is a thin wrapper around someone else&rsquo;s API. An engineer reviewing your site knows that within two questions. A retrieval engine you built &mdash; tokeniser, inverted index, BM25 ranking, intent routing, answer composition, with a test suite proving it &mdash; is a substantially stronger signal, and it is the one thing on the page a reviewer cannot assume you outsourced.</p>
+        <p>It also removes the failure mode that would hurt you most: an LLM confidently inventing a job you never had, in front of a recruiter. This engine physically cannot &mdash; every sentence it emits is composed from data that passed Zod validation.</p>
+      </div>
+
+      <h3>How it works</h3>
+      <ol>
+        <li><strong>Passages.</strong> At build time, the content layer becomes ~30&ndash;40 retrievable passages: one per project, per role, per skill cluster, per achievement, plus profile and contact. Each carries a kind, title, searchable text, entity tags, and a link back to its section.</li>
+        <li><strong>Index.</strong> A build script tokenises, lightly stems, and produces an inverted index with document lengths for BM25 scoring. Serialised to JSON, ~25&nbsp;KB gzipped, shipped in the bundle. No network request at runtime.</li>
+        <li><strong>Query expansion.</strong> The question is normalised and expanded through <code>vocabulary.ts</code> &mdash; a content-layer alias map, so it&rsquo;s editable data, not code. &ldquo;tech stack&rdquo; &rarr; technologies; &ldquo;where do you work&rdquo; &rarr; experience; &ldquo;ML&rdquo; &rarr; machine learning; &ldquo;grad&rdquo; &rarr; education.</li>
+        <li><strong>Intent routing.</strong> An ordered set of matchers classifies the question &mdash; project detail, skill check, experience, availability, education, achievements, contact, overview. Each intent owns a composer.</li>
+        <li><strong>Composition.</strong> The composer builds a <em>rich</em> answer from validated data: sentences with real slot-filled values, plus optional chips, a project card, a timeline fragment, or a jump link. Richer than a chatbot&rsquo;s wall of text.</li>
+        <li><strong>Honest fallback.</strong> If the top BM25 score is below threshold and no intent matches, it says so plainly and offers three things it <em>can</em> answer &mdash; generated from your content, so the suggestions are never stale.</li>
+      </ol>
+
+      <h3>Worked examples</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Question</th><th>What happens</th></tr></thead>
+          <tbody>
+            <tr><td>&ldquo;Tell me about the API monitoring platform&rdquo;</td><td>BM25 top hit &rarr; that project passage &rarr; project-detail composer &rarr; summary, real stack list, two highlights, a jump link to the section.</td></tr>
+            <tr><td>&ldquo;Do you know Docker?&rdquo;</td><td>skill-check intent, entity matched against the tech vocabulary &rarr; <em>&ldquo;Yes &mdash; Docker is part of my DevOps toolkit. I&rsquo;ve used it in the API Monitoring Platform and in production work at Metawurks AI.&rdquo;</em></td></tr>
+            <tr><td>&ldquo;Have you worked with Kubernetes?&rdquo;</td><td>Entity not in vocabulary &rarr; <em>&ldquo;Kubernetes isn&rsquo;t something I&rsquo;ve worked with yet. Closest in my stack: Docker and AWS (EC2, Lambda, S3).&rdquo;</em> Honest, and still useful.</td></tr>
+            <tr><td>&ldquo;What&rsquo;s your experience?&rdquo;</td><td>experience intent &rarr; both roles, real dates, one line each, rendered as a compact timeline fragment.</td></tr>
+            <tr><td>&ldquo;Are you open to work?&rdquo;</td><td>availability intent &rarr; profile availability line + contact links.</td></tr>
+            <tr><td>&ldquo;What&rsquo;s your favourite film?&rdquo;</td><td>Below threshold, no intent &rarr; graceful deflect + three generated suggestions.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Making it <em>feel</em> like an assistant</h3>
+      <p>The engineering above is invisible; the experience is what a visitor judges. Four cheap details do the work: a brief considered pause (~300&nbsp;ms) with animated thinking dots; a typewriter reveal of the composed answer at ~18&nbsp;ms per character, click-to-complete; answer blocks that animate in with a stagger; and suggested questions that shuffle to match whatever section you&rsquo;re currently scrolled to. All of it is CSS and <code>requestAnimationFrame</code> &mdash; no cost, no latency.</p>
+
+      <div class="note alert">
+        <span class="label">Naming it honestly</span>
+        <p>The mockup labels this &ldquo;AI Portfolio Assistant&rdquo;. Retrieval and ranking are legitimately AI, so the label isn&rsquo;t false &mdash; but do <strong>not</strong> add &ldquo;powered by GPT/Claude&rdquo; badges, because that would be. Recommended microcopy: <em>&ldquo;Ask anything about my work &mdash; answers come straight from my portfolio.&rdquo;</em> Accurate, inviting, and the precision itself reads as confidence.</p>
+      </div>
+
+      <h3>Quality gate</h3>
+      <p>The unusual advantage of a deterministic engine is that it is genuinely testable. <code>fixtures.test.ts</code> holds ~40 question&rarr;expected-topic pairs, including deliberate misses and misspellings, and runs in CI. If a content edit breaks retrieval, the build tells you &mdash; something no LLM-backed assistant can offer.</p>
+    </div>
+  </section>
+
+  <!-- ============ 06 MOTION ============ -->
+  <section>
+    <div class="rail"><b>06</b><span>Motion &amp;<br>Design</span></div>
+    <div class="body-col">
+      <h2>The animated layer, specified properly</h2>
+      <p>You want it to feel high-end and alive. The gap between &ldquo;advanced&rdquo; and &ldquo;janky&rdquo; is almost entirely discipline, so this is specified as a system rather than a list of effects.</p>
+
+      <h3>The hero brain &mdash; the centrepiece</h3>
+      <p>You asked for the brain to rotate slowly. The honest problem: the image you shared is a flat picture of a 3&nbsp;D object, and CSS-rotating it looks broken rather than dimensional &mdash; the lighting and perspective stay fixed while the shape spins.</p>
+      <p><strong>Recommendation: generate it instead.</strong> A Canvas 2&nbsp;D neural point-cloud, tuned to resemble the reference:</p>
+      <ul>
+        <li>~220 points sampled across a brain-shaped volume (two lobes plus stem), deterministically seeded so it renders identically every load.</li>
+        <li>Rotation of ~0.0025&nbsp;rad per frame around the vertical axis &mdash; one full turn in roughly 42&nbsp;seconds. Slow enough to feel ambient, fast enough to read as alive.</li>
+        <li>Perspective projection with depth-driven size and opacity, so the far side genuinely recedes.</li>
+        <li>Synapse lines between near neighbours, opacity by depth, capped at ~350 edges.</li>
+        <li>A travelling signal pulse firing along a random edge roughly every 800&nbsp;ms &mdash; the detail that makes it read as <em>neural</em> rather than decorative.</li>
+        <li>The reference&rsquo;s glowing base platform, as an elliptical ring with a slow rotating gradient sweep.</li>
+        <li>&plusmn;6&deg; damped parallax toward the cursor.</li>
+      </ul>
+      <p>It is roughly 6&nbsp;KB of code against a ~500&nbsp;KB image, stays crisp on every display, recolours itself from your design tokens in both themes, and genuinely rotates. The fallback if you&rsquo;d rather keep your image: composite it over a rotating ring and give it a slow float and depth parallax &mdash; convincing, and about an hour&rsquo;s work instead of half a day. Decision 2 in &sect;08.</p>
+
+      <h3>Five layers of motion</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Layer</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td>Entrance</td><td>One orchestrated page-load sequence: nav settles, headline rises word by word on a 60&nbsp;ms stagger, brain fades up and starts turning, actions spring in last. Runs once.</td></tr>
+            <tr><td>Scroll narrative</td><td>Each section enters <em>differently</em> &mdash; the same fade-up five times is the tell of a generated site. Journey draws its timeline as you scroll; projects wipe in on a clip-path; skill clusters stagger; the contact wave amplifies on approach.</td></tr>
+            <tr><td>Interaction</td><td>Magnetic buttons that lean toward the cursor; link underlines that draw rather than appear; project cards that lift with a light source tracking the pointer; a nav pill that slides between active sections.</td></tr>
+            <tr><td>Ambient</td><td>The brain; a slow gradient-mesh drift behind the hero; the signal wave in contact; a 2&ndash;3% grain overlay for depth. All paused by IntersectionObserver when off-screen.</td></tr>
+            <tr><td>Transition</td><td>Native View Transitions for theme switching and any route change &mdash; free, progressive, and smoother than a JS crossfade.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The discipline that keeps it smooth</h3>
+      <ul>
+        <li><strong>Compositor only.</strong> Animate <code>transform</code> and <code>opacity</code>, never <code>top</code>, <code>left</code>, <code>width</code>, or <code>height</code>. This single rule is most of the difference between 60&nbsp;fps and stutter.</li>
+        <li><strong>Nothing animates off-screen.</strong> Every canvas and ambient loop is gated by IntersectionObserver and stops on tab blur.</li>
+        <li><strong>Canvas budget.</strong> DPR capped at 2; particle count scales with viewport (~120 on mobile); glow drawn from a pre-rendered sprite rather than per-point <code>shadowBlur</code>, which is the usual cause of canvas frame drops.</li>
+        <li><strong>Zero layout shift.</strong> Every animated element has its space reserved before it animates. Entrances must not move the page.</li>
+        <li><strong>Reduced motion is a real alternative.</strong> One flag from L3 disables the lot &mdash; the brain renders a single static frame, reveals become instant, ambient loops never start. Not shortened durations: genuinely still, and genuinely complete.</li>
+        <li><strong>Per-section imports.</strong> Motion code is dynamically imported so the initial route stays under budget.</li>
+      </ul>
+
+      <h3>Visual direction</h3>
+      <p>Keep the reference&rsquo;s instincts &mdash; deep ground, luminous accent, oversized type, real whitespace &mdash; while avoiding its one AI-tell: the violet-to-blue gradient is the single most over-produced palette in generated design, and a reviewer will have seen it fifty times this month. Proposal: a near-black ground with a faint cool bias, <em>one</em> luminous accent carrying every emphasis and interactive state, an editorial display face against a clean body face, and hairline rules doing the structural work that cards do in the mockup. I&rsquo;ll present the palette and type pairing for your approval at the start of Phase 3, before any section is built.</p>
+    </div>
+  </section>
+
+  <!-- ============ 07 COST ============ -->
+  <section>
+    <div class="rail"><b>07</b><span>Cost<br>Ledger</span></div>
+    <div class="body-col">
+      <h2>Every line item, zeroed</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Line item</th><th>Monthly</th><th>How it&rsquo;s zero</th></tr></thead>
+          <tbody>
+            <tr><td>Hosting</td><td class="zero">$0</td><td>Vercel Hobby. 100&nbsp;GB bandwidth &mdash; a portfolio uses a fraction of a percent. Cloudflare Pages and GitHub Pages are equally free fallbacks.</td></tr>
+            <tr><td>Assistant</td><td class="zero">$0</td><td>Runs in the visitor&rsquo;s browser. No API, no key, no server invocation.</td></tr>
+            <tr><td>Hero visual</td><td class="zero">$0</td><td>Generated in Canvas. No stock asset, no licence, no CDN.</td></tr>
+            <tr><td>Fonts</td><td class="zero">$0</td><td>Self-hosted open-licence faces, subset and served from your own origin. No Google Fonts request.</td></tr>
+            <tr><td>Database / CMS</td><td class="zero">$0</td><td>Neither exists. Content is typed files in git.</td></tr>
+            <tr><td>Analytics</td><td class="zero">$0</td><td>Vercel Analytics free tier, behind a flag, off by default.</td></tr>
+            <tr><td>SSL / CDN</td><td class="zero">$0</td><td>Included with every host above.</td></tr>
+            <tr><td>Domain <em>(optional)</em></td><td class="num">$0 or ~$10/yr</td><td><code>faiz.vercel.app</code> costs nothing. A custom domain is the only spend anywhere in this project, and it is entirely your call. Decision 3 in &sect;08.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>Recurring cost with the free subdomain: exactly zero, indefinitely.</strong> Nothing in the architecture can generate a bill, because nothing in it is metered &mdash; there is no usage-based service anywhere in the stack.</p>
+    </div>
+  </section>
+
+  <!-- ============ 08 PHASES ============ -->
+  <section>
+    <div class="rail"><b>08</b><span>Build<br>Plan</span></div>
+    <div class="body-col">
+      <h2>Seven phases, each one deployable</h2>
+      <div class="phases">
+        <div class="phase">
+          <span class="p-id">Phase 0</span>
+          <span class="p-body"><span class="p-title">Foundation</span><span class="p-desc">Repo + git init, Next 15 / TS strict / Tailwind v4, token scaffold, <code>env.ts</code>, Vercel project linked.</span></span>
+          <span class="p-cost">0.5 d</span>
+          <span class="p-exit" style="grid-column: 2"><em>Exit criteria</em>Blank styled page live on a Vercel URL; <code>npm run build</code> green.</span>
+        </div>
+        <div class="phase">
+          <span class="p-id">Phase 1</span>
+          <span class="p-body"><span class="p-title">Content layer</span><span class="p-desc">Zod schemas for all content types; every r&eacute;sum&eacute; fact entered; vocabulary map seeded; section registry; validation wired into build.</span></span>
+          <span class="p-cost">0.5 d</span>
+          <span class="p-exit" style="grid-column: 2"><em>Exit criteria</em>Content validates; a deliberately broken entry fails the build with a useful error.</span>
+        </div>
+        <div class="phase">
+          <span class="p-id">Phase 2</span>
+          <span class="p-body"><span class="p-title">Motion &amp; design system</span><span class="p-desc">Palette and type pairing approved, token set complete, <code>motion.ts</code> defined, reduced-motion gate, nav from registry, theme toggle with View Transitions, scroll progress, focus states.</span></span>
+          <span class="p-cost">1.5 d</span>
+          <span class="p-exit" style="grid-column: 2"><em>Exit criteria</em>Nav is data-driven; both themes pass WCAG AA; the reduced-motion flag verifiably kills all motion.</span>
+        </div>
+        <div class="phase">
+          <span class="p-id">Phase 3</span>
+          <span class="p-body"><span class="p-title">Hero &amp; the brain</span><span class="p-desc">The centrepiece: Canvas neural point-cloud, rotation, synapses, pulses, base ring, cursor parallax, entrance choreography, derived stat counters.</span></span>
+          <span class="p-cost">1.5 d</span>
+          <span class="p-exit" style="grid-column: 2"><em>Exit criteria</em>Steady 60&nbsp;fps on a mid-range phone; pauses off-screen and on tab blur; renders a clean static frame under reduced motion.</span>
+        </div>
+        <div class="phase">
+          <span class="p-id">Phase 4</span>
+          <span class="p-body"><span class="p-title">Sections 02 &middot; 03 &middot; 05</span><span class="p-desc">Journey with a scroll-drawn timeline, Projects with per-card choreography, Contact with the signal wave. Fully content-driven.</span></span>
+          <span class="p-cost">2 d</span>
+          <span class="p-exit" style="grid-column: 2"><em>Exit criteria</em><strong>A complete, animated, shippable portfolio exists.</strong> Lighthouse &ge; 95 mobile; zero content literals in <code>components/</code>.</span>
+        </div>
+        <div class="phase">
+          <span class="p-id">Phase 5</span>
+          <span class="p-body"><span class="p-title">The assistant</span><span class="p-desc">Passages, build-time index, tokeniser, BM25, intents, composers, fixture suite, and the conversational UI with typewriter reveal.</span></span>
+          <span class="p-cost">1.5 d</span>
+          <span class="p-exit" style="grid-column: 2"><em>Exit criteria</em>All ~40 fixtures pass; unknown questions deflect gracefully; works with the network disconnected.</span>
+        </div>
+        <div class="phase">
+          <span class="p-id">Phase 6</span>
+          <span class="p-body"><span class="p-title">Ship</span><span class="p-desc">OG image, sitemap, robots, JSON-LD person schema, analytics flag, domain, README runbook, cross-browser and device pass.</span></span>
+          <span class="p-cost">0.5 d</span>
+          <span class="p-exit" style="grid-column: 2"><em>Exit criteria</em>Link preview renders on LinkedIn and WhatsApp; a stranger can clone and run it with no configuration at all.</span>
+        </div>
+      </div>
+      <p style="margin-top:0.9rem"><strong>Total &asymp; 8 working days</strong> &mdash; one more than Rev. A: the assistant got simpler, but the motion work grew by more than that. Phases 0&ndash;4 (&asymp;6 days) get you a portfolio you could send to a recruiter today.</p>
+    </div>
+  </section>
+
+  <!-- ============ 09 DECISIONS ============ -->
+  <section>
+    <div class="rail"><b>09</b><span>Open<br>Decisions</span></div>
+    <div class="body-col">
+      <h2>Four things left for you</h2>
+      <p>Down from six &mdash; confirming the mockup was placeholder resolved the email, the stats, and the phantom project outright.</p>
+
+      <div class="decision">
+        <span class="q">1. Skill bars, or capability clusters?</span>
+        <span class="a"><b>Recommendation:</b> clusters with evidence links. Self-assigned percentages read as decoration to an engineer; &ldquo;RAG, agentic AI, MCP &rarr; see this project&rdquo; is verifiable. The schema supports both, so it&rsquo;s reversible &mdash; but it changes the composition of section 02, so decide before Phase 4.</span>
+      </div>
+      <div class="decision">
+        <span class="q">2. Generated brain, or your image plus a rotating ring?</span>
+        <span class="a"><b>Recommendation:</b> generated. It&rsquo;s the difference between something that genuinely rotates and something that visibly spins a flat picture &mdash; and it&rsquo;s 6&nbsp;KB against 500&nbsp;KB. Costs about half a day more. Your image stays as the fallback if you prefer it.</span>
+      </div>
+      <div class="decision">
+        <span class="q">3. Free subdomain, or a custom domain?</span>
+        <span class="a"><code>faiz.vercel.app</code> is free forever and perfectly respectable. A domain like <code>mdfaiz.dev</code> is roughly &#8377;800&ndash;1,200 a year and does read more established on a r&eacute;sum&eacute;. <b>The only possible cost in the whole project</b> &mdash; entirely optional, and easy to add later without changing anything.</span>
+      </div>
+      <div class="decision">
+        <span class="q">4. Blog: build the shell, or leave it out?</span>
+        <span class="a"><b>Recommendation:</b> build it behind a flag, ship with the flag off. About two hours now, saves a refactor when you have your first post. An empty blog with a &ldquo;coming soon&rdquo; is worse than no blog at all.</span>
+      </div>
+
+      <div class="note">
+        <span class="label">Also useful, not blocking</span>
+        <p>Live URLs and repository links for the four projects, if they exist &mdash; a &ldquo;view source&rdquo; link is worth more than any description. And your LinkedIn and GitHub URLs, which the CV references but doesn&rsquo;t spell out.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 GATES ============ -->
+  <section>
+    <div class="rail"><b>10</b><span>Gates</span></div>
+    <div class="body-col">
+      <h2>What &ldquo;done&rdquo; is measured against</h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Gate</th><th>Target</th><th>Why it&rsquo;s the target</th></tr></thead>
+          <tbody>
+            <tr><td>LCP (mobile, 4G)</td><td class="num">&lt; 2.0 s</td><td>An AI engineer&rsquo;s portfolio that loads slowly undercuts its own argument.</td></tr>
+            <tr><td>CLS</td><td class="num">&lt; 0.05</td><td>Entrance animations are the usual culprit &mdash; reserve space before animating.</td></tr>
+            <tr><td>Hero frame rate</td><td class="num">60 fps</td><td>Measured on a mid-range Android, not a desktop. A stuttering brain is worse than no brain.</td></tr>
+            <tr><td>Lighthouse a11y</td><td class="num">100</td><td>Non-negotiable. Keyboard-reachable, visible focus, semantic landmarks, real alt text.</td></tr>
+            <tr><td>Assistant response</td><td class="num">&lt; 50 ms</td><td>Local computation. Any perceived delay is the deliberate 300&nbsp;ms pause, not the engine.</td></tr>
+            <tr><td>Assistant fixtures</td><td class="num">40 / 40</td><td>The quality gate a deterministic engine makes possible.</td></tr>
+            <tr><td>Content literals in <code>components/</code></td><td class="num">0</td><td>The no-hardcode rule, made checkable. Enforced pre-commit.</td></tr>
+            <tr><td>Total JS (initial route)</td><td class="num">&lt; 200 KB gz</td><td>Motion is the main risk; import it per-section, not globally.</td></tr>
+            <tr><td>Works fully offline after first load</td><td class="num">yes</td><td>Proves nothing in the experience depends on a paid service.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Principal risks</h3>
+      <ul>
+        <li><strong>Animation jank on mid-range phones &mdash; now the highest-impact risk.</strong> An ambitious hero that stutters is worse than a modest one that doesn&rsquo;t. Mitigated by the Phase 3 exit criterion being measured on real hardware, and by the compositor-only rule.</li>
+        <li><strong>Assistant brittleness.</strong> A deterministic engine handles unusual phrasings less gracefully than an LLM. Mitigated by the vocabulary alias map being content-layer data you can extend in seconds, and by a fallback that always offers something useful rather than failing.</li>
+        <li><strong>Over-animation.</strong> Too much motion is the fastest route to a site reading as AI-generated. Mitigated by the five-layer budget in &sect;06 being written down before we start, and by varying the choreography per section rather than repeating one reveal.</li>
+        <li><strong>Generic palette.</strong> The reference&rsquo;s violet gradient is the most common generated look there is. Mitigated by an explicit direction review in Phase 2, before any section is built.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>End of plan &middot; Rev. B &middot; Awaiting decisions in &sect;09</footer>
+</div>
+
+
+</body>
+</html>

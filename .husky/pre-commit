@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+# The build plan's standing rules, enforced before anything can be committed.
+# Rules added after the fact never hold — so they run from the first commit.
+
+echo "→ typecheck (R6: strict types)"
+npm run typecheck || exit 1
+
+echo "→ lint staged files (R2, R3, R4: no raw colours, timings, or env reads)"
+npx lint-staged || exit 1
+
+echo "→ literal scan (R1: no content facts in components)"
+npm run check:literals || exit 1
+
+echo "→ tests"
+npm run test || exit 1
+
+echo "✓ all gates passed"
