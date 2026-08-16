@@ -1,24 +1,28 @@
 /**
  * The neural point cloud, generated rather than drawn.
  *
- * Built as an anatomical silhouette in sagittal (side) profile: frontal and
- * occipital bulges, a temporal lobe, cerebellum, and a brainstem descending
- * toward the platform. Sampling each lobe and then culling points that fall
- * inside a neighbour yields the union *surface* — without that cull the lobes
- * read as overlapping balls rather than one organ.
+ * What makes a shape read as a brain in under a second is not the overall
+ * mass — it is three specific features:
  *
- * Generation is deterministic: the same seed produces the same brain on every
- * load and on every machine.
+ *   1. the Sylvian fissure, the deep notch separating the temporal lobe from
+ *      the cerebrum
+ *   2. sulci, the grooves running across the cortex
+ *   3. a cerebellum set apart at the back, with a much finer fold texture
  *
- * Axes: x = left/right (width), y = up/down, z = front/back.
+ * All three are carved by *removing* points rather than by displacing them.
+ * Smooth noise gives a lumpy ball; cut grooves give a brain.
+ *
+ * Generation is deterministic — the same seed produces the same brain on
+ * every load and every machine.
+ *
+ * Axes: x = left/right (width), y = up/down, z = front/back (+z is forward).
  */
 
 export type Point3 = { x: number; y: number; z: number }
 export type Edge = { a: number; b: number }
 
 export type BrainPoint = Point3 & {
-  /** Cortex points carry the glow; stem and interior sit quieter. */
-  kind: 'cortex' | 'stem' | 'interior'
+  kind: 'cortex' | 'cerebellum' | 'stem' | 'interior'
 }
 
 export type BrainGeometry = {
@@ -30,64 +34,58 @@ type Lobe = {
   centre: Point3
   radii: Point3
   weight: number
+  kind: 'cortex' | 'cerebellum'
 }
 
 /**
- * Overlapping ellipsoids whose union reads as a brain from the side.
- * Tuned by silhouette rather than by anatomy textbook — what matters is that
- * a viewer recognises it in under a second.
+ * Ellipsoids whose union forms the mass. Proportioned like a real brain:
+ * clearly longer front-to-back than it is tall, and narrower than it is long.
  */
 const LOBES: readonly Lobe[] = [
-  // Main cerebrum.
+  // Main cerebrum. Distinctly longer front-to-back than tall — a brain that
+  // is as tall as it is long reads as a ball however it is textured.
   {
-    centre: { x: 0, y: 0.16, z: -0.02 },
-    radii: { x: 0.4, y: 0.42, z: 0.56 },
-    weight: 0.34,
+    centre: { x: 0, y: 0.12, z: -0.02 },
+    radii: { x: 0.35, y: 0.34, z: 0.66 },
+    weight: 0.4,
+    kind: 'cortex',
   },
-  // Frontal bulge.
+  // Frontal pole.
   {
-    centre: { x: 0, y: 0.14, z: 0.4 },
-    radii: { x: 0.34, y: 0.33, z: 0.3 },
-    weight: 0.18,
-  },
-  // Occipital bulge.
-  {
-    centre: { x: 0, y: 0.08, z: -0.46 },
-    radii: { x: 0.32, y: 0.31, z: 0.26 },
+    centre: { x: 0, y: 0.04, z: 0.46 },
+    radii: { x: 0.3, y: 0.29, z: 0.3 },
     weight: 0.16,
+    kind: 'cortex',
   },
-  // Temporal lobe, projecting forward and down.
+  // Occipital pole.
   {
-    centre: { x: 0, y: -0.24, z: 0.16 },
-    radii: { x: 0.29, y: 0.2, z: 0.36 },
-    weight: 0.18,
+    centre: { x: 0, y: 0.04, z: -0.52 },
+    radii: { x: 0.28, y: 0.27, z: 0.26 },
+    weight: 0.13,
+    kind: 'cortex',
   },
-  // Cerebellum, tucked under the back.
+  // Temporal lobe — projects forward and down, below the fissure.
   {
-    centre: { x: 0, y: -0.34, z: -0.4 },
-    radii: { x: 0.25, y: 0.19, z: 0.24 },
+    centre: { x: 0, y: -0.28, z: 0.14 },
+    radii: { x: 0.28, y: 0.17, z: 0.36 },
+    weight: 0.17,
+    kind: 'cortex',
+  },
+  // Cerebellum, set back and low.
+  {
+    centre: { x: 0, y: -0.36, z: -0.44 },
+    radii: { x: 0.25, y: 0.18, z: 0.23 },
     weight: 0.14,
+    kind: 'cerebellum',
   },
 ]
 
-/** Points sit in a thin shell rather than filling the volume. */
-const SHELL_MIN = 0.9
-
-/** Amplitude of the surface undulation that suggests cortical folds. */
-const FOLD_DEPTH = 0.07
-
-/** Neighbours closer than this become synapses. */
-const EDGE_RADIUS = 0.19
-
-/** Share of the budget spent on faint interior structure. */
-const INTERIOR_SHARE = 0.12
-
-/** Share of the budget spent on the brainstem. */
-const STEM_SHARE = 0.06
-
+const SHELL_MIN = 0.93
+const EDGE_RADIUS = 0.155
+const INTERIOR_SHARE = 0.1
+const STEM_SHARE = 0.07
 const TAU = Math.PI * 2
 
-/** mulberry32 — small, fast, and seeded so the geometry is reproducible. */
 function createRandom(seed: number): () => number {
   let state = seed >>> 0
 
@@ -100,7 +98,6 @@ function createRandom(seed: number): () => number {
   }
 }
 
-/** Normalised ellipsoid distance: below 1 is inside. */
 function insideness(point: Point3, lobe: Lobe): number {
   const dx = (point.x - lobe.centre.x) / lobe.radii.x
   const dy = (point.y - lobe.centre.y) / lobe.radii.y
@@ -109,15 +106,36 @@ function insideness(point: Point3, lobe: Lobe): number {
 }
 
 /**
- * Layered sines standing in for cortical folding. Two frequencies rather than
- * one, so the ridges do not fall into an obvious repeating band.
+ * Sulci. A periodic field across the surface; points falling in the narrow
+ * band near zero are removed, leaving grooves between raised gyri. The
+ * modulating term keeps the grooves from running as parallel stripes.
  */
-function fold(theta: number, phi: number): number {
-  return (
-    1 +
-    FOLD_DEPTH * Math.sin(theta * 6) * Math.sin(phi * 5) +
-    FOLD_DEPTH * 0.55 * Math.sin(theta * 11 + 1.7) * Math.cos(phi * 9)
+function inSulcus(point: Point3, frequency: number, width: number): boolean {
+  const field = Math.sin(
+    frequency * point.z +
+      frequency * 0.55 * point.y +
+      1.6 * Math.sin(frequency * 0.7 * point.x),
   )
+  return Math.abs(field) < width
+}
+
+/**
+ * The Sylvian fissure — the deep horizontal cleft between the temporal lobe
+ * and the rest of the cerebrum. This single feature does more for
+ * recognisability than any amount of surface detail.
+ */
+function inSylvianFissure(point: Point3): boolean {
+  if (point.z < -0.34 || point.z > 0.5) return false
+
+  // The cleft rises slightly toward the front of the brain.
+  const line = -0.12 + point.z * 0.12
+  return Math.abs(point.y - line) < 0.045
+}
+
+/** The gap separating cerebellum from the occipital lobe above it. */
+function inTransverseFissure(point: Point3): boolean {
+  if (point.z > -0.24) return false
+  return Math.abs(point.y - -0.19) < 0.035
 }
 
 export function createBrainGeometry(
@@ -130,50 +148,58 @@ export function createBrainGeometry(
 
   const stemCount = Math.round(count * STEM_SHARE)
   const interiorCount = Math.round(count * INTERIOR_SHARE)
-  const cortexBudget = count - stemCount - interiorCount
+  const surfaceBudget = count - stemCount - interiorCount
 
-  // --- cortex surface ---------------------------------------------------
+  // --- cortical surface --------------------------------------------------
   for (const [index, lobe] of LOBES.entries()) {
-    const target = Math.round(cortexBudget * lobe.weight)
+    const target = Math.round(surfaceBudget * lobe.weight)
+    const isCerebellum = lobe.kind === 'cerebellum'
+
+    // The cerebellum's folia are much finer than cerebral gyri, and that
+    // contrast is a large part of why the region reads as a cerebellum.
+    const frequency = isCerebellum ? 46 : 15
+    const grooveWidth = isCerebellum ? 0.3 : 0.2
+
     let placed = 0
     let attempts = 0
 
-    // Rejection sampling: a surface point that lies inside another lobe is
-    // interior to the union and would show through the silhouette.
-    while (placed < target && attempts < target * 12) {
+    while (placed < target && attempts < target * 30) {
       attempts += 1
 
       const theta = random() * TAU
       const phi = Math.acos(2 * random() - 1)
       const sinPhi = Math.sin(phi)
-
-      const scale = (SHELL_MIN + random() * (1 - SHELL_MIN)) * fold(theta, phi)
+      const shell = SHELL_MIN + random() * (1 - SHELL_MIN)
 
       const candidate: Point3 = {
-        x: lobe.centre.x + sinPhi * Math.cos(theta) * lobe.radii.x * scale,
-        y: lobe.centre.y + Math.cos(phi) * lobe.radii.y * scale,
-        z: lobe.centre.z + sinPhi * Math.sin(theta) * lobe.radii.z * scale,
+        x: lobe.centre.x + sinPhi * Math.cos(theta) * lobe.radii.x * shell,
+        y: lobe.centre.y + Math.cos(phi) * lobe.radii.y * shell,
+        z: lobe.centre.z + sinPhi * Math.sin(theta) * lobe.radii.z * shell,
       }
 
+      // Points buried inside a neighbouring lobe are interior to the union
+      // and would show through the silhouette.
       let buried = false
       for (const [otherIndex, other] of LOBES.entries()) {
         if (otherIndex === index) continue
-        if (insideness(candidate, other) < 0.94) {
+        if (insideness(candidate, other) < 0.93) {
           buried = true
           break
         }
       }
-
       if (buried) continue
 
-      points.push({ ...candidate, kind: 'cortex' })
+      if (inSulcus(candidate, frequency, grooveWidth)) continue
+      if (inSylvianFissure(candidate)) continue
+      if (inTransverseFissure(candidate)) continue
+
+      points.push({ ...candidate, kind: lobe.kind })
       placed += 1
     }
   }
 
-  // --- interior structure ------------------------------------------------
-  // A sparse scatter inside the shell. The reference image reads as volume
-  // rather than as an empty husk, and this is what supplies that.
+  // --- interior ----------------------------------------------------------
+  // A sparse scatter so the cloud reads as volume rather than an empty husk.
   for (let i = 0; i < interiorCount; i += 1) {
     const lobe = LOBES[Math.floor(random() * LOBES.length)]
     if (!lobe) continue
@@ -181,7 +207,7 @@ export function createBrainGeometry(
     const theta = random() * TAU
     const phi = Math.acos(2 * random() - 1)
     const sinPhi = Math.sin(phi)
-    const depth = 0.25 + random() * 0.5
+    const depth = 0.3 + random() * 0.45
 
     points.push({
       x: lobe.centre.x + sinPhi * Math.cos(theta) * lobe.radii.x * depth,
@@ -192,24 +218,25 @@ export function createBrainGeometry(
   }
 
   // --- brainstem ---------------------------------------------------------
-  // Descends toward the platform, tapering then flaring, so the brain reads
-  // as sitting on the light rather than floating above it.
+  // Curves down and slightly forward, thick at the top where it meets the
+  // brain and tapering toward the platform.
   for (let i = 0; i < stemCount; i += 1) {
     const t = i / Math.max(1, stemCount - 1)
     const angle = random() * TAU
-    const radius = (0.11 - t * 0.055) * (0.55 + random() * 0.45)
+    const radius = (0.115 - t * 0.06) * (0.6 + random() * 0.4)
+
+    // Slight forward lean, as the real brainstem has.
+    const centreZ = -0.2 + t * t * 0.14
 
     points.push({
       x: Math.cos(angle) * radius,
-      y: -0.34 - t * 0.5,
-      z: -0.16 + Math.sin(angle) * radius + t * 0.06,
+      y: -0.26 - t * 0.56,
+      z: centreZ + Math.sin(angle) * radius * 0.8,
       kind: 'stem',
     })
   }
 
   // --- synapses ----------------------------------------------------------
-  // Nearest neighbours only. Arbitrary long connections read as noise; short
-  // ones read as structure.
   const candidates: { a: number; b: number; d2: number }[] = []
   const limit = EDGE_RADIUS * EDGE_RADIUS
 

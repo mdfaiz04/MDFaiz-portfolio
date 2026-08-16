@@ -22,7 +22,9 @@ import {
 export type BrainRendererConfig = {
   rotationSpeed: number
   pulseInterval: number
-  parallaxDeg: number
+  orbitYawDeg: number
+  orbitPitchDeg: number
+  orbitEase: number
 }
 
 export type PointerState = { x: number; y: number }
@@ -65,8 +67,8 @@ const MAX_PULSES = 5
  */
 const SIDE_PROFILE = Math.PI / 2
 
-/** Only the nearest points get an expensive second bloom pass. */
-const BLOOM_FRACTION = 0.4
+/** Only the nearer points get an expensive second bloom pass. */
+const BLOOM_FRACTION = 0.62
 
 /**
  * Radial sprite. Glow is drawn from a pre-rendered image rather than
@@ -102,10 +104,17 @@ export function createBrainRenderer(
   let width = 0
   let height = 0
   /** Opens on the silhouette that reads as a brain, then rotates away. */
-  let rotation = SIDE_PROFILE
+  let autoRotation = SIDE_PROFILE
   let sinceLastPulse = 0
-  let tiltX = 0
   let elapsedTotal = 0
+
+  /** Orbit offsets driven by the cursor, eased toward their targets. */
+  let yaw = 0
+  let pitch = 0
+
+  /** Composed each frame from the automatic turn plus the cursor orbit. */
+  let rotation = SIDE_PROFILE
+  let tiltX = 0
 
   let near = toRgb(initialPalette.near)
   let mid = toRgb(initialPalette.mid)
@@ -292,8 +301,8 @@ export function createBrainRenderer(
       // Bloom pass on the near half only — the far side gains nothing
       // visible from it and it doubles the draw cost.
       if (isCortex && closeness > 1 - BLOOM_FRACTION) {
-        const bloomSize = (18 + closeness * 26) * target.scale
-        ctx.globalAlpha = (closeness - (1 - BLOOM_FRACTION)) * 0.5
+        const bloomSize = (22 + closeness * 34) * target.scale
+        ctx.globalAlpha = (closeness - (1 - BLOOM_FRACTION)) * 0.62
         ctx.drawImage(
           bloomSprite,
           target.x - bloomSize / 2,
@@ -358,13 +367,21 @@ export function createBrainRenderer(
       const dt = Math.min(elapsed, MAX_FRAME_MS)
       elapsedTotal += dt
 
-      rotation += config.rotationSpeed * (dt / 16.667)
+      autoRotation += config.rotationSpeed * (dt / 16.667)
 
-      // Ease toward the pointer rather than tracking it, so the parallax
-      // reads as weight instead of a cursor attachment.
-      const maxTilt = config.parallaxDeg * DEG_TO_RAD
-      tiltX += (pointer.y * maxTilt - tiltX) * 0.05
-      rotation += (pointer.x * maxTilt - 0) * 0.00035
+      // The cursor orbits the brain: yaw turns it left and right, pitch tips
+      // it toward and away. Both ease toward their target rather than
+      // snapping, so the object feels like it has mass — and both are
+      // offsets *added* to the automatic turn, so it keeps rotating on its
+      // own while still answering to the pointer.
+      const targetYaw = pointer.x * config.orbitYawDeg * DEG_TO_RAD
+      const targetPitch = pointer.y * config.orbitPitchDeg * DEG_TO_RAD
+
+      yaw += (targetYaw - yaw) * config.orbitEase
+      pitch += (targetPitch - pitch) * config.orbitEase
+
+      rotation = autoRotation + yaw
+      tiltX = pitch
 
       sinceLastPulse += dt
       if (
@@ -394,6 +411,9 @@ export function createBrainRenderer(
       // Near side-profile. The sagittal silhouette is the view that reads as
       // a brain in under a second; a three-quarter angle merges the lobes
       // into an anonymous blob.
+      autoRotation = SIDE_PROFILE
+      yaw = 0
+      pitch = -0.06
       rotation = SIDE_PROFILE
       tiltX = -0.06
       elapsedTotal = 0

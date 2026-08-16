@@ -54,7 +54,9 @@ export function NeuralBrain() {
       {
         rotationSpeed: brain.rotationSpeed,
         pulseInterval: brain.pulseInterval,
-        parallaxDeg: brain.parallaxDeg,
+        orbitYawDeg: brain.orbitYawDeg,
+        orbitPitchDeg: brain.orbitPitchDeg,
+        orbitEase: brain.orbitEase,
       },
     )
 
@@ -133,9 +135,13 @@ export function NeuralBrain() {
 
     const onPointerMove = (event: PointerEvent) => {
       if (event.pointerType !== 'mouse') return
-      const rect = host.getBoundingClientRect()
-      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-      pointer.y = ((event.clientY - rect.top) / rect.height) * 2 - 1
+
+      // Measured against the viewport, not the canvas box. Relative to the
+      // canvas, a cursor anywhere else on the page produces values far
+      // outside -1…1 and pins the orbit at its limit; against the viewport
+      // the brain turns smoothly as the cursor crosses the whole page.
+      pointer.x = (event.clientX / window.innerWidth) * 2 - 1
+      pointer.y = (event.clientY / window.innerHeight) * 2 - 1
     }
 
     // Tokens can change under the visitor (a future theme switch), so the

@@ -60,13 +60,20 @@ export const brain = {
    * scattered specks. Mobile takes roughly half, since the canvas is
    * smaller and the device has less to give.
    */
-  pointCount: { desktop: 900, mobile: 420 },
+  pointCount: { desktop: 1100, mobile: 450 },
   /** Hard cap on drawn synapses; the limiting factor for frame rate. */
-  edgeCap: { desktop: 1500, mobile: 700 },
+  edgeCap: { desktop: 2000, mobile: 800 },
   /** Milliseconds between signal pulses travelling an edge. */
   pulseInterval: 520,
-  /** Maximum cursor parallax, in degrees. */
-  parallaxDeg: 7,
+  /**
+   * How far the cursor can orbit the brain, in degrees. Large enough that
+   * moving the mouse visibly turns it in three dimensions — a few degrees of
+   * parallax reads as a wobble, not as control.
+   */
+  orbitYawDeg: 34,
+  orbitPitchDeg: 20,
+  /** How quickly the orbit eases toward the cursor. Lower is heavier. */
+  orbitEase: 0.055,
   /** Retina is worth it; beyond 2x is invisible and expensive. */
   dprCap: 2,
 } as const
