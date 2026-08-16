@@ -1,54 +1,101 @@
+import { MagneticButton } from '@/components/ui/MagneticButton'
+import { Reveal, RevealItem } from '@/components/ui/Reveal'
 import { counts, experienceSince, profile, visibleSections } from '@/content'
 
 /**
- * Phase 1 placeholder. The real page is composed in Phase 3 and Phase 4 by
- * mapping over the section registry — there will never be a hand-written
- * list of sections here.
+ * Phase 2 placeholder.
  *
- * It renders live content so the layer is proven end to end: every value
- * below comes from src/content, and the counters are derived, not typed.
+ * The hero proper is Phase 3 and the remaining sections are Phase 4. What
+ * this proves now is the system: the page maps over the section registry
+ * rather than listing sections, every value comes from the content layer,
+ * and every colour and timing comes from a token.
  */
 export default function HomePage() {
-  // Time-dependent, so it is read here in a Server Component and passed as a
-  // plain value. Reading the clock in a Client Component would produce a
-  // different result on the server than in the browser.
+  // Time-dependent, so it is read here in a Server Component and passed down
+  // as a plain value — reading the clock on the client would desynchronise
+  // the markup and trigger a hydration mismatch.
   const tenure = experienceSince(new Date())
 
   const stats = [
-    { label: 'experience', value: tenure.label },
-    { label: 'projects', value: String(counts.projects) },
-    { label: 'technologies', value: String(counts.technologies) },
-    { label: 'placements', value: String(counts.placements) },
+    { label: 'Experience', value: tenure.label },
+    { label: 'Projects', value: String(counts.projects) },
+    { label: 'Technologies', value: String(counts.technologies) },
+    { label: 'Placements', value: String(counts.placements) },
   ]
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-8 p-8">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <p className="font-mono text-xs tracking-widest uppercase opacity-60">
-          {profile.role}
-        </p>
-        <h1 className="font-mono text-3xl font-bold tracking-tight">
-          {profile.name}
-        </h1>
-        <p className="max-w-md text-sm opacity-70">{profile.tagline}</p>
-      </div>
+    <main id="main" className="flex flex-1 flex-col">
+      {visibleSections.map((section) => (
+        <section
+          key={section.id}
+          id={section.id}
+          className="scroll-mt-24 px-gutter py-section"
+        >
+          <div className="mx-auto max-w-6xl">
+            {section.id === 'hero' ? (
+              <Reveal stagger className="flex flex-col gap-6">
+                <RevealItem>
+                  <p className="text-accent-bright font-mono text-eyebrow uppercase">
+                    {profile.role}
+                  </p>
+                </RevealItem>
 
-      <dl className="flex flex-wrap justify-center gap-x-8 gap-y-3 font-mono text-xs">
-        {stats.map((stat) => (
-          <div key={stat.label} className="flex flex-col items-center gap-1">
-            <dt className="tracking-widest uppercase opacity-50">
-              {stat.label}
-            </dt>
-            <dd className="text-base font-bold">{stat.value}</dd>
+                <RevealItem>
+                  <h1 className="font-display text-display text-ink max-w-4xl font-extrabold text-balance">
+                    {profile.tagline}
+                  </h1>
+                </RevealItem>
+
+                <RevealItem>
+                  <p className="text-ink-muted text-lede max-w-measure">
+                    {profile.summary}
+                  </p>
+                </RevealItem>
+
+                <RevealItem>
+                  <dl className="border-rule-soft flex flex-wrap gap-x-10 gap-y-4 border-t pt-6">
+                    {stats.map((stat) => (
+                      <div key={stat.label} className="flex flex-col gap-1">
+                        <dt className="text-ink-faint font-mono text-eyebrow uppercase">
+                          {stat.label}
+                        </dt>
+                        <dd className="text-accent-bright font-mono text-xl font-bold tabular-nums">
+                          {stat.value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </RevealItem>
+
+                <RevealItem>
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <MagneticButton href="#projects">
+                      View my work
+                    </MagneticButton>
+                    <MagneticButton href="#contact" variant="outline">
+                      Get in touch
+                    </MagneticButton>
+                  </div>
+                </RevealItem>
+              </Reveal>
+            ) : (
+              <Reveal className="flex flex-col gap-3">
+                <p className="text-ink-ghost font-mono text-eyebrow uppercase">
+                  {section.stage}
+                </p>
+                <h2 className="font-display text-headline text-ink font-semibold">
+                  {section.navLabel}
+                </h2>
+                <div className="border-rule-soft max-w-measure border-t pt-4">
+                  <p className="text-ink-faint font-mono text-xs tracking-wider">
+                    Built in a later phase.
+                  </p>
+                </div>
+              </Reveal>
+            )}
           </div>
-        ))}
-      </dl>
-
-      <nav className="flex flex-wrap justify-center gap-4 font-mono text-xs opacity-60">
-        {visibleSections.map((section) => (
-          <span key={section.id}>{section.navLabel}</span>
-        ))}
-      </nav>
+        </section>
+      ))}
     </main>
   )
 }

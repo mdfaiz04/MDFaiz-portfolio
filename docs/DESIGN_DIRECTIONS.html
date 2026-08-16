@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;800&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Instrument+Serif:ital@0;1&family=Familjen+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --shell:      #0E0F10;
+    --shell-2:    #17191A;
+    --shell-ink:  #EDEFEF;
+    --shell-mute: #8A9396;
+    --shell-rule: #262A2B;
+    --ui: 'Archivo', system-ui, sans-serif;
+    --code: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--shell);
+    color: var(--shell-ink);
+    font-family: var(--ui);
+    line-height: 1.6;
+    padding: 0 1.25rem 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 62rem; margin: 0 auto; }
+
+  /* ---------- page head ---------- */
+
+  header.page {
+    padding: 4rem 0 2rem;
+    border-bottom: 1px solid var(--shell-rule);
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+  .kicker {
+    font-family: var(--code); font-size: 0.68rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--shell-mute);
+  }
+  header.page h1 {
+    font-family: var(--ui); font-weight: 700;
+    font-size: clamp(2rem, 5vw, 2.9rem); letter-spacing: -0.03em;
+    line-height: 1.05; margin: 0;
+  }
+  header.page p {
+    margin: 0; max-width: 58ch; color: var(--shell-mute); font-size: 1.02rem;
+  }
+
+  .howto {
+    margin-top: 0.75rem; border-left: 3px solid #5B6B6F;
+    padding: 0.85rem 1.1rem; background: var(--shell-2);
+    font-size: 0.95rem; color: var(--shell-ink);
+    display: flex; flex-direction: column; gap: 0.35rem;
+  }
+  .howto b { font-family: var(--code); font-size: 0.8rem; letter-spacing: 0.05em; }
+
+  /* ---------- direction block ---------- */
+
+  .dir { padding: 3.5rem 0; border-bottom: 1px solid var(--shell-rule); }
+
+  .dir-head {
+    display: flex; align-items: baseline; gap: 0.9rem;
+    flex-wrap: wrap; margin-bottom: 0.35rem;
+  }
+  .dir-num {
+    font-family: var(--code); font-size: 0.75rem; letter-spacing: 0.16em;
+    color: var(--shell-mute);
+  }
+  .dir-name {
+    font-family: var(--ui); font-weight: 700; font-size: 1.6rem;
+    letter-spacing: -0.02em;
+  }
+  .dir-tag {
+    font-family: var(--code); font-size: 0.68rem; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 0.2rem 0.5rem;
+    border: 1px solid var(--shell-rule); color: var(--shell-mute);
+  }
+  .dir-desc {
+    color: var(--shell-mute); max-width: 62ch; margin: 0 0 1.5rem;
+    font-size: 0.99rem;
+  }
+
+  /* ---------- mock ---------- */
+
+  .mock {
+    border-radius: 2px; overflow: hidden; position: relative;
+    min-height: 26rem; display: grid;
+    grid-template-columns: 1.05fr 0.95fr; align-items: center;
+    gap: 2rem; padding: 3rem 2.5rem;
+  }
+  @media (max-width: 720px) {
+    .mock { grid-template-columns: 1fr; min-height: 0; padding: 2.25rem 1.5rem; }
+  }
+
+  .mock-copy { display: flex; flex-direction: column; gap: 1rem; z-index: 2; }
+  .mock-eyebrow {
+    font-family: var(--code); font-size: 0.66rem; letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .mock-h { margin: 0; line-height: 1.0; letter-spacing: -0.035em; }
+  .mock-sub { margin: 0; font-size: 1rem; max-width: 34ch; }
+  .mock-stats { display: flex; gap: 1.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .mock-stats div { display: flex; flex-direction: column; gap: 0.15rem; }
+  .mock-stats dt {
+    font-family: var(--code); font-size: 0.58rem; letter-spacing: 0.16em;
+    text-transform: uppercase; opacity: 0.65;
+  }
+  .mock-stats dd { margin: 0; font-family: var(--code); font-size: 1.15rem; font-weight: 700; }
+  .mock-cta { display: flex; gap: 0.7rem; margin-top: 0.6rem; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--code); font-size: 0.72rem; letter-spacing: 0.08em;
+    padding: 0.6rem 1.1rem; border-radius: 1px; text-transform: uppercase;
+  }
+
+  /* the brain stand-in */
+  .orb-wrap {
+    position: relative; display: grid; place-items: center;
+    min-height: 15rem; z-index: 2;
+  }
+  .orb {
+    width: 13rem; height: 13rem; border-radius: 50%; position: relative;
+  }
+  .orb::after {
+    content: ''; position: absolute; inset: -22%;
+    border-radius: 50%; border: 1px solid currentColor; opacity: 0.16;
+  }
+  .ring {
+    position: absolute; left: 50%; top: 74%; transform: translate(-50%,-50%) rotateX(74deg);
+    width: 17rem; height: 17rem; border-radius: 50%;
+    border: 1px solid currentColor; opacity: 0.35;
+  }
+  .ring.two { width: 21rem; height: 21rem; opacity: 0.16; }
+  .node { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: currentColor; }
+
+  /* ---------- palette + type ---------- */
+
+  .detail {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 720px) { .detail { grid-template-columns: 1fr; gap: 1.5rem; } }
+
+  .detail h4 {
+    font-family: var(--code); font-size: 0.66rem; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--shell-mute);
+    margin: 0 0 0.7rem; font-weight: 400;
+  }
+
+  .swatches { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .sw { display: flex; flex-direction: column; gap: 0.3rem; width: 5.2rem; }
+  .sw i {
+    display: block; height: 2.6rem; border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.09);
+  }
+  .sw code {
+    font-family: var(--code); font-size: 0.62rem; color: var(--shell-mute);
+    letter-spacing: 0.02em;
+  }
+  .sw span {
+    font-family: var(--code); font-size: 0.58rem; letter-spacing: 0.11em;
+    text-transform: uppercase; color: var(--shell-mute); opacity: 0.75;
+  }
+
+  .type-rows { display: flex; flex-direction: column; gap: 0.85rem; }
+  .type-row { display: flex; flex-direction: column; gap: 0.2rem; }
+  .type-row small {
+    font-family: var(--code); font-size: 0.58rem; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--shell-mute);
+  }
+
+  .notes { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.55rem; }
+  .note-line {
+    display: grid; grid-template-columns: 5.5rem minmax(0,1fr);
+    gap: 0.9rem; font-size: 0.93rem; align-items: baseline;
+  }
+  .note-line b {
+    font-family: var(--code); font-size: 0.62rem; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--shell-mute); font-weight: 400;
+  }
+  .note-line.risk span { color: #E6A16B; }
+
+  footer.page {
+    padding: 3rem 0 0; display: flex; flex-direction: column; gap: 0.8rem;
+  }
+  footer.page h3 { margin: 0; font-size: 1.25rem; letter-spacing: -0.02em; }
+  footer.page p { margin: 0; color: var(--shell-mute); max-width: 60ch; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <span class="kicker">Phase 2 &middot; Task 2.1 &middot; Decision gate</span>
+    <h1>Three directions. Pick one.</h1>
+    <p>Same content, same structure, same animation plan &mdash; three different visual identities. Every one of them is dark, spacious, large-type and built around a rotating neural hero, because that is what your reference established. What changes is the palette, the typography, and how the page carries itself.</p>
+    <div class="howto">
+      <b>HOW TO CHOOSE</b>
+      <span>Scroll through all three before deciding. Look at the mock first, then the type. Ignore the exact wording &mdash; that is real content, already built.</span>
+      <span>Reply with just <b>1</b>, <b>2</b>, or <b>3</b>. You can also mix: &ldquo;2 but the accent from 3&rdquo;.</span>
+    </div>
+  </header>
+
+  <!-- ============ 1. NOCTURNE ============ -->
+  <section class="dir">
+    <div class="dir-head">
+      <span class="dir-num">01</span>
+      <span class="dir-name">Nocturne</span>
+      <span class="dir-tag">Closest to your reference</span>
+    </div>
+    <p class="dir-desc">Midnight indigo, luminous violet-to-cyan, soft glows, large geometric sans. This is the palette from the image you shared, executed cleanly. Familiar and unmistakably &ldquo;AI product&rdquo;.</p>
+
+    <div class="mock" style="background:
+        radial-gradient(120% 90% at 78% 42%, #241C5E 0%, rgba(36,28,94,0) 62%),
+        radial-gradient(90% 70% at 12% 18%, #17123A 0%, rgba(23,18,58,0) 70%),
+        #0A0A16;">
+      <div class="mock-copy" style="color:#E8E8F5;">
+        <span class="mock-eyebrow" style="color:#9B8CFF; font-family:'JetBrains Mono',monospace;">AI &amp; Software Engineer</span>
+        <h2 class="mock-h" style="font-family:'Sora',sans-serif; font-weight:800; font-size:clamp(2.1rem,4.4vw,3.2rem);">
+          Building intelligent<br>systems with
+          <span style="background:linear-gradient(92deg,#8B6BFF 0%,#35D6F5 100%); -webkit-background-clip:text; background-clip:text; color:transparent;">code &amp; AI.</span>
+        </h2>
+        <p class="mock-sub" style="font-family:'Archivo',sans-serif; color:#A9A7C8;">I build scalable AI systems and the backend services that carry them to production.</p>
+        <div class="mock-stats" style="color:#E8E8F5;">
+          <div><dt style="color:#8E8CB4;">Experience</dt><dd style="color:#B7A6FF;">6 mo</dd></div>
+          <div><dt style="color:#8E8CB4;">Projects</dt><dd style="color:#B7A6FF;">4</dd></div>
+          <div><dt style="color:#8E8CB4;">Tech</dt><dd style="color:#B7A6FF;">15</dd></div>
+        </div>
+        <div class="mock-cta">
+          <span class="btn" style="background:linear-gradient(92deg,#7C5CFF,#5B7BFF); color:#fff;">View my work</span>
+          <span class="btn" style="border:1px solid #3A3570; color:#C9C6E8;">Résumé</span>
+        </div>
+      </div>
+      <div class="orb-wrap" style="color:#8B6BFF;">
+        <div class="ring"></div><div class="ring two"></div>
+        <div class="orb" style="background:
+            radial-gradient(closest-side, rgba(53,214,245,0.55), rgba(124,92,255,0.30) 55%, rgba(10,10,22,0) 78%);
+            box-shadow: 0 0 90px 20px rgba(124,92,255,0.28), inset 0 0 60px rgba(53,214,245,0.22);">
+          <span class="node" style="left:28%;top:32%;background:#8FE9FF;"></span>
+          <span class="node" style="left:63%;top:24%;background:#C6B4FF;"></span>
+          <span class="node" style="left:44%;top:55%;background:#8FE9FF;"></span>
+          <span class="node" style="left:72%;top:63%;background:#C6B4FF;"></span>
+          <span class="node" style="left:33%;top:70%;background:#8FE9FF;"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail">
+      <div>
+        <h4>Palette</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#0A0A16;"></i><code>#0A0A16</code><span>Ground</span></div>
+          <div class="sw"><i style="background:#12122A;"></i><code>#12122A</code><span>Surface</span></div>
+          <div class="sw"><i style="background:#7C5CFF;"></i><code>#7C5CFF</code><span>Accent</span></div>
+          <div class="sw"><i style="background:#35D6F5;"></i><code>#35D6F5</code><span>Glow</span></div>
+          <div class="sw"><i style="background:#E8E8F5;"></i><code>#E8E8F5</code><span>Ink</span></div>
+        </div>
+      </div>
+      <div>
+        <h4>Typography</h4>
+        <div class="type-rows">
+          <div class="type-row"><small>Display &mdash; Sora ExtraBold</small>
+            <span style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.5rem;letter-spacing:-0.03em;">Some things I've built</span></div>
+          <div class="type-row"><small>Body &mdash; Archivo</small>
+            <span style="font-family:'Archivo',sans-serif;font-size:0.95rem;color:var(--shell-mute);">A selection of projects that show how I work.</span></div>
+          <div class="type-row"><small>Data &mdash; JetBrains Mono</small>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--shell-mute);">FastAPI · MongoDB · Docker</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="note-line"><b>Brain</b><span>Violet core with cyan synapses, heavy bloom. Reads exactly like your reference.</span></div>
+      <div class="note-line"><b>Motion</b><span>Soft, floaty, glow-led. Pulses bloom outward.</span></div>
+      <div class="note-line risk"><b>Risk</b><span>The violet-to-cyan gradient on midnight is the single most common look in AI-generated design right now. A technical reviewer will have seen it many times this month.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 2. INSTRUMENT ============ -->
+  <section class="dir">
+    <div class="dir-head">
+      <span class="dir-num">02</span>
+      <span class="dir-name">Instrument</span>
+      <span class="dir-tag">My recommendation</span>
+    </div>
+    <p class="dir-desc">True black, one sodium-amber signal colour, monospace headlines, hairline rules instead of glows. Reads like precision equipment rather than a product landing page &mdash; engineered, not marketed. Nobody else's portfolio looks like this.</p>
+
+    <div class="mock" style="background:
+        radial-gradient(100% 80% at 80% 40%, #17120B 0%, rgba(23,18,11,0) 66%),
+        #0B0C0D;">
+      <div class="mock-copy" style="color:#E9EDEF;">
+        <span class="mock-eyebrow" style="color:#FF8A2B; font-family:'JetBrains Mono',monospace;">AI &amp; Software Engineer</span>
+        <h2 class="mock-h" style="font-family:'JetBrains Mono',monospace; font-weight:700; font-size:clamp(1.75rem,3.7vw,2.6rem); letter-spacing:-0.045em;">
+          Building intelligent<br>systems with
+          <span style="color:#FF8A2B;">code &amp; AI.</span>
+        </h2>
+        <p class="mock-sub" style="font-family:'Archivo',sans-serif; color:#98A2A6;">I build scalable AI systems and the backend services that carry them to production.</p>
+        <div class="mock-stats">
+          <div><dt style="color:#6F797D;">Experience</dt><dd style="color:#FF8A2B;">6 mo</dd></div>
+          <div><dt style="color:#6F797D;">Projects</dt><dd style="color:#FF8A2B;">4</dd></div>
+          <div><dt style="color:#6F797D;">Tech</dt><dd style="color:#FF8A2B;">15</dd></div>
+        </div>
+        <div class="mock-cta">
+          <span class="btn" style="background:#FF8A2B; color:#0B0C0D; font-weight:700;">View my work</span>
+          <span class="btn" style="border:1px solid #2A2F31; color:#C3CBCE;">Résumé</span>
+        </div>
+      </div>
+      <div class="orb-wrap" style="color:#FF8A2B;">
+        <div class="ring"></div><div class="ring two"></div>
+        <div class="orb" style="background:
+            radial-gradient(closest-side, rgba(255,138,43,0.24), rgba(255,138,43,0.07) 58%, rgba(11,12,13,0) 76%);
+            box-shadow: 0 0 60px 6px rgba(255,138,43,0.16);
+            border:1px solid rgba(255,138,43,0.22);">
+          <span class="node" style="left:30%;top:34%;background:#FFC48A;"></span>
+          <span class="node" style="left:61%;top:26%;background:#FF8A2B;"></span>
+          <span class="node" style="left:47%;top:57%;background:#FFC48A;"></span>
+          <span class="node" style="left:70%;top:64%;background:#FF8A2B;"></span>
+          <span class="node" style="left:35%;top:71%;background:#FFC48A;"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail">
+      <div>
+        <h4>Palette</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#0B0C0D;"></i><code>#0B0C0D</code><span>Ground</span></div>
+          <div class="sw"><i style="background:#141618;"></i><code>#141618</code><span>Surface</span></div>
+          <div class="sw"><i style="background:#FF8A2B;"></i><code>#FF8A2B</code><span>Signal</span></div>
+          <div class="sw"><i style="background:#23282B;"></i><code>#23282B</code><span>Rule</span></div>
+          <div class="sw"><i style="background:#E9EDEF;"></i><code>#E9EDEF</code><span>Ink</span></div>
+        </div>
+      </div>
+      <div>
+        <h4>Typography</h4>
+        <div class="type-rows">
+          <div class="type-row"><small>Display &mdash; JetBrains Mono Bold</small>
+            <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.35rem;letter-spacing:-0.04em;">Some things I've built</span></div>
+          <div class="type-row"><small>Body &mdash; Archivo</small>
+            <span style="font-family:'Archivo',sans-serif;font-size:0.95rem;color:var(--shell-mute);">A selection of projects that show how I work.</span></div>
+          <div class="type-row"><small>Data &mdash; JetBrains Mono</small>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--shell-mute);">FastAPI · MongoDB · Docker</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="note-line"><b>Brain</b><span>Wireframe point-cloud, thin amber synapses, almost no bloom. Looks measured rather than magical.</span></div>
+      <div class="note-line"><b>Motion</b><span>Crisp and mechanical. Pulses travel like signals down a wire.</span></div>
+      <div class="note-line"><b>Why</b><span>Monospace display is rare on portfolios and reads instantly as engineering. One accent colour means every highlight has weight.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 3. MERIDIAN ============ -->
+  <section class="dir">
+    <div class="dir-head">
+      <span class="dir-num">03</span>
+      <span class="dir-name">Meridian</span>
+      <span class="dir-tag">Most distinctive</span>
+    </div>
+    <p class="dir-desc">Deep charcoal with a green cast, luminous jade accent, and a high-contrast serif set against a clean grotesque. Editorial and composed &mdash; closer to a design studio's site than a developer template.</p>
+
+    <div class="mock" style="background:
+        radial-gradient(105% 85% at 76% 38%, #0F2A22 0%, rgba(15,42,34,0) 64%),
+        #0C1110;">
+      <div class="mock-copy" style="color:#E6EDE9;">
+        <span class="mock-eyebrow" style="color:#38E0A5; font-family:'JetBrains Mono',monospace;">AI &amp; Software Engineer</span>
+        <h2 class="mock-h" style="font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(2.3rem,5vw,3.5rem); letter-spacing:-0.02em;">
+          Building intelligent systems with
+          <em style="color:#38E0A5; font-style:italic;">code &amp; AI.</em>
+        </h2>
+        <p class="mock-sub" style="font-family:'Familjen Grotesk',sans-serif; color:#94A69E;">I build scalable AI systems and the backend services that carry them to production.</p>
+        <div class="mock-stats">
+          <div><dt style="color:#6E827B;">Experience</dt><dd style="color:#38E0A5;">6 mo</dd></div>
+          <div><dt style="color:#6E827B;">Projects</dt><dd style="color:#38E0A5;">4</dd></div>
+          <div><dt style="color:#6E827B;">Tech</dt><dd style="color:#38E0A5;">15</dd></div>
+        </div>
+        <div class="mock-cta">
+          <span class="btn" style="background:#38E0A5; color:#08110E; font-weight:700;">View my work</span>
+          <span class="btn" style="border:1px solid #26362F; color:#BDCCC5;">Résumé</span>
+        </div>
+      </div>
+      <div class="orb-wrap" style="color:#38E0A5;">
+        <div class="ring"></div><div class="ring two"></div>
+        <div class="orb" style="background:
+            radial-gradient(closest-side, rgba(56,224,165,0.34), rgba(56,224,165,0.10) 56%, rgba(12,17,16,0) 78%);
+            box-shadow: 0 0 75px 12px rgba(56,224,165,0.18), inset 0 0 40px rgba(56,224,165,0.14);">
+          <span class="node" style="left:29%;top:33%;background:#B4F5DE;"></span>
+          <span class="node" style="left:62%;top:25%;background:#38E0A5;"></span>
+          <span class="node" style="left:45%;top:56%;background:#B4F5DE;"></span>
+          <span class="node" style="left:71%;top:62%;background:#38E0A5;"></span>
+          <span class="node" style="left:34%;top:70%;background:#B4F5DE;"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail">
+      <div>
+        <h4>Palette</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#0C1110;"></i><code>#0C1110</code><span>Ground</span></div>
+          <div class="sw"><i style="background:#131A18;"></i><code>#131A18</code><span>Surface</span></div>
+          <div class="sw"><i style="background:#38E0A5;"></i><code>#38E0A5</code><span>Accent</span></div>
+          <div class="sw"><i style="background:#26362F;"></i><code>#26362F</code><span>Rule</span></div>
+          <div class="sw"><i style="background:#E6EDE9;"></i><code>#E6EDE9</code><span>Ink</span></div>
+        </div>
+      </div>
+      <div>
+        <h4>Typography</h4>
+        <div class="type-rows">
+          <div class="type-row"><small>Display &mdash; Instrument Serif</small>
+            <span style="font-family:'Instrument Serif',serif;font-size:1.7rem;letter-spacing:-0.02em;">Some things I've <em style="color:#38E0A5;">built</em></span></div>
+          <div class="type-row"><small>Body &mdash; Familjen Grotesk</small>
+            <span style="font-family:'Familjen Grotesk',sans-serif;font-size:0.95rem;color:var(--shell-mute);">A selection of projects that show how I work.</span></div>
+          <div class="type-row"><small>Data &mdash; JetBrains Mono</small>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--shell-mute);">FastAPI · MongoDB · Docker</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="note-line"><b>Brain</b><span>Jade point-cloud, fine synapses, moderate bloom. Organic rather than electric.</span></div>
+      <div class="note-line"><b>Motion</b><span>Slow and deliberate. Text reveals feel typeset rather than animated.</span></div>
+      <div class="note-line risk"><b>Risk</b><span>A serif headline is a strong opinion. It reads beautifully to some people and unexpected to others on an engineering portfolio.</span></div>
+    </div>
+  </section>
+
+  <footer class="page">
+    <h3>Reply with 1, 2 or 3</h3>
+    <p>Whichever you pick becomes the token layer in <code>globals.css</code>, so it applies everywhere at once &mdash; and stays changeable from one file afterwards. Mixing is fine: tell me which parts of which.</p>
+    <p style="color:#7E8A8D;font-size:0.9rem;">Note: these mocks use a static circle to stand in for the hero. The real one is a rotating 3D neural point cloud built in Phase 3.</p>
+  </footer>
+
+</div>
+</body>
+</html>

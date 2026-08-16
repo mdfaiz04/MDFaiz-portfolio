@@ -1,26 +1,199 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/**
+ * L2 — the design token layer.
+ *
+ * Direction: Nocturne, with Instrument's discipline.
+ * Midnight indigo ground, violet-to-cyan accent, large geometric display type
+ * — restrained by hairline rules rather than glow, monospace for all data and
+ * labels, and bloom reserved for the hero and interactive states.
+ *
+ * Every colour, size, and duration used anywhere in the app is defined here.
+ * A hex code or arbitrary value inside a component fails lint (R2), so this
+ * file is the only place the look can be changed — and changing it here
+ * changes the whole site at once.
+ *
+ * Deliberately dark-only. The palette IS the identity; a light variant would
+ * be a different design rather than the same one inverted. The token
+ * structure supports adding one later without touching a component.
+ */
+
+@theme {
+  /* --- ground & surface ------------------------------------------------ */
+  --color-ground: #0a0a16;
+  --color-ground-deep: #06060f;
+  --color-surface: #12122a;
+  --color-surface-raised: #1a1a38;
+
+  /* --- ink -------------------------------------------------------------- */
+  --color-ink: #e8e8f5;
+  --color-ink-muted: #a9a7c8;
+  --color-ink-faint: #8e8cb4;
+  --color-ink-ghost: #5d5b80;
+
+  /* --- accent ----------------------------------------------------------- */
+  --color-accent: #7c5cff;
+  --color-accent-bright: #9b8cff;
+  --color-accent-glow: #35d6f5;
+  --color-accent-deep: #4a32b8;
+
+  /* --- structure -------------------------------------------------------- */
+  --color-rule: #26264a;
+  --color-rule-soft: #1b1b36;
+
+  /* --- semantic (kept separate from the accent) ------------------------- */
+  --color-positive: #3fd39a;
+  --color-caution: #e6a16b;
+
+  /* --- type ------------------------------------------------------------- */
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --text-eyebrow: 0.7rem;
+  --text-eyebrow--line-height: 1.4;
+  --text-eyebrow--letter-spacing: 0.2em;
+
+  --text-display: clamp(2.5rem, 7vw, 5.25rem);
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.04em;
+
+  --text-headline: clamp(1.75rem, 4vw, 2.75rem);
+  --text-headline--line-height: 1.08;
+  --text-headline--letter-spacing: -0.03em;
+
+  --text-title: clamp(1.15rem, 2vw, 1.4rem);
+  --text-title--line-height: 1.25;
+  --text-title--letter-spacing: -0.015em;
+
+  --text-lede: clamp(1.05rem, 1.6vw, 1.2rem);
+  --text-lede--line-height: 1.6;
+
+  /* --- rhythm ----------------------------------------------------------- */
+  --spacing-gutter: 1.5rem;
+  --spacing-section: clamp(5rem, 12vh, 9rem);
+
+  /* Reading measure. Lives in the --container-* namespace because that is
+     what Tailwind's max-w-* utilities read from; putting it in --spacing-*
+     would silently produce no class at all. */
+  --container-measure: 34rem;
+
+  /* --- motion ----------------------------------------------------------- */
+  /* Mirrors src/config/motion.ts. CSS transitions read these; Framer Motion
+     reads the TypeScript. One vocabulary, two consumers. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --duration-instant: 150ms;
+  --duration-fast: 280ms;
+  --duration-base: 450ms;
+  --duration-slow: 700ms;
+
+  /* --- depth ------------------------------------------------------------ */
+  --radius-edge: 2px;
+  --radius-soft: 6px;
+}
+
+/**
+ * Named transition durations.
+ *
+ * Tailwind's built-in `duration-*` utility only accepts numbers, so the
+ * tokens above would compile to nothing at all — a class that silently does
+ * not exist. Declaring them explicitly makes `duration-fast` real, and keeps
+ * every timing value tied to the token rather than to a magic number.
+ */
+@utility duration-instant {
+  transition-duration: var(--duration-instant);
+}
+@utility duration-fast {
+  transition-duration: var(--duration-fast);
+}
+@utility duration-base {
+  transition-duration: var(--duration-base);
+}
+@utility duration-slow {
+  transition-duration: var(--duration-slow);
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* --- base ---------------------------------------------------------------- */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ambient depth behind the whole page. Two soft pools rather than a linear
+   gradient — a diagonal gradient wash is the tell of a template. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(
+      70% 55% at 78% 12%,
+      color-mix(in oklab, var(--color-accent) 16%, transparent) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      60% 50% at 10% 88%,
+      color-mix(in oklab, var(--color-accent-glow) 8%, transparent) 0%,
+      transparent 65%
+    );
+}
+
+/* Fine grain, so large dark areas read as a surface rather than a void. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* --- focus --------------------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-glow);
+  outline-offset: 3px;
+  border-radius: var(--radius-edge);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-accent) 45%, transparent);
+  color: var(--color-ink);
+}
+
+/* --- reduced motion ------------------------------------------------------ */
+
+/* R8. A genuine static alternative, not shortened durations. Framer Motion is
+   gated separately in TypeScript; this covers CSS-driven movement. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
