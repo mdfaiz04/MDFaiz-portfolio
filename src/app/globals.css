@@ -95,6 +95,11 @@
      would silently produce no class at all. */
   --container-measure: 34rem;
 
+  /* Page shell. Wider than Tailwind's 6xl so a large display does not leave
+     a broad dead margin on either side of the content. Prose still wraps at
+     --container-measure, so the extra width goes to layout, not line length. */
+  --container-shell: 84rem;
+
   /* --- motion ----------------------------------------------------------- */
   /* Mirrors src/config/motion.ts. CSS transitions read these; Framer Motion
      reads the TypeScript. One vocabulary, two consumers. */
@@ -151,7 +156,7 @@
   --enter-distance: 1.25rem;
 
   /** Hero canvas ceiling, so a short window shrinks it instead of scrolling. */
-  --brain-max-height: 52vh;
+  --brain-max-height: 60vh;
 }
 
 @keyframes enter-rise {

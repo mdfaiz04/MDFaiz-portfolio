@@ -11,7 +11,7 @@ import { counts, experienceSince, profile, visibleSections } from '@/content'
  */
 export default function HomePage() {
   // Time-dependent, so it is read here in a Server Component and passed down
-  // as a plain value — reading the clock on the client would desynchronise
+  // as a plain value â€” reading the clock on the client would desynchronise
   // the markup and trigger a hydration mismatch.
   const tenure = experienceSince(new Date())
 
@@ -43,7 +43,7 @@ export default function HomePage() {
             {/* `min-w-0` matters because the hero section is a flex container:
               its child would otherwise take `min-width: auto` and refuse to
               shrink below its content, overflowing narrow screens. */}
-            <div className="mx-auto w-full min-w-0 max-w-6xl">
+            <div className="mx-auto w-full min-w-0 max-w-shell">
               {section.id === 'hero' ? (
                 <Hero
                   role={profile.role}

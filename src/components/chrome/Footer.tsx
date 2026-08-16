@@ -1,7 +1,7 @@
 import type { Link as ContentLink } from '@/content'
 
 type FooterProps = {
-  /** From the section registry — the same source the nav uses. */
+  /** From the section registry â€” the same source the nav uses. */
   items: readonly { id: string; navLabel: string }[]
   links: readonly ContentLink[]
   owner: string
@@ -17,9 +17,9 @@ type FooterProps = {
 export function Footer({ items, links, owner, year }: FooterProps) {
   return (
     <footer className="border-rule-soft relative z-10 border-t">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-gutter py-10 md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto flex max-w-shell flex-col gap-6 px-gutter py-10 md:flex-row md:items-center md:justify-between">
         <p className="text-ink-ghost font-mono text-xs tracking-wider">
-          © {year} {owner}
+          Â© {year} {owner}
         </p>
 
         <nav aria-label="Footer">

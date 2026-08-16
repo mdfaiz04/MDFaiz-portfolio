@@ -159,7 +159,7 @@ export function NeuralBrain() {
       /* Height-capped as well as width-capped: on a short window an
          aspect-square canvas sized only by width is what pushes the hero's
          actions below the fold. */
-      className="brain-cap pointer-events-none relative aspect-square w-full max-w-lg"
+      className="brain-cap pointer-events-none relative aspect-square w-full max-w-lg xl:max-w-2xl"
     >
       <canvas ref={canvasRef} className="h-full w-full" />
     </div>
