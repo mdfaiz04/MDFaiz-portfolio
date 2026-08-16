@@ -66,8 +66,8 @@ export function Hero({
     /* `min-w-0` on both children is load-bearing: grid items default to
        `min-width: auto`, so the canvas wrapper's max width would set the
        track width and push the whole hero wider than a phone screen. */
-    <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
-      <div className="flex min-w-0 flex-col gap-6">
+    <div className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.9fr] lg:gap-10">
+      <div className="flex min-w-0 flex-col gap-5">
         <p
           style={delay(ENTER.eyebrow)}
           className="enter text-accent-bright font-mono text-eyebrow uppercase"

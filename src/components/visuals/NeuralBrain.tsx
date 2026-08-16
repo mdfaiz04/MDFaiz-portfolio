@@ -54,13 +54,9 @@ export function NeuralBrain() {
       {
         rotationSpeed: brain.rotationSpeed,
         pulseInterval: brain.pulseInterval,
-        orbitYawDeg: brain.orbitYawDeg,
-        orbitPitchDeg: brain.orbitPitchDeg,
-        orbitEase: brain.orbitEase,
       },
     )
 
-    const pointer = { x: 0, y: 0 }
     let frameId: number | null = null
     let lastTime = 0
     let onScreen = true
@@ -85,7 +81,7 @@ export function NeuralBrain() {
     const tick = (time: number) => {
       const elapsed = lastTime === 0 ? 16 : time - lastTime
       lastTime = time
-      renderer.frame(elapsed, pointer)
+      renderer.frame(elapsed)
       frameId = requestAnimationFrame(tick)
     }
 
@@ -133,17 +129,6 @@ export function NeuralBrain() {
       evaluateRunState()
     }
 
-    const onPointerMove = (event: PointerEvent) => {
-      if (event.pointerType !== 'mouse') return
-
-      // Measured against the viewport, not the canvas box. Relative to the
-      // canvas, a cursor anywhere else on the page produces values far
-      // outside -1…1 and pins the orbit at its limit; against the viewport
-      // the brain turns smoothly as the cursor crosses the whole page.
-      pointer.x = (event.clientX / window.innerWidth) * 2 - 1
-      pointer.y = (event.clientY / window.innerHeight) * 2 - 1
-    }
-
     // Tokens can change under the visitor (a future theme switch), so the
     // palette is re-read rather than captured once at mount.
     const themeObserver = new MutationObserver(() => {
@@ -156,7 +141,6 @@ export function NeuralBrain() {
     })
 
     document.addEventListener('visibilitychange', onVisibilityChange)
-    window.addEventListener('pointermove', onPointerMove, { passive: true })
 
     evaluateRunState()
 
@@ -166,14 +150,16 @@ export function NeuralBrain() {
       intersectionObserver.disconnect()
       themeObserver.disconnect()
       document.removeEventListener('visibilitychange', onVisibilityChange)
-      window.removeEventListener('pointermove', onPointerMove)
     }
   }, [reduced])
 
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none relative aspect-square w-full max-w-xl"
+      /* Height-capped as well as width-capped: on a short window an
+         aspect-square canvas sized only by width is what pushes the hero's
+         actions below the fold. */
+      className="brain-cap pointer-events-none relative aspect-square w-full max-w-lg"
     >
       <canvas ref={canvasRef} className="h-full w-full" />
     </div>

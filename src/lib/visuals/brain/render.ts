@@ -15,22 +15,17 @@ import {
  * re-render per frame.
  *
  * Everything luminous is composited with `lighter` (additive). That single
- * choice is what separates a neon network from flat dots — overlapping
+ * choice is what separates a neon network from flat dots â€” overlapping
  * synapses and nodes accumulate into hot spots the way real light does.
  */
 
 export type BrainRendererConfig = {
   rotationSpeed: number
   pulseInterval: number
-  orbitYawDeg: number
-  orbitPitchDeg: number
-  orbitEase: number
 }
 
-export type PointerState = { x: number; y: number }
-
 export type BrainRenderer = {
-  frame(elapsed: number, pointer: PointerState): void
+  frame(elapsed: number): void
   still(): void
   resize(width: number, height: number, dpr: number): void
   setPalette(palette: BrainPalette): void
@@ -56,7 +51,6 @@ const CENTRE_Y = 0.42
 
 const PULSE_TRAVEL = 900
 const MAX_FRAME_MS = 50
-const DEG_TO_RAD = Math.PI / 180
 
 /** Pulses run concurrently, so the network never looks idle. */
 const MAX_PULSES = 5
@@ -66,6 +60,9 @@ const MAX_PULSES = 5
  * with z as front-to-back, so a quarter turn puts that axis across the screen.
  */
 const SIDE_PROFILE = Math.PI / 2
+
+/** Slight downward tip, so the brain is seen from a touch above. */
+const RESTING_TILT = -0.06
 
 /** Only the nearer points get an expensive second bloom pass. */
 const BLOOM_FRACTION = 0.62
@@ -106,15 +103,8 @@ export function createBrainRenderer(
   /** Opens on the silhouette that reads as a brain, then rotates away. */
   let autoRotation = SIDE_PROFILE
   let sinceLastPulse = 0
-  let elapsedTotal = 0
-
-  /** Orbit offsets driven by the cursor, eased toward their targets. */
-  let yaw = 0
-  let pitch = 0
-
-  /** Composed each frame from the automatic turn plus the cursor orbit. */
   let rotation = SIDE_PROFILE
-  let tiltX = 0
+  let tiltX = RESTING_TILT
 
   let near = toRgb(initialPalette.near)
   let mid = toRgb(initialPalette.mid)
@@ -152,7 +142,7 @@ export function createBrainRenderer(
     return {
       x: width / 2 + x * perspective * radius,
       // Canvas y grows downward while the model treats +y as up, so this
-      // subtracts. Adding here renders the whole brain inverted — the
+      // subtracts. Adding here renders the whole brain inverted â€” the
       // brainstem points at the sky and the silhouette stops reading.
       y: height * CENTRE_Y - y * perspective * radius,
       depth,
@@ -170,7 +160,7 @@ export function createBrainRenderer(
     ctx.globalCompositeOperation = 'lighter'
 
     // Light rising toward the brain. Drawn as a radial gradient rather than a
-    // filled rectangle — a rect gives the glow hard vertical edges and the
+    // filled rectangle â€” a rect gives the glow hard vertical edges and the
     // whole hero reads as a box sitting on the page.
     ctx.save()
     ctx.translate(centreX, centreY)
@@ -188,7 +178,7 @@ export function createBrainRenderer(
     ctx.translate(centreX, centreY)
     ctx.scale(1, 0.19)
 
-    // Glowing disc. Kept narrower than the cloud above it — a platform wider
+    // Glowing disc. Kept narrower than the cloud above it â€” a platform wider
     // than the brain pulls the eye downward, away from the subject.
     const disc = ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 1.05)
     disc.addColorStop(0, rgbaString(baseRgb, 0.6))
@@ -298,7 +288,7 @@ export function createBrainRenderer(
       const closeness = nearness(target.depth)
       const isCortex = point.kind === 'cortex'
 
-      // Bloom pass on the near half only — the far side gains nothing
+      // Bloom pass on the near half only â€” the far side gains nothing
       // visible from it and it doubles the draw cost.
       if (isCortex && closeness > 1 - BLOOM_FRACTION) {
         const bloomSize = (22 + closeness * 34) * target.scale
@@ -312,7 +302,7 @@ export function createBrainRenderer(
         )
       }
 
-      // Depth-graded core: far → mid over the back half, mid → near over
+      // Depth-graded core: far â†’ mid over the back half, mid â†’ near over
       // the front half, so the cloud reads as a solid lit object.
       const tint =
         closeness < 0.5
@@ -363,25 +353,15 @@ export function createBrainRenderer(
   }
 
   return {
-    frame(elapsed, pointer) {
+    frame(elapsed) {
       const dt = Math.min(elapsed, MAX_FRAME_MS)
-      elapsedTotal += dt
 
       autoRotation += config.rotationSpeed * (dt / 16.667)
 
-      // The cursor orbits the brain: yaw turns it left and right, pitch tips
-      // it toward and away. Both ease toward their target rather than
-      // snapping, so the object feels like it has mass — and both are
-      // offsets *added* to the automatic turn, so it keeps rotating on its
-      // own while still answering to the pointer.
-      const targetYaw = pointer.x * config.orbitYawDeg * DEG_TO_RAD
-      const targetPitch = pointer.y * config.orbitPitchDeg * DEG_TO_RAD
-
-      yaw += (targetYaw - yaw) * config.orbitEase
-      pitch += (targetPitch - pitch) * config.orbitEase
-
-      rotation = autoRotation + yaw
-      tiltX = pitch
+      // Cursor-driven orbit was removed by request: the brain turns on its
+      // own and ignores the pointer entirely.
+      rotation = autoRotation
+      tiltX = RESTING_TILT
 
       sinceLastPulse += dt
       if (
@@ -412,11 +392,8 @@ export function createBrainRenderer(
       // a brain in under a second; a three-quarter angle merges the lobes
       // into an anonymous blob.
       autoRotation = SIDE_PROFILE
-      yaw = 0
-      pitch = -0.06
       rotation = SIDE_PROFILE
-      tiltX = -0.06
-      elapsedTotal = 0
+      tiltX = RESTING_TILT
       pulses.length = 0
       render()
     },

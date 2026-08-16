@@ -66,14 +66,9 @@ export const brain = {
   /** Milliseconds between signal pulses travelling an edge. */
   pulseInterval: 520,
   /**
-   * How far the cursor can orbit the brain, in degrees. Large enough that
-   * moving the mouse visibly turns it in three dimensions — a few degrees of
-   * parallax reads as a wobble, not as control.
+   * No cursor interaction: the brain turns on its own and ignores the
+   * pointer. Removed by request after the orbit proved distracting.
    */
-  orbitYawDeg: 34,
-  orbitPitchDeg: 20,
-  /** How quickly the orbit eases toward the cursor. Lower is heavier. */
-  orbitEase: 0.055,
   /** Retina is worth it; beyond 2x is invisible and expensive. */
   dprCap: 2,
 } as const
