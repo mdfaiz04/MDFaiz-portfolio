@@ -55,13 +55,18 @@ export const reveal = {
 export const brain = {
   /** Radians per frame — one full rotation in roughly 42 seconds. */
   rotationSpeed: 0.0025,
-  pointCount: { desktop: 220, mobile: 120 },
+  /**
+   * Density is what makes the cloud read as an organ rather than as
+   * scattered specks. Mobile takes roughly half, since the canvas is
+   * smaller and the device has less to give.
+   */
+  pointCount: { desktop: 900, mobile: 420 },
   /** Hard cap on drawn synapses; the limiting factor for frame rate. */
-  edgeCap: 350,
+  edgeCap: { desktop: 1500, mobile: 700 },
   /** Milliseconds between signal pulses travelling an edge. */
-  pulseInterval: 800,
+  pulseInterval: 520,
   /** Maximum cursor parallax, in degrees. */
-  parallaxDeg: 6,
+  parallaxDeg: 7,
   /** Retina is worth it; beyond 2x is invisible and expensive. */
   dprCap: 2,
 } as const

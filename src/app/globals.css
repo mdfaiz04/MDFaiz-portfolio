@@ -41,6 +41,18 @@
   --color-rule: #26264a;
   --color-rule-soft: #1b1b36;
 
+  /* --- neural hero ------------------------------------------------------
+     Graded by depth so the cloud reads as a solid object: near points burn
+     close to white, mid points are cyan, and the far side falls back to
+     indigo instead of dissolving into the page. */
+  --color-brain-near: #e8fbff;
+  --color-brain-mid: #4bc9f5;
+  --color-brain-far: #4733b0;
+  --color-brain-edge: #5aa9ff;
+  --color-brain-pulse: #ffffff;
+  --color-brain-halo: #6b5cff;
+  --color-brain-base: #35d6f5;
+
   /* --- semantic (kept separate from the accent) ------------------------- */
   --color-positive: #3fd39a;
   --color-caution: #e6a16b;

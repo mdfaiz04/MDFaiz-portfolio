@@ -39,12 +39,13 @@ export function NeuralBrain() {
 
     const host = canvas.parentElement ?? canvas
 
-    const pointCount =
-      window.innerWidth < MOBILE_BREAKPOINT
-        ? brain.pointCount.mobile
-        : brain.pointCount.desktop
+    const isSmallScreen = window.innerWidth < MOBILE_BREAKPOINT
 
-    const geometry = createBrainGeometry(pointCount, SEED, brain.edgeCap)
+    const geometry = createBrainGeometry(
+      isSmallScreen ? brain.pointCount.mobile : brain.pointCount.desktop,
+      SEED,
+      isSmallScreen ? brain.edgeCap.mobile : brain.edgeCap.desktop,
+    )
 
     const renderer: BrainRenderer = createBrainRenderer(
       ctx,

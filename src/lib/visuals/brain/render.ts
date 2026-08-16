@@ -1,33 +1,34 @@
-import type { BrainGeometry, Point3 } from './geometry'
-import type { BrainPalette } from './palette'
+import type { BrainGeometry, BrainPoint } from './geometry'
+import {
+  mixRgb,
+  rgbaString,
+  toRgb,
+  type BrainPalette,
+  type Rgb,
+} from './palette'
 
 /**
  * The draw loop.
  *
  * Kept out of the React component deliberately: this is imperative canvas
  * work with its own state, and mixing it into a component would mean a
- * re-render per frame. The component owns the element; this owns the pixels.
+ * re-render per frame.
+ *
+ * Everything luminous is composited with `lighter` (additive). That single
+ * choice is what separates a neon network from flat dots — overlapping
+ * synapses and nodes accumulate into hot spots the way real light does.
  */
 
 export type BrainRendererConfig = {
-  /** Radians per frame around the vertical axis. */
   rotationSpeed: number
-  /** Milliseconds between signal pulses. */
   pulseInterval: number
-  /** Maximum cursor parallax, in degrees. */
   parallaxDeg: number
 }
 
-export type PointerState = {
-  /** −1 … 1, relative to the centre of the canvas. */
-  x: number
-  y: number
-}
+export type PointerState = { x: number; y: number }
 
 export type BrainRenderer = {
-  /** Advance and draw. `elapsed` is milliseconds since the previous frame. */
   frame(elapsed: number, pointer: PointerState): void
-  /** Draw a single motionless frame — the reduced-motion alternative. */
   still(): void
   resize(width: number, height: number, dpr: number): void
   setPalette(palette: BrainPalette): void
@@ -35,26 +36,44 @@ export type BrainRenderer = {
 
 type Pulse = { edgeIndex: number; progress: number }
 
+type Projected = {
+  x: number
+  y: number
+  depth: number
+  scale: number
+}
+
 /** Perspective strength. Larger is flatter. */
-const FOV = 3.2
+const FOV = 3.4
 
 /** Fraction of the canvas the cloud occupies. */
-const FILL = 0.4
+const FILL = 0.46
 
-/** How long a pulse takes to travel one synapse, in milliseconds. */
+/** Vertical placement, leaving room for the platform beneath. */
+const CENTRE_Y = 0.42
+
 const PULSE_TRAVEL = 900
-
-/** Frame time is clamped so a backgrounded tab cannot jump the animation. */
 const MAX_FRAME_MS = 50
-
 const DEG_TO_RAD = Math.PI / 180
 
+/** Pulses run concurrently, so the network never looks idle. */
+const MAX_PULSES = 5
+
 /**
- * Glow is drawn from a pre-rendered sprite rather than per-point
- * `shadowBlur`. Blur is recomputed per draw call and is the usual reason a
- * canvas that looks fine on a laptop stutters on a phone.
+ * Rotation that presents the sagittal (side) silhouette. The model is built
+ * with z as front-to-back, so a quarter turn puts that axis across the screen.
  */
-function createGlowSprite(colour: string, size: number): HTMLCanvasElement {
+const SIDE_PROFILE = Math.PI / 2
+
+/** Only the nearest points get an expensive second bloom pass. */
+const BLOOM_FRACTION = 0.4
+
+/**
+ * Radial sprite. Glow is drawn from a pre-rendered image rather than
+ * per-point `shadowBlur`, which is recomputed on every draw call and is the
+ * usual reason a canvas that looks fine on a laptop stutters on a phone.
+ */
+function createSprite(colour: Rgb, size: number, softness: number) {
   const sprite = document.createElement('canvas')
   sprite.width = size
   sprite.height = size
@@ -64,14 +83,12 @@ function createGlowSprite(colour: string, size: number): HTMLCanvasElement {
 
   const half = size / 2
   const gradient = ctx.createRadialGradient(half, half, 0, half, half, half)
-  gradient.addColorStop(0, colour)
-  gradient.addColorStop(0.35, colour)
-  gradient.addColorStop(1, 'transparent')
+  gradient.addColorStop(0, rgbaString(colour, 1))
+  gradient.addColorStop(softness, rgbaString(colour, 0.35))
+  gradient.addColorStop(1, rgbaString(colour, 0))
 
   ctx.fillStyle = gradient
-  ctx.beginPath()
-  ctx.arc(half, half, half, 0, Math.PI * 2)
-  ctx.fill()
+  ctx.fillRect(0, 0, size, size)
 
   return sprite
 }
@@ -82,68 +99,111 @@ export function createBrainRenderer(
   initialPalette: BrainPalette,
   config: BrainRendererConfig,
 ): BrainRenderer {
-  let palette = initialPalette
   let width = 0
   let height = 0
-  let rotation = 0
+  /** Opens on the silhouette that reads as a brain, then rotates away. */
+  let rotation = SIDE_PROFILE
   let sinceLastPulse = 0
   let tiltX = 0
-  let tiltY = 0
+  let elapsedTotal = 0
 
-  let glow = createGlowSprite(palette.point, 64)
-  let pulseGlow = createGlowSprite(palette.pulse, 48)
+  let near = toRgb(initialPalette.near)
+  let mid = toRgb(initialPalette.mid)
+  let far = toRgb(initialPalette.far)
+  let edgeRgb = toRgb(initialPalette.edge)
+  let baseRgb = toRgb(initialPalette.base)
+  let haloRgb = toRgb(initialPalette.halo)
+
+  let coreSprite = createSprite(near, 32, 0.25)
+  let bloomSprite = createSprite(mid, 96, 0.12)
+  let pulseSprite = createSprite(toRgb(initialPalette.pulse), 64, 0.18)
+  let haloSprite = createSprite(haloRgb, 512, 0.02)
 
   const pulses: Pulse[] = []
-  const projected: { x: number; y: number; depth: number }[] =
-    geometry.points.map(() => ({ x: 0, y: 0, depth: 0 }))
+  const projected: Projected[] = geometry.points.map(() => ({
+    x: 0,
+    y: 0,
+    depth: 0,
+    scale: 1,
+  }))
   const order: number[] = geometry.points.map((_, index) => index)
 
-  function project(point: Point3, cos: number, sin: number) {
-    // Yaw first, then a small pitch from the cursor. Doing it in this order
-    // keeps the rotation axis vertical regardless of where the pointer is.
+  function project(point: BrainPoint, cos: number, sin: number): Projected {
     const x = point.x * cos + point.z * sin
-    const z = point.z * cos - point.x * sin
-    const y = point.y * Math.cos(tiltX) - z * Math.sin(tiltX)
-    const depth = z * Math.cos(tiltX) + point.y * Math.sin(tiltX)
+    const rotatedZ = point.z * cos - point.x * sin
 
-    const scale = FOV / (FOV + depth)
+    const cosTilt = Math.cos(tiltX)
+    const sinTilt = Math.sin(tiltX)
+    const y = point.y * cosTilt - rotatedZ * sinTilt
+    const depth = rotatedZ * cosTilt + point.y * sinTilt
+
+    const perspective = FOV / (FOV + depth)
     const radius = Math.min(width, height) * FILL
 
     return {
-      x: width / 2 + x * scale * radius,
-      y: height / 2 + y * scale * radius,
+      x: width / 2 + x * perspective * radius,
+      // Canvas y grows downward while the model treats +y as up, so this
+      // subtracts. Adding here renders the whole brain inverted — the
+      // brainstem points at the sky and the silhouette stops reading.
+      y: height * CENTRE_Y - y * perspective * radius,
       depth,
-      scale,
+      scale: perspective,
     }
   }
 
-  function drawRing(cos: number) {
+  /** The lit platform: disc, rings, and a shaft of light rising from it. */
+  function drawPlatform(sweep: number) {
     const radius = Math.min(width, height) * FILL
-    const centreY = height / 2 + radius * 0.92
+    const centreY = height * CENTRE_Y + radius * 1.02
+    const centreX = width / 2
 
     ctx.save()
-    ctx.translate(width / 2, centreY)
-    ctx.scale(1, 0.24)
+    ctx.globalCompositeOperation = 'lighter'
 
-    ctx.strokeStyle = palette.ring
-    ctx.globalAlpha = 0.22
-    ctx.lineWidth = 1
+    // Light rising toward the brain. Drawn as a radial gradient rather than a
+    // filled rectangle — a rect gives the glow hard vertical edges and the
+    // whole hero reads as a box sitting on the page.
+    ctx.save()
+    ctx.translate(centreX, centreY)
+    ctx.scale(1, 1.5)
+    const shaft = ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 1.1)
+    shaft.addColorStop(0, rgbaString(baseRgb, 0.32))
+    shaft.addColorStop(0.5, rgbaString(baseRgb, 0.08))
+    shaft.addColorStop(1, rgbaString(baseRgb, 0))
+    ctx.fillStyle = shaft
     ctx.beginPath()
-    ctx.arc(0, 0, radius * 1.28, 0, Math.PI * 2)
-    ctx.stroke()
+    ctx.arc(0, 0, radius * 1.1, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
 
-    ctx.globalAlpha = 0.1
-    ctx.beginPath()
-    ctx.arc(0, 0, radius * 1.62, 0, Math.PI * 2)
-    ctx.stroke()
+    ctx.translate(centreX, centreY)
+    ctx.scale(1, 0.19)
 
-    // A short bright arc sweeping the ring — the platform reads as powered
-    // rather than as a static outline.
-    const sweep = Math.atan2(Math.sqrt(1 - cos * cos), cos) * 2
-    ctx.globalAlpha = 0.5
-    ctx.lineWidth = 2
+    // Glowing disc. Kept narrower than the cloud above it — a platform wider
+    // than the brain pulls the eye downward, away from the subject.
+    const disc = ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 1.05)
+    disc.addColorStop(0, rgbaString(baseRgb, 0.6))
+    disc.addColorStop(0.45, rgbaString(baseRgb, 0.17))
+    disc.addColorStop(1, rgbaString(baseRgb, 0))
+    ctx.fillStyle = disc
     ctx.beginPath()
-    ctx.arc(0, 0, radius * 1.28, sweep, sweep + 0.9)
+    ctx.arc(0, 0, radius * 1.05, 0, Math.PI * 2)
+    ctx.fill()
+
+    // Concentric rings.
+    ctx.lineWidth = 1.5
+    for (const [index, factor] of [0.74, 0.92, 1.12].entries()) {
+      ctx.strokeStyle = rgbaString(baseRgb, 0.42 - index * 0.11)
+      ctx.beginPath()
+      ctx.arc(0, 0, radius * factor, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+
+    // A bright arc sweeping the ring, so the platform reads as powered.
+    ctx.lineWidth = 3
+    ctx.strokeStyle = rgbaString(baseRgb, 0.85)
+    ctx.beginPath()
+    ctx.arc(0, 0, radius * 0.92, sweep, sweep + 0.75)
     ctx.stroke()
 
     ctx.restore()
@@ -156,8 +216,24 @@ export function createBrainRenderer(
 
     const cos = Math.cos(rotation)
     const sin = Math.sin(rotation)
+    const radius = Math.min(width, height) * FILL
 
-    drawRing(cos)
+    drawPlatform(rotation * 0.7)
+
+    ctx.globalCompositeOperation = 'lighter'
+
+    // Ambient bloom behind the cloud. Sized to fall to zero well inside the
+    // canvas: a halo wider than the element lightens right up to the edge
+    // and the hero reads as a rectangle pasted on the page.
+    const haloSize = radius * 2.2
+    ctx.globalAlpha = 0.45
+    ctx.drawImage(
+      haloSprite,
+      width / 2 - haloSize / 2,
+      height * CENTRE_Y - haloSize / 2,
+      haloSize,
+      haloSize,
+    )
 
     let minDepth = Infinity
     let maxDepth = -Infinity
@@ -171,6 +247,7 @@ export function createBrainRenderer(
       target.x = result.x
       target.y = result.y
       target.depth = result.depth
+      target.scale = result.scale
 
       if (result.depth < minDepth) minDepth = result.depth
       if (result.depth > maxDepth) maxDepth = result.depth
@@ -179,7 +256,7 @@ export function createBrainRenderer(
     const span = maxDepth - minDepth || 1
     const nearness = (depth: number) => 1 - (depth - minDepth) / span
 
-    // Synapses sit behind the nodes.
+    // Synapses first, behind the nodes.
     ctx.lineWidth = 1
     for (const edge of geometry.edges) {
       const a = projected[edge.a]
@@ -187,15 +264,14 @@ export function createBrainRenderer(
       if (!a || !b) continue
 
       const closeness = (nearness(a.depth) + nearness(b.depth)) / 2
-      ctx.globalAlpha = 0.08 + closeness * 0.3
-      ctx.strokeStyle = palette.edge
+      ctx.strokeStyle = rgbaString(edgeRgb, 0.05 + closeness * 0.28)
       ctx.beginPath()
       ctx.moveTo(a.x, a.y)
       ctx.lineTo(b.x, b.y)
       ctx.stroke()
     }
 
-    // Painter's algorithm: far points first, so near ones overlap correctly.
+    // Painter's algorithm: far points first.
     order.sort((left, right) => {
       const a = projected[left]
       const b = projected[right]
@@ -203,17 +279,56 @@ export function createBrainRenderer(
       return b.depth - a.depth
     })
 
+    ctx.globalAlpha = 1
+
     for (const index of order) {
       const target = projected[index]
-      if (!target) continue
+      const point = geometry.points[index]
+      if (!target || !point) continue
 
       const closeness = nearness(target.depth)
-      const size = (3.2 + closeness * 6.5) * 2
+      const isCortex = point.kind === 'cortex'
 
-      // Floor kept high enough that the far side of the cloud still reads as
-      // structure rather than dissolving into the background.
-      ctx.globalAlpha = 0.45 + closeness * 0.55
-      ctx.drawImage(glow, target.x - size / 2, target.y - size / 2, size, size)
+      // Bloom pass on the near half only — the far side gains nothing
+      // visible from it and it doubles the draw cost.
+      if (isCortex && closeness > 1 - BLOOM_FRACTION) {
+        const bloomSize = (18 + closeness * 26) * target.scale
+        ctx.globalAlpha = (closeness - (1 - BLOOM_FRACTION)) * 0.5
+        ctx.drawImage(
+          bloomSprite,
+          target.x - bloomSize / 2,
+          target.y - bloomSize / 2,
+          bloomSize,
+          bloomSize,
+        )
+      }
+
+      // Depth-graded core: far → mid over the back half, mid → near over
+      // the front half, so the cloud reads as a solid lit object.
+      const tint =
+        closeness < 0.5
+          ? mixRgb(far, mid, closeness * 2)
+          : mixRgb(mid, near, (closeness - 0.5) * 2)
+
+      // The stem stays bright enough to visibly join the brain to the
+      // platform; interior points sit back so they read as depth, not noise.
+      const weight = isCortex ? 1 : point.kind === 'stem' ? 0.9 : 0.4
+      const size = (2.2 + closeness * 5.2) * target.scale * weight
+
+      ctx.globalAlpha = (0.35 + closeness * 0.65) * weight
+      ctx.fillStyle = rgbaString(tint, 1)
+      ctx.beginPath()
+      ctx.arc(target.x, target.y, Math.max(0.4, size * 0.28), 0, Math.PI * 2)
+      ctx.fill()
+
+      ctx.globalAlpha = (0.2 + closeness * 0.5) * weight
+      ctx.drawImage(
+        coreSprite,
+        target.x - size / 2,
+        target.y - size / 2,
+        size,
+        size,
+      )
     }
 
     // Signals travelling the network.
@@ -227,33 +342,36 @@ export function createBrainRenderer(
 
       const x = a.x + (b.x - a.x) * pulse.progress
       const y = a.y + (b.y - a.y) * pulse.progress
-
-      // Fade in and out so a pulse never pops into existence.
       const fade = Math.sin(pulse.progress * Math.PI)
-      const size = 12
+      const size = 16 * a.scale
 
       ctx.globalAlpha = fade
-      ctx.drawImage(pulseGlow, x - size / 2, y - size / 2, size, size)
+      ctx.drawImage(pulseSprite, x - size / 2, y - size / 2, size, size)
     }
 
     ctx.globalAlpha = 1
+    ctx.globalCompositeOperation = 'source-over'
   }
 
   return {
     frame(elapsed, pointer) {
       const dt = Math.min(elapsed, MAX_FRAME_MS)
+      elapsedTotal += dt
 
       rotation += config.rotationSpeed * (dt / 16.667)
 
-      // Ease towards the pointer rather than tracking it exactly, so the
-      // parallax feels like weight instead of a cursor attachment.
+      // Ease toward the pointer rather than tracking it, so the parallax
+      // reads as weight instead of a cursor attachment.
       const maxTilt = config.parallaxDeg * DEG_TO_RAD
       tiltX += (pointer.y * maxTilt - tiltX) * 0.05
-      tiltY += (pointer.x * maxTilt - tiltY) * 0.05
-      rotation += tiltY * 0.0015
+      rotation += (pointer.x * maxTilt - 0) * 0.00035
 
       sinceLastPulse += dt
-      if (sinceLastPulse >= config.pulseInterval && geometry.edges.length > 0) {
+      if (
+        sinceLastPulse >= config.pulseInterval &&
+        geometry.edges.length > 0 &&
+        pulses.length < MAX_PULSES
+      ) {
         sinceLastPulse = 0
         pulses.push({
           edgeIndex: Math.floor(Math.random() * geometry.edges.length),
@@ -273,11 +391,12 @@ export function createBrainRenderer(
     },
 
     still() {
-      // A recognisable three-quarter view, so the static alternative looks
-      // composed rather than like a stopped animation.
-      rotation = 0.6
-      tiltX = 0
-      tiltY = 0
+      // Near side-profile. The sagittal silhouette is the view that reads as
+      // a brain in under a second; a three-quarter angle merges the lobes
+      // into an anonymous blob.
+      rotation = SIDE_PROFILE
+      tiltX = -0.06
+      elapsedTotal = 0
       pulses.length = 0
       render()
     },
@@ -289,9 +408,17 @@ export function createBrainRenderer(
     },
 
     setPalette(next) {
-      palette = next
-      glow = createGlowSprite(palette.point, 64)
-      pulseGlow = createGlowSprite(palette.pulse, 48)
+      near = toRgb(next.near)
+      mid = toRgb(next.mid)
+      far = toRgb(next.far)
+      edgeRgb = toRgb(next.edge)
+      baseRgb = toRgb(next.base)
+      haloRgb = toRgb(next.halo)
+
+      coreSprite = createSprite(near, 32, 0.25)
+      bloomSprite = createSprite(mid, 96, 0.12)
+      pulseSprite = createSprite(toRgb(next.pulse), 64, 0.18)
+      haloSprite = createSprite(haloRgb, 512, 0.02)
     },
   }
 }
