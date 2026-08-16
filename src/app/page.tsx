@@ -1,14 +1,13 @@
-import { MagneticButton } from '@/components/ui/MagneticButton'
-import { Reveal, RevealItem } from '@/components/ui/Reveal'
+import { Hero } from '@/components/sections/Hero'
+import { Reveal } from '@/components/ui/Reveal'
 import { counts, experienceSince, profile, visibleSections } from '@/content'
 
 /**
- * Phase 2 placeholder.
+ * The page maps over the section registry rather than listing sections, so
+ * enabling or reordering one is a content edit.
  *
- * The hero proper is Phase 3 and the remaining sections are Phase 4. What
- * this proves now is the system: the page maps over the section registry
- * rather than listing sections, every value comes from the content layer,
- * and every colour and timing comes from a token.
+ * Journey, Projects, Assistant and Contact land in Phases 4 and 5; their
+ * placeholders keep the scroll-spy and nav honest in the meantime.
  */
 export default function HomePage() {
   // Time-dependent, so it is read here in a Server Component and passed down
@@ -25,77 +24,56 @@ export default function HomePage() {
 
   return (
     <main id="main" className="flex flex-1 flex-col">
-      {visibleSections.map((section) => (
-        <section
-          key={section.id}
-          id={section.id}
-          className="scroll-mt-24 px-gutter py-section"
-        >
-          <div className="mx-auto max-w-6xl">
-            {section.id === 'hero' ? (
-              <Reveal stagger className="flex flex-col gap-6">
-                <RevealItem>
-                  <p className="text-accent-bright font-mono text-eyebrow uppercase">
-                    {profile.role}
+      {visibleSections.map((section) => {
+        // The hero is sized to one viewport so the headline, the numbers and
+        // the actions are all visible without scrolling. Every other section
+        // uses the standard vertical rhythm.
+        const isHero = section.id === 'hero'
+
+        return (
+          <section
+            key={section.id}
+            id={section.id}
+            className={
+              isHero
+                ? 'flex min-h-svh scroll-mt-24 items-center px-gutter pt-28 pb-16'
+                : 'scroll-mt-24 px-gutter py-section'
+            }
+          >
+            {/* `min-w-0` matters because the hero section is a flex container:
+              its child would otherwise take `min-width: auto` and refuse to
+              shrink below its content, overflowing narrow screens. */}
+            <div className="mx-auto w-full min-w-0 max-w-6xl">
+              {section.id === 'hero' ? (
+                <Hero
+                  role={profile.role}
+                  tagline={profile.tagline}
+                  summary={profile.summary}
+                  stats={stats}
+                  projectsSectionId="projects"
+                  contactSectionId="contact"
+                  assistantSectionId="assistant"
+                  assistantPrompt="Ask me anything about my work"
+                />
+              ) : (
+                <Reveal className="flex flex-col gap-3">
+                  <p className="text-ink-ghost font-mono text-eyebrow uppercase">
+                    {section.stage}
                   </p>
-                </RevealItem>
-
-                <RevealItem>
-                  <h1 className="font-display text-display text-ink max-w-4xl font-extrabold text-balance">
-                    {profile.tagline}
-                  </h1>
-                </RevealItem>
-
-                <RevealItem>
-                  <p className="text-ink-muted text-lede max-w-measure">
-                    {profile.summary}
-                  </p>
-                </RevealItem>
-
-                <RevealItem>
-                  <dl className="border-rule-soft flex flex-wrap gap-x-10 gap-y-4 border-t pt-6">
-                    {stats.map((stat) => (
-                      <div key={stat.label} className="flex flex-col gap-1">
-                        <dt className="text-ink-faint font-mono text-eyebrow uppercase">
-                          {stat.label}
-                        </dt>
-                        <dd className="text-accent-bright font-mono text-xl font-bold tabular-nums">
-                          {stat.value}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                </RevealItem>
-
-                <RevealItem>
-                  <div className="flex flex-wrap gap-3 pt-2">
-                    <MagneticButton href="#projects">
-                      View my work
-                    </MagneticButton>
-                    <MagneticButton href="#contact" variant="outline">
-                      Get in touch
-                    </MagneticButton>
+                  <h2 className="font-display text-headline text-ink font-semibold">
+                    {section.navLabel}
+                  </h2>
+                  <div className="border-rule-soft max-w-measure border-t pt-4">
+                    <p className="text-ink-faint font-mono text-xs tracking-wider">
+                      Built in a later phase.
+                    </p>
                   </div>
-                </RevealItem>
-              </Reveal>
-            ) : (
-              <Reveal className="flex flex-col gap-3">
-                <p className="text-ink-ghost font-mono text-eyebrow uppercase">
-                  {section.stage}
-                </p>
-                <h2 className="font-display text-headline text-ink font-semibold">
-                  {section.navLabel}
-                </h2>
-                <div className="border-rule-soft max-w-measure border-t pt-4">
-                  <p className="text-ink-faint font-mono text-xs tracking-wider">
-                    Built in a later phase.
-                  </p>
-                </div>
-              </Reveal>
-            )}
-          </div>
-        </section>
-      ))}
+                </Reveal>
+              )}
+            </div>
+          </section>
+        )
+      })}
     </main>
   )
 }

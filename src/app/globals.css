@@ -54,9 +54,12 @@
   --text-eyebrow--line-height: 1.4;
   --text-eyebrow--letter-spacing: 0.2em;
 
-  --text-display: clamp(2.5rem, 7vw, 5.25rem);
-  --text-display--line-height: 0.98;
-  --text-display--letter-spacing: -0.04em;
+  /* Sized so the tagline holds two lines and the whole hero — headline,
+     stats, actions — still fits one viewport. Bigger looked impressive in
+     isolation and pushed everything that matters below the fold. */
+  --text-display: clamp(2.25rem, 5.2vw, 4.25rem);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.035em;
 
   --text-headline: clamp(1.75rem, 4vw, 2.75rem);
   --text-headline--line-height: 1.08;
@@ -117,6 +120,33 @@
 
 :root {
   color-scheme: dark;
+
+  /* Entrance choreography. Kept in CSS rather than JavaScript so the hero is
+     never hidden behind hydration — on a slow connection, JS-gated content
+     shows a blank page until the bundle lands. */
+  --enter-step: 60ms;
+  --enter-distance: 1.25rem;
+}
+
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--enter-distance));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/**
+ * Staggered entrance. Set `--enter-index` inline per element; the delay is
+ * derived from the token, so the rhythm of the whole page is tuned from
+ * `--enter-step` alone.
+ */
+@utility enter {
+  animation: enter-rise var(--duration-slow) var(--ease-out-expo) both;
+  animation-delay: calc(var(--enter-index, 0) * var(--enter-step));
 }
 
 /* --- base ---------------------------------------------------------------- */
@@ -192,6 +222,9 @@ body::after {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /* Delay matters as much as duration: without this, a staggered entrance
+       would still hold elements invisible for the length of the stagger. */
+    animation-delay: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
