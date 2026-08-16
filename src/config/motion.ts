@@ -45,8 +45,16 @@ export const stagger = {
 export const reveal = {
   /** How far an element travels on entry, in pixels. */
   distance: 24,
-  /** Fraction of the element that must be visible before it fires. */
-  amount: 0.25,
+  /**
+   * Fires as soon as any part of the element enters, pulled in from the
+   * bottom so it triggers just before the element is fully in view.
+   *
+   * Deliberately NOT a ratio threshold: a section taller than the viewport
+   * can never reach a 25% ratio, so a percentage threshold leaves exactly
+   * the largest sections permanently hidden.
+   */
+  threshold: 0,
+  rootMargin: '0px 0px -12% 0px',
   /** Reveals happen once. Replaying on every scroll-past reads as a gimmick. */
   once: true,
 } as const

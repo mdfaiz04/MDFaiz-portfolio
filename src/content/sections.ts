@@ -3,14 +3,14 @@ import type { Section } from './schema'
 /**
  * The spine of the site (L6).
  *
- * Nav, page composition, scroll-spy, and footer links are all generated from
- * this one array. Reordering the story is an edit to `order`; removing a
- * section from the entire site is `enabled: false`. There is no second list
- * of links anywhere in the codebase.
+ * Nav, mobile menu, page composition, scroll-spy, and footer links are all
+ * generated from this one array. Reordering the story is an edit to `order`;
+ * removing a section from the entire site is `enabled: false`. There is no
+ * second list of links anywhere in the codebase.
  *
  * `stage` records which step of the visitor journey a section serves —
  * attention → understanding → proof → interaction → connection. It is real
- * information, not decoration, and the design uses it.
+ * information, not decoration, and the design surfaces it.
  */
 export const sections = [
   {
@@ -25,6 +25,8 @@ export const sections = [
     navLabel: 'Journey',
     order: 1,
     stage: 'understanding',
+    heading: 'The path so far',
+    lede: 'Two internships in two very different fields, and the engineering that carries across both.',
     enabled: true,
   },
   {
@@ -32,6 +34,8 @@ export const sections = [
     navLabel: 'Projects',
     order: 2,
     stage: 'proof',
+    heading: "Things I've built",
+    lede: 'Each one started with a problem worth solving. Here is the problem, the approach, and what came out of it.',
     enabled: true,
   },
   {
@@ -39,6 +43,8 @@ export const sections = [
     navLabel: 'Ask',
     order: 3,
     stage: 'interaction',
+    heading: 'Ask about my work',
+    lede: 'Answers come straight from this portfolio — no guessing, and nothing invented.',
     enabled: true,
   },
   {
@@ -46,6 +52,8 @@ export const sections = [
     navLabel: 'Contact',
     order: 4,
     stage: 'connection',
+    heading: "Let's build something",
+    lede: 'Open to internships and graduate roles in AI and backend engineering.',
     enabled: true,
   },
   {

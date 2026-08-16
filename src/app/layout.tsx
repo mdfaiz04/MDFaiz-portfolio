@@ -55,6 +55,20 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
   return (
     <html lang="en" className={`${fontVariables} h-full`}>
+      <head>
+        {/*
+          Marks that scripting is available, before the first paint. Every
+          scroll-reveal's hidden start state is scoped to this class, so a
+          blocked or failed bundle leaves the page fully readable instead of
+          blank. Inline and synchronous on purpose — deferring it would show
+          a flash of un-hidden content.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.add('js')`,
+          }}
+        />
+      </head>
       <body className="flex min-h-full flex-col">
         {/* R8 — keyboard users skip the nav without tabbing through it. */}
         <a

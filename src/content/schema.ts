@@ -184,6 +184,13 @@ export const SectionSchema = z.object({
   navLabel: z.string().min(1),
   order: z.number().int().min(0),
   stage: JourneyStageSchema,
+  /**
+   * Section copy. Optional because the hero carries its own headline from
+   * the profile. Kept here rather than in components so no section title is
+   * ever a literal in markup (R1).
+   */
+  heading: z.string().min(1).optional(),
+  lede: z.string().min(1).optional(),
   /** Sections ship dark until their content exists. */
   enabled: z.boolean().default(true),
 })

@@ -125,6 +125,113 @@
  * every timing value tied to the token rather than to a magic number.
  */
 /**
+ * Scroll reveals.
+ *
+ * Content is visible by DEFAULT. The hidden start state is scoped to `.js`,
+ * a class added by an inline script before first paint — so if the bundle
+ * fails, is blocked, or simply has not arrived yet, every section still
+ * renders in full. Animation is an enhancement, never a precondition for
+ * reading the page.
+ */
+[data-reveal],
+[data-reveal-wipe],
+[data-reveal-stagger] > * {
+  opacity: 1;
+}
+
+.js [data-reveal],
+.js [data-reveal-stagger] > * {
+  opacity: 0;
+  transform: translateY(var(--enter-distance));
+  transition:
+    opacity var(--duration-base) var(--ease-out-expo),
+    transform var(--duration-base) var(--ease-out-expo);
+}
+
+.js [data-reveal].is-visible,
+.js [data-reveal-stagger].is-visible > * {
+  opacity: 1;
+  transform: none;
+}
+
+/* A wipe rather than a rise — each section enters differently, because the
+   same reveal five times over is the clearest tell of a generated page. */
+.js [data-reveal-wipe] {
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
+  transition:
+    opacity var(--duration-slow) var(--ease-out-expo),
+    clip-path var(--duration-slow) var(--ease-out-expo);
+}
+
+.js [data-reveal-wipe].is-visible {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+}
+
+/* Children release in sequence. Enumerated rather than computed because CSS
+   cannot derive a delay from an element's index. */
+.js [data-reveal-stagger].is-visible > *:nth-child(1) {
+  transition-delay: calc(0 * var(--enter-step));
+}
+.js [data-reveal-stagger].is-visible > *:nth-child(2) {
+  transition-delay: calc(1 * var(--enter-step));
+}
+.js [data-reveal-stagger].is-visible > *:nth-child(3) {
+  transition-delay: calc(2 * var(--enter-step));
+}
+.js [data-reveal-stagger].is-visible > *:nth-child(4) {
+  transition-delay: calc(3 * var(--enter-step));
+}
+.js [data-reveal-stagger].is-visible > *:nth-child(5) {
+  transition-delay: calc(4 * var(--enter-step));
+}
+.js [data-reveal-stagger].is-visible > *:nth-child(n + 6) {
+  transition-delay: calc(5 * var(--enter-step));
+}
+
+/* Reduced motion: never hidden, never moved. A genuinely static page. */
+@media (prefers-reduced-motion: reduce) {
+  .js [data-reveal],
+  .js [data-reveal-wipe],
+  .js [data-reveal-stagger] > * {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+    transition: none;
+  }
+}
+
+/**
+ * A soft light that follows the pointer across a project row. The position
+ * arrives as CSS custom properties set by a pointermove handler, so tracking
+ * the cursor costs no React renders.
+ */
+.project-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-out-expo);
+  background: radial-gradient(
+    22rem circle at var(--pointer-x) var(--pointer-y),
+    color-mix(in oklab, var(--color-accent) 12%, transparent),
+    transparent 70%
+  );
+}
+
+.project-card:hover::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-card::before {
+    display: none;
+  }
+}
+
+/**
  * Caps the hero canvas by viewport height. Without a height cap, an
  * aspect-square canvas sized only by width grows tall enough on a short
  * window to push the hero's actions below the fold.
