@@ -137,10 +137,11 @@
   --duration-slow: 700ms;
 
   /* --- stage ------------------------------------------------------------ */
-  /* The hero visual's frame. Wider than square because the scene is a
-     laptop on a floor, not a floating object — the extra width is where the
-     grid and the orbiting tiles live. */
-  --aspect-stage: 7 / 5;
+  /* The hero visual's frame. Wider than square because the scene is a laptop
+     on a floor, not a floating object — the extra width is where the grid and
+     the orbiting tiles live. Height is what limits how large the model can be
+     drawn, so the frame is only as wide as it needs to be. */
+  --aspect-stage: 6 / 5;
 
   /* --- depth ------------------------------------------------------------ */
   /* Two radii languages on purpose. `edge` is the hairline, technical

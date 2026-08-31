@@ -8,7 +8,7 @@ import {
   Trophy,
   type LucideIcon,
 } from 'lucide-react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
 import { BrandMark } from '@/components/ui/BrandMark'
 import { Reveal } from '@/components/ui/Reveal'
@@ -44,6 +44,14 @@ type HeroProps = {
   brands: readonly Brand[]
   brandsHeading: string
   scrollCue: string
+  /**
+   * The assistant, passed in rather than imported.
+   *
+   * Keeps this a Server Component: the panel is the only interactive thing in
+   * the hero, and rendering it as a slot means its client bundle does not
+   * drag the rest of the introduction into the browser with it.
+   */
+  assistant: ReactNode
   primaryAction: string
   secondaryAction: string
   projectsSectionId: string
@@ -74,7 +82,8 @@ const ENTER = {
   summary: 4,
   actions: 5,
   scene: 3,
-  scrollCue: 6,
+  assistant: 6,
+  scrollCue: 7,
 } as const
 
 /** `--enter-index` is a position in the sequence, not a duration. */
@@ -119,6 +128,7 @@ export function Hero({
   brands,
   brandsHeading,
   scrollCue,
+  assistant,
   primaryAction,
   secondaryAction,
   projectsSectionId,
@@ -146,7 +156,7 @@ export function Hero({
     <div className="flex flex-col gap-10 lg:gap-12">
       <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-8">
         {/* --- the pitch ------------------------------------------------- */}
-        <div className="flex min-w-0 flex-col gap-4 lg:col-span-5">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-span-4">
           <p
             style={delay(ENTER.greeting)}
             className="enter text-accent-bright text-sm font-medium"
@@ -221,9 +231,21 @@ export function Hero({
         {/* --- the object ------------------------------------------------ */}
         <div
           style={delay(ENTER.scene)}
-          className="enter flex w-full min-w-0 justify-center lg:col-span-7"
+          /* Third on a phone, second on a desktop. Stacked, the scene is
+             tall and decorative, and putting it before the assistant buries
+             the one interactive thing on the page — which is the reason it
+             moved out of the footer in the first place. */
+          className="enter order-3 flex w-full min-w-0 justify-center lg:order-2 lg:col-span-5"
         >
           <Workstation glyphs={glyphs} />
+        </div>
+
+        {/* --- the conversation ------------------------------------------ */}
+        <div
+          style={delay(ENTER.assistant)}
+          className="enter order-2 flex min-w-0 lg:order-3 lg:col-span-3"
+        >
+          {assistant}
         </div>
       </div>
 

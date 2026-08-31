@@ -51,7 +51,7 @@ type Projected = { x: number; y: number; depth: number; scale: number }
 const FOV = 4.1
 
 /** Fraction of the shorter canvas edge one model unit maps to. */
-const FILL = 0.235
+const FILL = 0.25
 
 /** Vertical placement of the model origin. */
 const CENTRE_Y = 0.73
@@ -70,9 +70,18 @@ const PITCH = 0.33
 /** A frame longer than this is a tab waking up, not a slow device. */
 const MAX_FRAME_MS = 50
 
-/** The laptop sways rather than spins: a full turn would face it away. */
-const SWAY_RADIANS = 0.13
-const SWAY_SPEED = 0.00021
+/**
+ * The machine is turned to three-quarters and breathes within a narrow arc.
+ *
+ * Head-on, a laptop is a rectangle above a rectangle and the eye has nothing
+ * to read depth from. Turned, both the side of the base and the angle of the
+ * lid become visible at once — which is why every product photograph of a
+ * laptop ever taken is shot from roughly here. A full rotation would spend
+ * half its time showing the back of a lid, so it sways instead.
+ */
+const BASE_YAW = 0.34
+const SWAY_RADIANS = 0.055
+const SWAY_SPEED = 0.00019
 
 /** Deck height, and the lid's lean back from vertical. */
 const DECK_Y = -0.55
@@ -91,7 +100,7 @@ const ORBIT_RADIUS = 1.55
  * the largest, so it is the one that runs off the top of the frame. This is
  * the angle at which it clears.
  */
-const ORBIT_TILT = 0.26
+const ORBIT_TILT = 0.22
 const ORBIT_SPEED = 0.00034
 
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
@@ -222,26 +231,51 @@ function buildGlobe(count: number, edgeCap: number) {
   return { points, edges }
 }
 
-/** Code lines for the screen, in surface coordinates. Seeded, so stable. */
+/**
+ * A screenful of code, in editor coordinates. Seeded, so it is stable.
+ *
+ * Each row is a few coloured runs rather than one bar, because that is what
+ * distinguishes code from a paragraph at a glance: short keyword, longer
+ * name, a string. Indentation follows a running depth the way real code
+ * does — it opens a block, stays there, and closes — instead of jittering
+ * line to line, which is the tell of a drawing of code.
+ */
+type CodeRun = { start: number; end: number; tone: number }
+
 function buildCodeLines(seed: number) {
   const random = mulberry32(seed)
-  const lines: { v: number; start: number; end: number; tone: number }[] = []
-  const rows = 11
+  const rows: { v: number; runs: CodeRun[] }[] = []
+  const count = 14
+  let depth = 0
 
-  for (let row = 0; row < rows; row += 1) {
-    const v = 0.14 + (row / rows) * 0.74
-    const indent = 0.1 + Math.floor(random() * 3) * 0.07
-    const width = 0.16 + random() * 0.46
+  for (let row = 0; row < count; row += 1) {
+    const v = 0.1 + (row / count) * 0.82
 
-    lines.push({
-      v,
-      start: indent,
-      end: Math.min(0.88, indent + width),
-      tone: random(),
-    })
+    if (random() > 0.72 && depth < 3) depth += 1
+    else if (random() > 0.86 && depth > 0) depth -= 1
+
+    // A blank line every so often, as in anything anyone actually wrote.
+    if (random() > 0.88) {
+      rows.push({ v, runs: [] })
+      continue
+    }
+
+    const runs: CodeRun[] = []
+    let cursor = 0.06 + depth * 0.055
+    const segments = 1 + Math.floor(random() * 3)
+
+    for (let segment = 0; segment < segments; segment += 1) {
+      const width = 0.06 + random() * 0.17
+      if (cursor + width > 0.94) break
+
+      runs.push({ start: cursor, end: cursor + width, tone: random() })
+      cursor += width + 0.022
+    }
+
+    rows.push({ v, runs })
   }
 
-  return lines
+  return rows
 }
 
 // ---------------------------------------------------------------------------
@@ -589,6 +623,8 @@ export function createWorkstationRenderer(
     ctx.stroke()
 
     // --- the lid ----------------------------------------------------------
+    // Drawn after the base but sharing its back edge, so the base's own edge
+    // highlight stays on top where the two meet.
     quadPath(LID, spin)
     ctx.fillStyle = surfaceGradient(
       LID,
@@ -658,19 +694,72 @@ export function createWorkstationRenderer(
     )
     ctx.fill()
 
-    // Code. Positioned in the panel's own coordinates, so it stays inside the
-    // bezel however the lid is angled.
-    ctx.lineWidth = Math.max(1, radius * 0.0095)
-    for (const line of code) {
-      const a = project(onQuad(panel, line.start, line.v), spin)
-      const b = project(onQuad(panel, line.end, line.v), spin)
-      const colour = line.tone > 0.72 ? halo : line.tone > 0.4 ? mid : edge
+    /**
+     * The editor.
+     *
+     * An activity strip, a tab bar, a gutter of line numbers and then the
+     * code — the furniture, not just the text. It is what the eye actually
+     * uses to recognise a screen as a screen: a field of coloured dashes
+     * could be anything, but a sidebar and a row of tabs could only be one
+     * thing.
+     */
+    const chromeTop = 0.075
+    const gutter = 0.115
+    const rail = 0.055
+
+    // Activity strip down the left edge.
+    quadPath(inset(panel, 0, 0, rail, 1), spin)
+    ctx.fillStyle = rgbaString(halo, 0.1)
+    ctx.fill()
+
+    // Tab bar, with one tab lit as the active file.
+    quadPath(inset(panel, rail, 0, 1, chromeTop), spin)
+    ctx.fillStyle = rgbaString(halo, 0.08)
+    ctx.fill()
+
+    quadPath(inset(panel, rail + 0.02, 0.008, rail + 0.19, chromeTop), spin)
+    ctx.fillStyle = rgbaString(mid, 0.16)
+    ctx.fill()
+
+    // Line numbers: one short dash per row, dimmer than the code.
+    ctx.lineWidth = Math.max(0.8, radius * 0.006)
+    for (const row of code) {
+      if (row.runs.length === 0) continue
+      const v = chromeTop + row.v * (1 - chromeTop)
+      const a = project(onQuad(panel, rail + 0.022, v), spin)
+      const b = project(onQuad(panel, rail + 0.045, v), spin)
 
       ctx.beginPath()
       ctx.moveTo(a.x, a.y)
       ctx.lineTo(b.x, b.y)
-      ctx.strokeStyle = rgbaString(colour, 0.95)
+      ctx.strokeStyle = rgbaString(edge, 0.3)
       ctx.stroke()
+    }
+
+    // The code itself, inside the gutter.
+    ctx.lineWidth = Math.max(1, radius * 0.0085)
+    for (const row of code) {
+      const v = chromeTop + row.v * (1 - chromeTop)
+
+      for (const run of row.runs) {
+        const colour =
+          run.tone > 0.76
+            ? near
+            : run.tone > 0.5
+              ? halo
+              : run.tone > 0.24
+                ? mid
+                : edge
+
+        const a = project(onQuad(panel, gutter + run.start * 0.86, v), spin)
+        const b = project(onQuad(panel, gutter + run.end * 0.86, v), spin)
+
+        ctx.beginPath()
+        ctx.moveTo(a.x, a.y)
+        ctx.lineTo(b.x, b.y)
+        ctx.strokeStyle = rgbaString(colour, 0.92)
+        ctx.stroke()
+      }
     }
 
     /**
@@ -732,6 +821,39 @@ export function createWorkstationRenderer(
     ctx.lineWidth = Math.max(0.8, radius * 0.005)
     ctx.strokeStyle = rgbaString(base, 0.32)
     ctx.stroke()
+
+    /**
+     * The pool of screen light on the floor in front of the machine.
+     *
+     * A lit screen in a dark room throws light forward, and the floor is the
+     * only surface here to catch it. Without it the laptop is lit but the
+     * scene around it is not, which is the difference between an object in a
+     * room and a sticker on a background.
+     */
+    const pool = project(onQuad(DECK, 0.5, 1), spin)
+    const reach = radius * 1.3
+    const spill = ctx.createRadialGradient(
+      pool.x,
+      pool.y,
+      0,
+      pool.x,
+      pool.y,
+      reach,
+    )
+    spill.addColorStop(0, rgbaString(mid, 0.14))
+    spill.addColorStop(1, rgbaString(mid, 0))
+    ctx.fillStyle = spill
+    ctx.beginPath()
+    ctx.ellipse(
+      pool.x,
+      pool.y + reach * 0.2,
+      reach,
+      reach * 0.34,
+      0,
+      0,
+      Math.PI * 2,
+    )
+    ctx.fill()
 
     // The lit seam along the hinge.
     const hingeLeft = project(onQuad(DECK, 0.06, 0.02), spin)
@@ -881,7 +1003,7 @@ export function createWorkstationRenderer(
 
     // The laptop sways within a narrow arc; a full rotation would spend half
     // its time showing the back of a lid.
-    const sway = Math.sin(time * SWAY_SPEED) * SWAY_RADIANS
+    const sway = BASE_YAW + Math.sin(time * SWAY_SPEED) * SWAY_RADIANS
     const revolve = time * ORBIT_SPEED
 
     /**

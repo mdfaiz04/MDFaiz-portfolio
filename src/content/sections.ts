@@ -39,13 +39,21 @@ export const sections = [
     enabled: true,
   },
   {
+    /**
+     * Off as a section, because it now lives in the hero.
+     *
+     * At the foot of the page almost nobody reached it — the one genuinely
+     * interactive thing here was the last thing anyone would find. Beside the
+     * introduction it is the second thing they see. The stage it serves is
+     * unchanged; only where it happens has moved.
+     */
     id: 'assistant',
     navLabel: 'Ask',
     order: 3,
     stage: 'interaction',
     heading: 'Ask about my work',
     lede: 'Answers come straight from this portfolio — no guessing, and nothing invented.',
-    enabled: true,
+    enabled: false,
   },
   {
     id: 'contact',

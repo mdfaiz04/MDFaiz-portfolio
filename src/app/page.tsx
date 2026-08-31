@@ -179,6 +179,15 @@ export default function HomePage() {
                   brands={brandedTechnologies}
                   brandsHeading="Technologies I work with"
                   scrollCue="Scroll to explore"
+                  assistant={
+                    <Assistant
+                      heading="Ask me anything"
+                      status="Online"
+                      placeholder="Type your question..."
+                      sendLabel="Send question"
+                      opening={`Hi! I'm ${profile.shortName}'s portfolio assistant. Ask me anything about my work, skills, projects, or experience.`}
+                    />
+                  }
                   primaryAction="View my work"
                   secondaryAction="Get in touch"
                   projectsSectionId="projects"
@@ -213,13 +222,6 @@ export default function HomePage() {
                       email={profile.email}
                       location={`${profile.location.city}, ${profile.location.region}, ${profile.location.country}`}
                       links={profile.links}
-                    />
-                  ) : null}
-
-                  {section.id === 'assistant' ? (
-                    <Assistant
-                      placeholder="Ask about a project, a technology, or my experience"
-                      opening={`Ask me anything about ${profile.shortName}'s work. Every answer is built from this portfolio, so nothing here is invented.`}
                     />
                   ) : null}
                 </div>

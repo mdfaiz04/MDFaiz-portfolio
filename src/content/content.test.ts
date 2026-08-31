@@ -148,17 +148,26 @@ describe('the section registry drives the site', () => {
     expect(orders).toEqual([...orders].sort((a, b) => a - b))
   })
 
+  /**
+   * The five-stage journey is the site's spine, and every stage still has to
+   * happen — but not every stage is still its own section.
+   *
+   * `interaction` moved into the hero: at the foot of the page almost nobody
+   * reached the assistant, so it now sits beside the introduction. A section
+   * carries one stage, so the hero cannot declare both, and the registry can
+   * only show four. The assertion below therefore checks the four that remain
+   * sections AND that the stage which moved is still accounted for, so
+   * deleting the assistant outright fails rather than passing quietly.
+   */
   it('covers every stage of the visitor journey', () => {
-    const stages = new Set(visibleSections.map((section) => section.stage))
-    expect(stages).toEqual(
-      new Set([
-        'attention',
-        'understanding',
-        'proof',
-        'interaction',
-        'connection',
-      ]),
+    const visible = new Set(visibleSections.map((section) => section.stage))
+    expect(visible).toEqual(
+      new Set(['attention', 'understanding', 'proof', 'connection']),
     )
+
+    const moved = sections.find((section) => section.stage === 'interaction')
+    expect(moved).toBeDefined()
+    expect(moved?.enabled).toBe(false)
   })
 })
 

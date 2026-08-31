@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpRight, CornerDownLeft, Sparkles } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Send, Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import { Chip } from '@/components/ui/Chip'
@@ -15,9 +15,12 @@ type Turn =
   | { id: string; role: 'assistant'; answer: Answer }
 
 type AssistantProps = {
-  /** Placeholder and opening line come from content, never from markup. */
+  /** Every string arrives as a prop — this component states no fact (R1). */
+  heading: string
+  status: string
   placeholder: string
   opening: string
+  sendLabel: string
 }
 
 /** How many characters of the current text block are shown. */
@@ -37,7 +40,13 @@ const COMPLETE: Progress = { block: Number.MAX_SAFE_INTEGER, char: 0 }
  * are honest ones — the engine really does answer in under a millisecond, and
  * text appearing instantly reads as canned rather than considered.
  */
-export function Assistant({ placeholder, opening }: AssistantProps) {
+export function Assistant({
+  heading,
+  status,
+  placeholder,
+  opening,
+  sendLabel,
+}: AssistantProps) {
   const reduced = useReducedMotion()
   const [turns, setTurns] = useState<Turn[]>([])
   const [draft, setDraft] = useState('')
@@ -133,93 +142,116 @@ export function Assistant({ placeholder, opening }: AssistantProps) {
     })
   }, [turns, progress, reduced])
 
-  const openingSuggestions = suggestions.slice(0, 4)
+  const openingSuggestions = suggestions.slice(0, 3)
+
+  // Prompts only while there is nothing to read. Once a conversation starts
+  // they are clutter competing with the answer.
+  const showSuggestions = turns.length === 0 && !thinking
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="border-rule-soft bg-surface/40 flex flex-col rounded-edge border">
-        <div
-          ref={transcriptRef}
-          aria-live="polite"
-          className="flex max-h-96 flex-col gap-5 overflow-y-auto p-5"
-        >
-          <p className="text-ink-faint flex items-start gap-3 text-sm">
-            <Sparkles
-              size={15}
-              aria-hidden="true"
-              className="text-accent-glow mt-0.5 shrink-0"
-            />
-            {opening}
-          </p>
-
-          {turns.map((turn) =>
-            turn.role === 'visitor' ? (
-              <p
-                key={turn.id}
-                className="border-accent/50 text-ink self-end border-r-2 pr-3 text-right text-sm"
-              >
-                {turn.text}
-              </p>
-            ) : (
-              <AnswerView
-                key={turn.id}
-                answer={turn.answer}
-                progress={turn === latest ? progress : COMPLETE}
-              />
-            ),
-          )}
-
-          {thinking ? (
-            <p className="text-ink-ghost flex gap-1 font-mono text-xs">
-              <span className="dot-pulse">•</span>
-              <span className="dot-pulse dot-pulse-2">•</span>
-              <span className="dot-pulse dot-pulse-3">•</span>
-            </p>
-          ) : null}
-        </div>
-
-        <form
-          onSubmit={(event) => {
-            event.preventDefault()
-            ask(draft)
-          }}
-          className="border-rule-soft flex items-center gap-3 border-t p-3"
-        >
-          <label htmlFor="assistant-input" className="sr-only">
-            {placeholder}
-          </label>
-          <input
-            id="assistant-input"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder={placeholder}
-            autoComplete="off"
-            className="text-ink placeholder:text-ink-ghost min-w-0 flex-1 bg-transparent px-2 py-2 font-mono text-sm outline-none"
+    <div className="panel flex w-full flex-col overflow-hidden">
+      <div className="border-rule-soft/70 flex items-center justify-between gap-3 border-b px-4 py-3">
+        <span className="text-ink flex min-w-0 items-center gap-2 text-sm font-semibold">
+          <Sparkles
+            size={15}
+            aria-hidden="true"
+            className="text-accent-glow shrink-0"
           />
-          <button
-            type="submit"
-            disabled={draft.trim() === '' || thinking}
-            className="bg-accent hover:bg-accent-bright text-ink inline-flex shrink-0 items-center gap-2 rounded-edge px-4 py-2 font-mono text-xs tracking-widest uppercase transition-colors duration-fast disabled:opacity-40"
-          >
-            Ask
-            <CornerDownLeft size={13} aria-hidden="true" />
-          </button>
-        </form>
+          <span className="truncate">{heading}</span>
+        </span>
+
+        <span className="text-ink-faint flex shrink-0 items-center gap-1.5 text-xs">
+          <span
+            aria-hidden="true"
+            className="bg-positive size-1.5 rounded-pill"
+          />
+          {status}
+        </span>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {openingSuggestions.map((suggestion) => (
-          <button
-            key={suggestion.id}
-            type="button"
-            onClick={() => ask(suggestion.question)}
-            disabled={thinking || isTyping}
-            className="border-rule text-ink-faint hover:border-accent hover:text-ink rounded-edge border px-3 py-1.5 text-left font-mono text-xs transition-colors duration-fast disabled:opacity-40"
-          >
-            {suggestion.question}
-          </button>
-        ))}
+      <div
+        ref={transcriptRef}
+        aria-live="polite"
+        className="flex max-h-64 min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4"
+      >
+        <p className="border-rule-soft/60 bg-surface/50 text-ink-muted rounded-tile border p-3 text-sm leading-relaxed">
+          {opening}
+        </p>
+
+        {turns.map((turn) =>
+          turn.role === 'visitor' ? (
+            <p
+              key={turn.id}
+              className="bg-accent-solid/25 border-accent/30 text-ink w-fit self-end rounded-tile border px-3 py-2 text-sm"
+            >
+              {turn.text}
+            </p>
+          ) : (
+            <AnswerView
+              key={turn.id}
+              answer={turn.answer}
+              progress={turn === latest ? progress : COMPLETE}
+            />
+          ),
+        )}
+
+        {thinking ? (
+          <p className="text-ink-ghost flex gap-1 font-mono text-xs">
+            <span className="dot-pulse">•</span>
+            <span className="dot-pulse dot-pulse-2">•</span>
+            <span className="dot-pulse dot-pulse-3">•</span>
+          </p>
+        ) : null}
       </div>
+
+      {showSuggestions ? (
+        <div className="flex flex-col gap-2 px-4 pb-3">
+          {openingSuggestions.map((suggestion) => (
+            <button
+              key={suggestion.id}
+              type="button"
+              onClick={() => ask(suggestion.question)}
+              disabled={isTyping}
+              className="border-rule-soft/70 text-ink-muted hover:border-accent hover:text-ink group flex items-center justify-between gap-3 rounded-tile border px-3 py-2.5 text-left text-xs leading-snug transition-colors duration-fast disabled:opacity-40"
+            >
+              {suggestion.question}
+              <ArrowRight
+                size={14}
+                aria-hidden="true"
+                className="text-ink-ghost group-hover:text-accent-bright shrink-0 transition-colors duration-fast"
+              />
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          ask(draft)
+        }}
+        className="border-rule-soft/70 flex items-center gap-2 border-t p-3"
+      >
+        <label htmlFor="assistant-input" className="sr-only">
+          {placeholder}
+        </label>
+        <input
+          id="assistant-input"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder={placeholder}
+          autoComplete="off"
+          className="border-rule-soft/70 bg-surface/40 text-ink placeholder:text-ink-ghost min-w-0 flex-1 rounded-tile border px-3 py-2 text-sm outline-none focus:border-accent/60"
+        />
+        <button
+          type="submit"
+          aria-label={sendLabel}
+          disabled={draft.trim() === '' || thinking}
+          className="button-primary text-ink inline-flex size-9 shrink-0 items-center justify-center disabled:opacity-40"
+        >
+          <Send size={15} aria-hidden="true" />
+        </button>
+      </form>
     </div>
   )
 }
