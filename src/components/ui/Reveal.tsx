@@ -10,6 +10,8 @@ type RevealProps = {
   stagger?: boolean
   /** A clip-path wipe instead of a rise. */
   wipe?: boolean
+  /** Children pop in one after another, scaling up as they land. */
+  pop?: boolean
   className?: string
 }
 
@@ -30,6 +32,7 @@ export function Reveal({
   children,
   stagger = false,
   wipe = false,
+  pop = false,
   className,
 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null)
@@ -58,9 +61,11 @@ export function Reveal({
 
   const attribute = wipe
     ? { 'data-reveal-wipe': '' }
-    : stagger
-      ? { 'data-reveal-stagger': '' }
-      : { 'data-reveal': '' }
+    : pop
+      ? { 'data-reveal-pop': '' }
+      : stagger
+        ? { 'data-reveal-stagger': '' }
+        : { 'data-reveal': '' }
 
   return (
     <div ref={ref} className={className} {...attribute}>

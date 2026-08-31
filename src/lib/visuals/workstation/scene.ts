@@ -76,6 +76,8 @@ const SWAY_SPEED = 0.00021
 
 /** Deck height, and the lid's lean back from vertical. */
 const DECK_Y = -0.55
+/** The base is a slab, not a plane — the front lip is what sells it. */
+const DECK_THICKNESS = 0.075
 const LID_TILT = 0.2
 const LID_HEIGHT = 1.3
 
@@ -93,6 +95,13 @@ const ORBIT_TILT = 0.26
 const ORBIT_SPEED = 0.00034
 
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5))
+
+/**
+ * Shadow and the darkest part of a screen. Not a design token on purpose:
+ * this is the absence of light rather than a colour choice, and it stays
+ * correct whatever the palette is retuned to.
+ */
+const BLACK: Rgb = { r: 0, g: 0, b: 0 }
 
 // ---------------------------------------------------------------------------
 // Model
@@ -353,7 +362,16 @@ export function createWorkstationRenderer(
   let radius = 0
   let time = 0
 
-  function readTones(source: BrainPalette): Record<string, Rgb> {
+  /**
+   * Every palette entry, parsed once per theme change rather than per frame.
+   *
+   * Typed as the palette's own keys, not `Record<string, Rgb>`. The loose
+   * version let a missing entry through as `undefined`, which then reached
+   * `mixRgb` and threw inside the draw loop — killing the animation while
+   * leaving a canvas that had already been cleared. A blank hero and no
+   * error in sight.
+   */
+  function readTones(source: BrainPalette): Record<keyof BrainPalette, Rgb> {
     return {
       near: toRgb(source.near),
       mid: toRgb(source.mid),
@@ -362,6 +380,9 @@ export function createWorkstationRenderer(
       pulse: toRgb(source.pulse),
       halo: toRgb(source.halo),
       base: toRgb(source.base),
+      shell: toRgb(source.shell),
+      shellDeep: toRgb(source.shellDeep),
+      rule: toRgb(source.rule),
     }
   }
 
@@ -393,32 +414,6 @@ export function createWorkstationRenderer(
       depth: z,
       scale,
     }
-  }
-
-  function strokeQuad(quad: Vec3[], spin: number, colour: Rgb, alpha: number) {
-    const projected = quad.map((corner) => project(corner, spin))
-    const first = projected[0]
-    if (!first) return
-
-    ctx.beginPath()
-    ctx.moveTo(first.x, first.y)
-    for (const corner of projected.slice(1)) ctx.lineTo(corner.x, corner.y)
-    ctx.closePath()
-    ctx.strokeStyle = rgbaString(colour, alpha)
-    ctx.stroke()
-  }
-
-  function fillQuad(quad: Vec3[], spin: number, colour: Rgb, alpha: number) {
-    const projected = quad.map((corner) => project(corner, spin))
-    const first = projected[0]
-    if (!first) return
-
-    ctx.beginPath()
-    ctx.moveTo(first.x, first.y)
-    for (const corner of projected.slice(1)) ctx.lineTo(corner.x, corner.y)
-    ctx.closePath()
-    ctx.fillStyle = rgbaString(colour, alpha)
-    ctx.fill()
   }
 
   /** The lit floor: a grid that fades out rather than ending in a hard edge. */
@@ -454,73 +449,222 @@ export function createWorkstationRenderer(
     }
   }
 
-  function drawLaptop(spin: number) {
+  /**
+   * A quad as a path, returning its projected corners for anything that needs
+   * to place a gradient along the same surface.
+   */
+  function quadPath(quad: Vec3[], spin: number): Projected[] {
+    const corners = quad.map((corner) => project(corner, spin))
+    const first = corners[0]
+    if (!first) return corners
+
+    ctx.beginPath()
+    ctx.moveTo(first.x, first.y)
+    for (const corner of corners.slice(1)) ctx.lineTo(corner.x, corner.y)
+    ctx.closePath()
+
+    return corners
+  }
+
+  /** A linear gradient running between two points on a surface. */
+  function surfaceGradient(
+    quad: Vec3[],
+    spin: number,
+    from: [number, number],
+    to: [number, number],
+    stops: [number, string][],
+  ): CanvasGradient {
+    const a = project(onQuad(quad, from[0], from[1]), spin)
+    const b = project(onQuad(quad, to[0], to[1]), spin)
+    const gradient = ctx.createLinearGradient(a.x, a.y, b.x, b.y)
+    for (const [offset, colour] of stops) gradient.addColorStop(offset, colour)
+    return gradient
+  }
+
+  /** Inset a quad in surface coordinates — the bezel, the screen, the keys. */
+  function inset(
+    quad: Vec3[],
+    u0: number,
+    v0: number,
+    u1: number,
+    v1: number,
+  ): Vec3[] {
+    return [
+      onQuad(quad, u0, v0),
+      onQuad(quad, u1, v0),
+      onQuad(quad, u1, v1),
+      onQuad(quad, u0, v1),
+    ]
+  }
+
+  /**
+   * The machine, as a solid object.
+   *
+   * Drawn with `source-over` and opaque fills, unlike everything else in this
+   * scene. That is the whole difference between a product render and a neon
+   * diagram: additive compositing makes every surface glow and nothing ever
+   * occludes anything, so the result reads as line art however much detail is
+   * added to it. Light is added back afterwards, on top, in `drawLaptopLight`.
+   */
+  function drawLaptopBody(spin: number) {
+    const shell = tones.shell!
+    const deep = tones.shellDeep!
+    const rule = tones.rule!
+    const near = tones.near!
+
+    // Contact shadow. Without something dark beneath it the machine floats.
+    const under = project(onQuad(DECK, 0.5, 0.55), spin)
+    const spread = radius * 1.5
+    const shadow = ctx.createRadialGradient(
+      under.x,
+      under.y,
+      0,
+      under.x,
+      under.y,
+      spread,
+    )
+    shadow.addColorStop(0, rgbaString(BLACK, 0.55))
+    shadow.addColorStop(1, rgbaString(BLACK, 0))
+    ctx.fillStyle = shadow
+    ctx.beginPath()
+    ctx.ellipse(
+      under.x,
+      under.y + radius * 0.1,
+      spread,
+      spread * 0.3,
+      0,
+      0,
+      Math.PI * 2,
+    )
+    ctx.fill()
+
+    // --- the base, with real thickness ------------------------------------
+    const skirt = DECK.map((corner) => ({
+      ...corner,
+      y: corner.y - DECK_THICKNESS,
+    }))
+
+    const faces: [Vec3[], number][] = [
+      // front, then the two sides. Only one side faces the camera at a time,
+      // but the sway crosses centre, so both are drawn.
+      [[DECK[3]!, DECK[2]!, skirt[2]!, skirt[3]!], 0.55],
+      [[DECK[0]!, DECK[3]!, skirt[3]!, skirt[0]!], 0.34],
+      [[DECK[1]!, DECK[2]!, skirt[2]!, skirt[1]!], 0.34],
+    ]
+
+    for (const [face, shade] of faces) {
+      quadPath(face, spin)
+      ctx.fillStyle = rgbaString(mixRgb(deep, shell, shade), 1)
+      ctx.fill()
+    }
+
+    // Deck top: lit from the hinge, falling away toward the front edge.
+    quadPath(DECK, spin)
+    ctx.fillStyle = surfaceGradient(
+      DECK,
+      spin,
+      [0.5, 0],
+      [0.5, 1],
+      [
+        [0, rgbaString(mixRgb(deep, shell, 1.35), 1)],
+        [1, rgbaString(mixRgb(deep, shell, 0.55), 1)],
+      ],
+    )
+    ctx.fill()
+
+    // The machined edge where the top face meets the front lip.
+    ctx.lineWidth = Math.max(0.8, radius * 0.006)
+    ctx.strokeStyle = rgbaString(near, 0.22)
+    ctx.stroke()
+
+    // A brighter specular along the front lip alone, where a real chamfer
+    // would catch the light square on.
+    const lipLeft = project(onQuad(DECK, 0, 1), spin)
+    const lipRight = project(onQuad(DECK, 1, 1), spin)
+    ctx.lineWidth = Math.max(1, radius * 0.009)
+    ctx.beginPath()
+    ctx.moveTo(lipLeft.x, lipLeft.y)
+    ctx.lineTo(lipRight.x, lipRight.y)
+    ctx.strokeStyle = rgbaString(near, 0.3)
+    ctx.stroke()
+
+    // --- the lid ----------------------------------------------------------
+    quadPath(LID, spin)
+    ctx.fillStyle = surfaceGradient(
+      LID,
+      spin,
+      [0, 0],
+      [1, 1],
+      [
+        [0, rgbaString(mixRgb(deep, shell, 1), 1)],
+        [1, rgbaString(mixRgb(deep, shell, 0.35), 1)],
+      ],
+    )
+    ctx.fill()
+    ctx.strokeStyle = rgbaString(rule, 0.9)
+    ctx.stroke()
+
+    // Rim light along the top of the lid.
+    const rimLeft = project(onQuad(LID, 0, 0), spin)
+    const rimRight = project(onQuad(LID, 1, 0), spin)
+    ctx.lineWidth = Math.max(1, radius * 0.008)
+    ctx.beginPath()
+    ctx.moveTo(rimLeft.x, rimLeft.y)
+    ctx.lineTo(rimRight.x, rimRight.y)
+    ctx.strokeStyle = rgbaString(near, 0.26)
+    ctx.stroke()
+
+    // Bezel, then the panel itself. A chin below the screen, as on a real
+    // machine — a perfectly centred screen is one of the tells of a drawing.
+    const panel = inset(LID, 0.045, 0.055, 0.955, 0.88)
+    quadPath(panel, spin)
+    ctx.fillStyle = surfaceGradient(
+      LID,
+      spin,
+      [0.5, 0],
+      [0.5, 1],
+      [
+        [0, rgbaString(mixRgb(deep, BLACK, 0.5), 1)],
+        [1, rgbaString(mixRgb(deep, BLACK, 0.78), 1)],
+      ],
+    )
+    ctx.fill()
+
+    return panel
+  }
+
+  /**
+   * Everything the machine emits or catches: the screen, its spill onto the
+   * deck, the specular sweep across the lid, and the keys.
+   */
+  function drawLaptopLight(spin: number, panel: Vec3[]) {
     const base = tones.base!
     const near = tones.near!
     const mid = tones.mid!
     const halo = tones.halo!
+    const edge = tones.edge!
 
-    // Deck: a dark face so the grid does not read through the machine.
-    fillQuad(DECK, spin, tones.far!, 0.34)
-
-    ctx.lineWidth = Math.max(1, radius * 0.012)
-    strokeQuad(DECK, spin, base, 0.85)
-
-    // Key rows, as short strokes in deck surface coordinates.
-    ctx.lineWidth = Math.max(0.8, radius * 0.007)
-    for (let row = 0; row < 4; row += 1) {
-      const v = 0.2 + row * 0.15
-      for (let key = 0; key < 12; key += 1) {
-        const u = 0.1 + key * 0.0655
-        const a = project(onQuad(DECK, u, v), spin)
-        const b = project(onQuad(DECK, u + 0.045, v), spin)
-
-        ctx.beginPath()
-        ctx.moveTo(a.x, a.y)
-        ctx.lineTo(b.x, b.y)
-        ctx.strokeStyle = rgbaString(base, 0.42)
-        ctx.stroke()
-      }
-    }
-
-    // Trackpad.
-    strokeQuad(
-      [
-        onQuad(DECK, 0.38, 0.76),
-        onQuad(DECK, 0.62, 0.76),
-        onQuad(DECK, 0.62, 0.93),
-        onQuad(DECK, 0.38, 0.93),
-      ],
+    // Screen wash, brightest at the top where the content is densest.
+    quadPath(panel, spin)
+    ctx.fillStyle = surfaceGradient(
+      LID,
       spin,
-      base,
-      0.4,
+      [0.5, 0],
+      [0.5, 1],
+      [
+        [0, rgbaString(mid, 0.4)],
+        [1, rgbaString(halo, 0.12)],
+      ],
     )
+    ctx.fill()
 
-    // Lid: dark panel, bright bezel, then the code.
-    fillQuad(LID, spin, tones.far!, 0.4)
-    ctx.lineWidth = Math.max(1.2, radius * 0.014)
-    strokeQuad(LID, spin, near, 0.9)
-
-    const screenGlow = project(onQuad(LID, 0.5, 0.5), spin)
-    const bloom = ctx.createRadialGradient(
-      screenGlow.x,
-      screenGlow.y,
-      0,
-      screenGlow.x,
-      screenGlow.y,
-      radius * 1.5,
-    )
-    bloom.addColorStop(0, rgbaString(mid, 0.3))
-    bloom.addColorStop(1, rgbaString(mid, 0))
-    ctx.fillStyle = bloom
-    ctx.fillRect(0, 0, width, height)
-
-    ctx.lineWidth = Math.max(1, radius * 0.011)
+    // Code. Positioned in the panel's own coordinates, so it stays inside the
+    // bezel however the lid is angled.
+    ctx.lineWidth = Math.max(1, radius * 0.0095)
     for (const line of code) {
-      const a = project(onQuad(LID, line.start, line.v), spin)
-      const b = project(onQuad(LID, line.end, line.v), spin)
-      const colour =
-        line.tone > 0.72 ? halo : line.tone > 0.4 ? mid : tones.edge!
+      const a = project(onQuad(panel, line.start, line.v), spin)
+      const b = project(onQuad(panel, line.end, line.v), spin)
+      const colour = line.tone > 0.72 ? halo : line.tone > 0.4 ? mid : edge
 
       ctx.beginPath()
       ctx.moveTo(a.x, a.y)
@@ -528,6 +672,76 @@ export function createWorkstationRenderer(
       ctx.strokeStyle = rgbaString(colour, 0.95)
       ctx.stroke()
     }
+
+    /**
+     * A specular band travelling across the lid.
+     *
+     * The one moving highlight in the scene that is not rotation. Glass and
+     * anodised metal both do this, and the eye reads it as "hard surface"
+     * faster than any amount of edge detail.
+     */
+    const sweep = (Math.sin(time * 0.00012) + 1) / 2
+    const band = inset(
+      LID,
+      Math.max(0, sweep - 0.16),
+      0,
+      Math.min(1, sweep + 0.16),
+      1,
+    )
+    quadPath(band, spin)
+    ctx.fillStyle = surfaceGradient(
+      LID,
+      spin,
+      [Math.max(0, sweep - 0.16), 0.5],
+      [Math.min(1, sweep + 0.16), 0.5],
+      [
+        [0, rgbaString(near, 0)],
+        [0.5, rgbaString(near, 0.05)],
+        [1, rgbaString(near, 0)],
+      ],
+    )
+    ctx.fill()
+
+    // Screen spill on the deck, strongest at the hinge.
+    quadPath(DECK, spin)
+    ctx.fillStyle = surfaceGradient(
+      DECK,
+      spin,
+      [0.5, 0],
+      [0.5, 0.85],
+      [
+        [0, rgbaString(mid, 0.16)],
+        [1, rgbaString(mid, 0)],
+      ],
+    )
+    ctx.fill()
+
+    // Keys, as lit faces rather than strokes.
+    for (let row = 0; row < 4; row += 1) {
+      const v = 0.22 + row * 0.13
+      for (let key = 0; key < 12; key += 1) {
+        const u = 0.11 + key * 0.064
+        quadPath(inset(DECK, u, v, u + 0.048, v + 0.075), spin)
+        ctx.fillStyle = rgbaString(base, 0.2)
+        ctx.fill()
+      }
+    }
+
+    // Trackpad: a recessed rectangle, so a bright edge and no fill.
+    quadPath(inset(DECK, 0.38, 0.75, 0.62, 0.92), spin)
+    ctx.lineWidth = Math.max(0.8, radius * 0.005)
+    ctx.strokeStyle = rgbaString(base, 0.32)
+    ctx.stroke()
+
+    // The lit seam along the hinge.
+    const hingeLeft = project(onQuad(DECK, 0.06, 0.02), spin)
+    const hingeRight = project(onQuad(DECK, 0.94, 0.02), spin)
+    ctx.lineWidth = Math.max(1, radius * 0.008)
+    ctx.beginPath()
+    ctx.moveTo(hingeLeft.x, hingeLeft.y)
+    ctx.lineTo(hingeRight.x, hingeRight.y)
+    ctx.strokeStyle = rgbaString(base, 0.5)
+    ctx.stroke()
   }
 
   function drawGlobe(spin: number) {
@@ -662,7 +876,6 @@ export function createWorkstationRenderer(
     if (width === 0 || height === 0) return
 
     ctx.clearRect(0, 0, width, height)
-    ctx.globalCompositeOperation = 'lighter'
     ctx.lineJoin = 'round'
     ctx.lineCap = 'round'
 
@@ -671,10 +884,24 @@ export function createWorkstationRenderer(
     const sway = Math.sin(time * SWAY_SPEED) * SWAY_RADIANS
     const revolve = time * ORBIT_SPEED
 
+    /**
+     * Two passes, and the order is the design.
+     *
+     * Light first — atmosphere, floor, the far side of the orbit — composited
+     * additively. Then the machine, opaque, which correctly hides the grid
+     * behind it. Then everything the machine emits, additively again, on top
+     * of its own surfaces.
+     */
+    ctx.globalCompositeOperation = 'lighter'
     drawAtmosphere()
     drawGrid(sway)
     drawOrbiters(sway, revolve, 'back')
-    drawLaptop(sway)
+
+    ctx.globalCompositeOperation = 'source-over'
+    const panel = drawLaptopBody(sway)
+
+    ctx.globalCompositeOperation = 'lighter'
+    drawLaptopLight(sway, panel)
     drawGlobe(sway + time * config.rotationSpeed)
     drawOrbiters(sway, revolve, 'front')
 

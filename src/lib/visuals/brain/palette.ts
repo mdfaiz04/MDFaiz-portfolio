@@ -20,6 +20,17 @@ export type BrainPalette = {
   halo: string
   /** The lit platform below. */
   base: string
+  /**
+   * Material colours, as opposed to light.
+   *
+   * The point cloud is made entirely of light and needed none of these. The
+   * hero scene has a solid object in it, and a solid object needs a surface
+   * to catch light on — rendered additively like everything else it just
+   * glows, which is exactly what makes a render look like a cartoon.
+   */
+  shell: string
+  shellDeep: string
+  rule: string
 }
 
 export type Rgb = { r: number; g: number; b: number }
@@ -33,6 +44,9 @@ const FALLBACK: BrainPalette = {
   pulse: '#ffffff',
   halo: '#6b5cff',
   base: '#35d6f5',
+  shell: '#1a1a38',
+  shellDeep: '#06060f',
+  rule: '#26264a',
 }
 
 const TOKENS: Record<keyof BrainPalette, string> = {
@@ -43,6 +57,9 @@ const TOKENS: Record<keyof BrainPalette, string> = {
   pulse: '--color-brain-pulse',
   halo: '--color-brain-halo',
   base: '--color-brain-base',
+  shell: '--color-surface-raised',
+  shellDeep: '--color-ground-deep',
+  rule: '--color-rule',
 }
 
 export function readBrainPalette(host: Element): BrainPalette {
@@ -61,6 +78,9 @@ export function readBrainPalette(host: Element): BrainPalette {
     pulse: read('pulse'),
     halo: read('halo'),
     base: read('base'),
+    shell: read('shell'),
+    shellDeep: read('shellDeep'),
+    rule: read('rule'),
   }
 }
 

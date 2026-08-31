@@ -11,6 +11,7 @@ import {
 import type { CSSProperties } from 'react'
 
 import { BrandMark } from '@/components/ui/BrandMark'
+import { Reveal } from '@/components/ui/Reveal'
 import { Workstation } from '@/components/visuals/Workstation'
 import type { Glyph } from '@/lib/visuals/workstation/scene'
 
@@ -73,9 +74,7 @@ const ENTER = {
   summary: 4,
   actions: 5,
   scene: 3,
-  stats: 8,
-  brands: 9,
-  scrollCue: 10,
+  scrollCue: 6,
 } as const
 
 /** `--enter-index` is a position in the sequence, not a duration. */
@@ -236,62 +235,66 @@ export function Hero({
         screen reader has to guess at is worse than plainer markup it can
         read straight through.
       */}
-      <ul
-        style={delay(ENTER.stats)}
-        className="enter panel grid grid-cols-2 overflow-hidden lg:grid-cols-4"
-      >
-        {stats.map((stat) => {
-          const Icon = STAT_ICONS[stat.id] ?? Sparkles
+      <Reveal pop>
+        <ul className="panel grid grid-cols-2 overflow-hidden lg:grid-cols-4">
+          {stats.map((stat, index) => {
+            const Icon = STAT_ICONS[stat.id] ?? Sparkles
 
-          return (
-            <li
-              key={stat.id}
-              className="border-rule/60 flex items-center gap-4 px-5 py-5 lg:border-l lg:first:border-l-0"
-            >
-              <span className="tile text-accent-bright flex size-11 shrink-0 items-center justify-center">
-                <Icon size={20} aria-hidden="true" />
-              </span>
-              <span className="flex min-w-0 flex-col">
-                <span className="text-ink flex items-baseline gap-1 text-2xl font-bold tabular-nums">
-                  {stat.value}
-                  {stat.unit ? (
-                    <span className="text-ink-faint text-sm font-medium">
-                      {stat.unit}
-                    </span>
-                  ) : null}
+            return (
+              <li
+                key={stat.id}
+                style={delay(index)}
+                className="border-rule/60 flex items-center gap-4 px-5 py-5 lg:border-l lg:first:border-l-0"
+              >
+                <span className="tile text-accent-bright flex size-11 shrink-0 items-center justify-center">
+                  <Icon size={20} aria-hidden="true" />
                 </span>
-                <span className="text-ink-faint truncate text-xs">
-                  {stat.label}
+                <span className="flex min-w-0 flex-col">
+                  <span className="text-ink flex items-baseline gap-1 text-2xl font-bold tabular-nums">
+                    {stat.value}
+                    {stat.unit ? (
+                      <span className="text-ink-faint text-sm font-medium">
+                        {stat.unit}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="text-ink-faint truncate text-xs">
+                    {stat.label}
+                  </span>
                 </span>
-              </span>
-            </li>
-          )
-        })}
-      </ul>
+              </li>
+            )
+          })}
+        </ul>
+      </Reveal>
 
       {/* --- the toolkit -------------------------------------------------- */}
       <section
-        style={delay(ENTER.brands)}
         aria-label={brandsHeading}
-        className="enter panel flex flex-col gap-5 px-6 py-6"
+        className="panel flex flex-col gap-5 px-6 py-6"
       >
         <h2 className="text-ink text-base font-semibold">{brandsHeading}</h2>
 
-        <ul className="flex flex-wrap items-start gap-x-8 gap-y-5 sm:gap-x-12">
-          {brands.map((brand) => (
-            <li
-              key={brand.technology}
-              className="flex w-16 flex-col items-center gap-2 text-center"
-            >
-              <BrandMark
-                title={brand.technology}
-                path={brand.path}
-                hex={brand.hex}
-              />
-              <span className="text-ink-faint text-xs">{brand.technology}</span>
-            </li>
-          ))}
-        </ul>
+        <Reveal pop>
+          <ul className="flex flex-wrap items-start gap-x-8 gap-y-5 sm:gap-x-12">
+            {brands.map((brand, index) => (
+              <li
+                key={brand.technology}
+                style={delay(index)}
+                className="flex w-16 flex-col items-center gap-2 text-center"
+              >
+                <BrandMark
+                  title={brand.technology}
+                  path={brand.path}
+                  hex={brand.hex}
+                />
+                <span className="text-ink-faint text-xs">
+                  {brand.technology}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Reveal>
       </section>
 
       <p

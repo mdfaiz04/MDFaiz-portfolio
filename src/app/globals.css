@@ -127,6 +127,9 @@
      reads the TypeScript. One vocabulary, two consumers. */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Overshoots slightly past its target before settling. Used only where an
+     element should feel like it lands — a tile arriving, not text fading. */
+  --ease-out-back: cubic-bezier(0.34, 1.42, 0.64, 1);
 
   --duration-instant: 150ms;
   --duration-fast: 280ms;
@@ -287,6 +290,32 @@
   clip-path: inset(0 0 0 0);
 }
 
+/**
+ * A pop: each child rises, scales up from slightly small, and overshoots a
+ * touch as it lands. For rows of discrete objects — counters, logos — where a
+ * plain fade reads as the page simply being there already.
+ *
+ * The delay comes from an inline `--enter-index` rather than from nth-child,
+ * because these rows are generated from content and can be any length.
+ */
+[data-reveal-pop] > * {
+  opacity: 1;
+}
+
+.js [data-reveal-pop] > * {
+  opacity: 0;
+  transform: translateY(1.1rem) scale(0.9);
+  transition:
+    opacity var(--duration-base) var(--ease-out-expo),
+    transform var(--duration-base) var(--ease-out-back);
+  transition-delay: calc(var(--enter-index, 0) * var(--enter-step));
+}
+
+.js [data-reveal-pop].is-visible > * {
+  opacity: 1;
+  transform: none;
+}
+
 /* Children release in sequence. Enumerated rather than computed because CSS
    cannot derive a delay from an element's index. */
 .js [data-reveal-stagger].is-visible > *:nth-child(1) {
@@ -312,6 +341,7 @@
 @media (prefers-reduced-motion: reduce) {
   .js [data-reveal],
   .js [data-reveal-wipe],
+  .js [data-reveal-pop] > *,
   .js [data-reveal-stagger] > * {
     opacity: 1;
     transform: none;

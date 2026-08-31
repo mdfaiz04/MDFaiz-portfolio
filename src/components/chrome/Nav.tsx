@@ -40,6 +40,26 @@ export function Nav({ items, owner, action }: NavProps) {
   const activeId = useScrollSpy(ids)
   const [menuOpen, setMenuOpen] = useState(false)
 
+  /**
+   * Whether the page has scrolled away from the top.
+   *
+   * The bar is transparent over the hero and becomes a solid surface once
+   * content starts passing beneath it. At a fixed 70% it did neither: hero
+   * text showed through the blur as a smear, which reads as a rendering
+   * fault rather than as a design.
+   */
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+
+    onScroll()
+    // Passive: this never calls preventDefault, and saying so lets the
+    // browser scroll without waiting on the handler.
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   // Escape closes the menu, which is the behaviour a keyboard user expects
   // from anything that opens over the page.
   useEffect(() => {
@@ -54,10 +74,16 @@ export function Nav({ items, owner, action }: NavProps) {
   }, [menuOpen])
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
+    <header
+      className={`fixed inset-x-0 top-0 z-50 border-b transition-colors duration-fast ${
+        scrolled || menuOpen
+          ? 'border-rule-soft/70 bg-ground/95 backdrop-blur-xl'
+          : 'border-transparent bg-transparent'
+      }`}
+    >
       <nav
         aria-label="Primary"
-        className="border-rule-soft/60 bg-ground/70 mx-auto flex max-w-shell items-center justify-between border-b px-gutter py-4 backdrop-blur-md"
+        className="mx-auto flex max-w-shell items-center justify-between px-gutter py-4"
       >
         <a
           href="#top"
@@ -136,7 +162,7 @@ export function Nav({ items, owner, action }: NavProps) {
       <div
         id="mobile-menu"
         hidden={!menuOpen}
-        className="border-rule-soft/60 bg-ground/95 mx-auto max-w-shell border-b px-gutter pb-4 backdrop-blur-md md:hidden"
+        className="mx-auto max-w-shell px-gutter pb-4 md:hidden"
       >
         <ul className="flex flex-col">
           {items.map((item) => {
