@@ -1,36 +1,191 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MD Faiz — Portfolio
 
-## Getting Started
+A single-page portfolio for an AI & software engineer, built as a product
+rather than a document. Dark, animated, and structured around one journey:
+**attention → understanding → proof → interaction → connection.**
 
-First, run the development server:
+It costs nothing to run. There is no database, no API route, no third-party
+script, and no service that can produce a bill.
+
+---
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+No `.env` file is needed. Every variable has a working default — see
+[.env.example](.env.example) for the three that exist and what they do.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command                  | What it does                                          |
+| ------------------------ | ----------------------------------------------------- |
+| `npm run dev`            | Development server                                    |
+| `npm run build`          | Production build (fails on any type or content error) |
+| `npm start`              | Serve the production build                            |
+| `npm test`               | Full test suite                                       |
+| `npm run test:watch`     | Tests, re-run on change                               |
+| `npm run typecheck`      | `tsc --noEmit`                                        |
+| `npm run lint`           | ESLint, including the architectural rules below       |
+| `npm run check:literals` | Scan components for content facts (rule R1)           |
+| **`npm run verify`**     | **All of the above. Run this before pushing.**        |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+A pre-commit hook runs `verify` automatically. If it blocks a commit, the
+failure is real — fix it rather than passing `--no-verify`.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Editing the site
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Everything a visitor reads lives in [`src/content/`](src/content/), and
+nothing else.** Components render what they are given; they never contain a
+fact. Change the CV here and the whole site follows — headings, counters,
+timeline, projects, the assistant's answers, the search description, the
+social card and the structured data all derive from these files.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| File                | Holds                                                       |
+| ------------------- | ----------------------------------------------------------- |
+| `profile.ts`        | Name, role, tagline, summary, location, links, availability |
+| `experience.ts`     | Roles, dates, highlights, stack                             |
+| `projects.ts`       | Problem → approach → outcome, stack, links                  |
+| `skills.ts`         | Capability clusters, and the projects that evidence them    |
+| `education.ts`      | Qualifications and scores                                   |
+| `achievements.ts`   | Competition results                                         |
+| `sections.ts`       | **The spine.** Section order, labels, and on/off switches   |
+| `vocabulary.ts`     | Search synonyms for the assistant                           |
+| `interpretation.ts` | How the assistant recognises a question                     |
+| `schema.ts`         | The rules every file above must satisfy                     |
 
-## Deploy on Vercel
+### Things that are derived, so never type them twice
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Counters (`4 projects`, `15 technologies`), tenure (`6 months`), the nav, the
+mobile menu, the footer, the scroll-spy, the sitemap, the keywords, the social
+card, the JSON-LD graph, and every answer the assistant gives.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Common edits
+
+**Add a project** — append to `projects.ts`. It appears in the Projects
+section, the counters move, the assistant can answer about it, a suggested
+question for it appears, and it joins the structured data. No other file
+changes.
+
+**Add a repository link** — fill in that project's `links: []`. The card gets
+a link, the assistant offers it, and the "code is not public yet" caveat it
+currently admits to disappears on its own.
+
+**Turn a section on or off** — flip `enabled` in `sections.ts`. It vanishes
+from the page, the nav, the menu and the footer at once. (The `writing`
+section is off, waiting for something to publish.)
+
+**Retune the design** — [`src/app/globals.css`](src/app/globals.css) is the
+only place colours, spacing and motion timings are defined. Changing a token
+changes the site, the browser theme colour, the app icon and the social card,
+because all four read from that file.
+
+---
+
+## The rules the build enforces
+
+These are checked mechanically, not by review. Breaking one fails the build.
+
+| #      | Rule                                             | Enforced by                  |
+| ------ | ------------------------------------------------ | ---------------------------- |
+| **R1** | No content facts in `src/components/`            | `scripts/check-literals.mjs` |
+| **R2** | No raw colours or arbitrary values in components | ESLint                       |
+| **R3** | No inline motion timings                         | ESLint                       |
+| **R4** | `process.env` read only in `src/config/env.ts`   | ESLint                       |
+| **R5** | Derived, never duplicated                        | Tests                        |
+| **R6** | Strict types, `noUncheckedIndexedAccess`         | `tsc`                        |
+| **R7** | Nothing metered — no dependency that can bill    | Review                       |
+| **R8** | Accessible by default                            | Review + markup              |
+
+Content is validated by Zod at import, so a malformed date or a skill citing
+a project that does not exist **fails the build** rather than rendering as a
+blank space in front of a recruiter.
+
+---
+
+## The assistant
+
+`src/lib/assistant/` — a retrieval engine that runs entirely in the visitor's
+browser. No API, no key, no model, nothing to rate-limit.
+
+```
+passages.ts       content → searchable documents
+tokenize.ts       normalise, stem, expand synonyms
+retrieve.ts       BM25 ranking
+fuzzy.ts          typo repair, with the correction stated out loud
+understand.ts     intent scoring: cues + entities + retrieval + shape
+assess.ts         judgement, derived — each claim carries its evidence
+explain.ts        long CV prose → short, plain lines
+answer.ts         composition
+```
+
+It **cannot invent a fact**, because there is no generative step to invent
+with. When something is not in the portfolio it says so.
+
+When it misunderstands a question, the fix is usually **one line of data** in
+`src/content/interpretation.ts` — not a code change. Add the phrasing, add a
+fixture in `src/lib/assistant/fixtures.test.ts`, done.
+
+---
+
+## Deploying
+
+Push to `main`. Vercel builds and deploys.
+
+Nothing needs configuring: the site URL is derived from the deployment host,
+and `robots.txt` allows crawling on production while refusing it on preview
+deployments — so branch previews never compete with the real site in search.
+
+### With a custom domain
+
+1. Add the domain in the Vercel project settings.
+2. Set `NEXT_PUBLIC_SITE_URL` to it, so canonical URLs, the sitemap and the
+   social card point at the domain rather than the `*.vercel.app` address.
+3. Redeploy.
+
+### Checking a deploy
+
+- Social card: paste the URL into any chat, or open `/opengraph-image`
+- Crawlers: `/robots.txt` and `/sitemap.xml`
+- Structured data: paste the URL into Google's Rich Results Test
+
+---
+
+## Analytics
+
+**Not installed, deliberately.** Every hosted analytics product is either
+metered or a third-party script, and this site currently makes **zero
+third-party requests** — fonts are self-hosted at build time, and nothing
+about a visitor leaves their browser.
+
+Vercel's dashboard already shows request volume with no code at all.
+
+If you decide you want per-page analytics later, it is three lines:
+
+```bash
+npm install @vercel/analytics
+```
+
+```tsx
+// src/app/layout.tsx
+import { Analytics } from '@vercel/analytics/next'
+// ...inside <body>, after <Footer />
+;<Analytics />
+```
+
+That is free on Vercel's Hobby plan and cannot generate a bill — but it does
+add a third-party request per visit, which is the trade being made.
+
+---
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4
+(CSS-first tokens) · Zod · Vitest.
+
+The hero's neural render is hand-written Canvas 2D — seeded so it is
+identical on every load, and drawn from a carved anatomical model rather than
+a particle cloud. See `src/lib/visuals/brain/`.

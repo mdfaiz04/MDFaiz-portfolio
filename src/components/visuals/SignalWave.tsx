@@ -111,7 +111,8 @@ export function SignalWave() {
       aria-hidden="true"
       className="pointer-events-none relative h-32 w-full sm:h-40"
     >
-      <canvas ref={canvasRef} className="h-full w-full" />
+      {/* Decorative — it carries no information the text does not (R8). */}
+      <canvas ref={canvasRef} aria-hidden="true" className="h-full w-full" />
     </div>
   )
 }

@@ -161,7 +161,12 @@ export function NeuralBrain() {
          actions below the fold. */
       className="brain-cap pointer-events-none relative aspect-square w-full max-w-lg xl:max-w-2xl"
     >
-      <canvas ref={canvasRef} className="h-full w-full" />
+      {/*
+        Decorative. The hero states the same thing in text directly beside
+        it, so announcing an unlabelled canvas to a screen reader would add
+        noise, not information (R8).
+      */}
+      <canvas ref={canvasRef} aria-hidden="true" className="h-full w-full" />
     </div>
   )
 }

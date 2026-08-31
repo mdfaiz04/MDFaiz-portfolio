@@ -1,12 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { env } from './env'
+import { env, searchIndexable } from './env'
 
 /** Re-evaluate env.ts against whatever process.env currently holds. */
 async function loadEnvFresh() {
   vi.resetModules()
-  const reloaded = await import('./env')
-  return reloaded.env
+  return import('./env')
 }
 
 describe('environment contract', () => {
@@ -18,14 +17,12 @@ describe('environment contract', () => {
     expect(() => new URL(env.NEXT_PUBLIC_SITE_URL)).not.toThrow()
   })
 
-  it('turns string flags into real booleans', () => {
-    expect(typeof env.NEXT_PUBLIC_ENABLE_BLOG).toBe('boolean')
-    expect(typeof env.NEXT_PUBLIC_ENABLE_ANALYTICS).toBe('boolean')
+  it('assumes a local development deployment by default', () => {
+    expect(env.NEXT_PUBLIC_VERCEL_ENV).toBe('development')
   })
 
-  it('ships both optional features switched off by default', () => {
-    expect(env.NEXT_PUBLIC_ENABLE_BLOG).toBe(false)
-    expect(env.NEXT_PUBLIC_ENABLE_ANALYTICS).toBe(false)
+  it('does not invite crawlers into a local or preview build', () => {
+    expect(searchIndexable).toBe(false)
   })
 })
 
@@ -37,8 +34,8 @@ describe('environment contract', () => {
 describe('empty strings behave exactly like unset variables', () => {
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', '')
-    vi.stubEnv('NEXT_PUBLIC_ENABLE_BLOG', '')
-    vi.stubEnv('NEXT_PUBLIC_ENABLE_ANALYTICS', '')
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', '')
+    vi.stubEnv('NEXT_PUBLIC_ALLOW_INDEXING', '')
   })
 
   afterEach(() => {
@@ -52,13 +49,13 @@ describe('empty strings behave exactly like unset variables', () => {
 
   it('falls back to the default site URL', async () => {
     const fresh = await loadEnvFresh()
-    expect(() => new URL(fresh.NEXT_PUBLIC_SITE_URL)).not.toThrow()
+    expect(() => new URL(fresh.env.NEXT_PUBLIC_SITE_URL)).not.toThrow()
   })
 
-  it('falls back to both flags being off', async () => {
+  it('falls back to a non-indexable development deployment', async () => {
     const fresh = await loadEnvFresh()
-    expect(fresh.NEXT_PUBLIC_ENABLE_BLOG).toBe(false)
-    expect(fresh.NEXT_PUBLIC_ENABLE_ANALYTICS).toBe(false)
+    expect(fresh.env.NEXT_PUBLIC_VERCEL_ENV).toBe('development')
+    expect(fresh.searchIndexable).toBe(false)
   })
 })
 
@@ -73,7 +70,7 @@ describe('deployment host is used when no explicit site URL is set', () => {
     vi.stubEnv('NEXT_PUBLIC_VERCEL_URL', 'md-faiz-portfolio.vercel.app')
 
     const fresh = await loadEnvFresh()
-    expect(fresh.NEXT_PUBLIC_SITE_URL).toBe(
+    expect(fresh.env.NEXT_PUBLIC_SITE_URL).toBe(
       'https://md-faiz-portfolio.vercel.app',
     )
   })
@@ -83,6 +80,40 @@ describe('deployment host is used when no explicit site URL is set', () => {
     vi.stubEnv('NEXT_PUBLIC_VERCEL_URL', 'md-faiz-portfolio.vercel.app')
 
     const fresh = await loadEnvFresh()
-    expect(fresh.NEXT_PUBLIC_SITE_URL).toBe('https://example.com')
+    expect(fresh.env.NEXT_PUBLIC_SITE_URL).toBe('https://example.com')
+  })
+})
+
+/**
+ * Preview deployments must not be indexed. Every branch push creates one at a
+ * new public URL serving the same CV, and a crawler that finds several copies
+ * chooses a canonical itself — which may not be the real site.
+ */
+describe('search indexing follows the deployment, not the developer', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.resetModules()
+  })
+
+  it('indexes production', async () => {
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'production')
+    expect((await loadEnvFresh()).searchIndexable).toBe(true)
+  })
+
+  it('refuses to index a preview deployment', async () => {
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview')
+    expect((await loadEnvFresh()).searchIndexable).toBe(false)
+  })
+
+  it('lets the flag force indexing on', async () => {
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview')
+    vi.stubEnv('NEXT_PUBLIC_ALLOW_INDEXING', 'true')
+    expect((await loadEnvFresh()).searchIndexable).toBe(true)
+  })
+
+  it('lets the flag force indexing off, even in production', async () => {
+    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'production')
+    vi.stubEnv('NEXT_PUBLIC_ALLOW_INDEXING', 'false')
+    expect((await loadEnvFresh()).searchIndexable).toBe(false)
   })
 })

@@ -19,20 +19,25 @@ import { z } from 'zod'
 const absent = (value: string | undefined): string | undefined =>
   value === undefined || value.trim() === '' ? undefined : value.trim()
 
-/** `'true'`/`'false'` strings are the only way env vars can carry booleans. */
-const booleanFlag = (fallback: 'true' | 'false') =>
-  z
-    .enum(['true', 'false'])
-    .default(fallback)
-    .transform((value) => value === 'true')
+/**
+ * `'true'`/`'false'` strings are the only way env vars can carry booleans.
+ * Left optional here rather than defaulted, because "not set" and "set to
+ * false" mean different things: unset defers to the deployment environment.
+ */
+const optionalBooleanFlag = z
+  .enum(['true', 'false'])
+  .optional()
+  .transform((value) => (value === undefined ? undefined : value === 'true'))
 
 const schema = z.object({
   /** Absolute origin, used to build canonical URLs and OG image links. */
   NEXT_PUBLIC_SITE_URL: z.string().url().default('http://localhost:3000'),
-  /** Blog section is built but hidden until there is something to publish. */
-  NEXT_PUBLIC_ENABLE_BLOG: booleanFlag('false'),
-  /** Analytics stays off unless deliberately switched on. */
-  NEXT_PUBLIC_ENABLE_ANALYTICS: booleanFlag('false'),
+  /** Injected by Vercel on every deployment; 'development' when running locally. */
+  NEXT_PUBLIC_VERCEL_ENV: z
+    .enum(['production', 'preview', 'development'])
+    .default('development'),
+  /** Manual override for search indexing. Unset means "decide from the env". */
+  NEXT_PUBLIC_ALLOW_INDEXING: optionalBooleanFlag,
 })
 
 /**
@@ -54,10 +59,8 @@ const derivedSiteUrl = vercelHost ? `https://${vercelHost}` : undefined
 
 const runtimeEnv = {
   NEXT_PUBLIC_SITE_URL: explicitSiteUrl ?? derivedSiteUrl,
-  NEXT_PUBLIC_ENABLE_BLOG: absent(process.env.NEXT_PUBLIC_ENABLE_BLOG),
-  NEXT_PUBLIC_ENABLE_ANALYTICS: absent(
-    process.env.NEXT_PUBLIC_ENABLE_ANALYTICS,
-  ),
+  NEXT_PUBLIC_VERCEL_ENV: absent(process.env.NEXT_PUBLIC_VERCEL_ENV),
+  NEXT_PUBLIC_ALLOW_INDEXING: absent(process.env.NEXT_PUBLIC_ALLOW_INDEXING),
 }
 
 const parsed = schema.safeParse(runtimeEnv)
@@ -74,5 +77,16 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data
+
+/**
+ * Whether search engines may index this deployment.
+ *
+ * Preview deployments must not be indexed. Every branch push creates one, and
+ * a crawler that finds three copies of the same CV on three URLs treats them
+ * as duplicate content and picks a winner — which may not be the real site.
+ * Production indexes; everything else does not; the flag overrides both.
+ */
+export const searchIndexable =
+  env.NEXT_PUBLIC_ALLOW_INDEXING ?? env.NEXT_PUBLIC_VERCEL_ENV === 'production'
 
 export type Env = typeof env
