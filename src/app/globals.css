@@ -368,3 +368,29 @@ body::after {
     scroll-behavior: auto !important;
   }
 }
+
+/**
+ * Thinking indicator. The pause it fills is deliberate — the engine answers
+ * in well under a millisecond, and an answer that appears instantly reads as
+ * canned rather than considered.
+ */
+@keyframes dot-pulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+.dot-pulse {
+  animation: dot-pulse 1.2s var(--ease-in-out-quart) infinite;
+}
+.dot-pulse-2 {
+  animation-delay: 0.15s;
+}
+.dot-pulse-3 {
+  animation-delay: 0.3s;
+}

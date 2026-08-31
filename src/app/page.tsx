@@ -1,8 +1,8 @@
+import { Assistant } from '@/components/sections/Assistant'
 import { Contact } from '@/components/sections/Contact'
 import { Hero } from '@/components/sections/Hero'
 import { Journey } from '@/components/sections/Journey'
 import { Projects } from '@/components/sections/Projects'
-import { Reveal } from '@/components/ui/Reveal'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import {
   achievements,
@@ -165,11 +165,10 @@ export default function HomePage() {
                   ) : null}
 
                   {section.id === 'assistant' ? (
-                    <Reveal>
-                      <p className="border-rule-soft text-ink-faint max-w-measure rounded-edge border border-dashed p-6 font-mono text-xs tracking-wider">
-                        Built in the next phase.
-                      </p>
-                    </Reveal>
+                    <Assistant
+                      placeholder="Ask about a project, a technology, or my experience"
+                      opening={`Ask me anything about ${profile.shortName}'s work. Every answer is built from this portfolio, so nothing here is invented.`}
+                    />
                   ) : null}
                 </div>
               )}
