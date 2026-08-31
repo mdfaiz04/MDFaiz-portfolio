@@ -170,6 +170,13 @@ if (integrityProblems.length > 0) {
 export { projectCategoryLabels } from './taxonomy'
 export { stopwords, synonyms } from './vocabulary'
 export {
+  INTENT_IDS,
+  contractions,
+  intentCues,
+  questionWords,
+} from './interpretation'
+export type { Cue, Cues, IntentId } from './interpretation'
+export {
   careerStart,
   counts,
   experienceSince,

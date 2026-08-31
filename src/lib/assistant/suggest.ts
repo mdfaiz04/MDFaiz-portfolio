@@ -5,6 +5,11 @@ import { profile, projects, skills } from '@/content'
  *
  * Add a project and its question appears here on its own — which is why the
  * suggestions can never go stale or point at something that no longer exists.
+ *
+ * Order is deliberate. The first four are what the visitor sees before they
+ * have typed anything, so they lead with the question a portfolio is really
+ * being read to answer — "what is this person like?" — rather than with four
+ * variations on the same project prompt.
  */
 
 export type Suggestion = {
@@ -14,12 +19,50 @@ export type Suggestion = {
   sectionId: string
 }
 
+const [firstProject, ...otherProjects] = projects
+
 export const suggestions: readonly Suggestion[] = [
-  ...projects.map((project) => ({
+  {
+    id: 'assessment',
+    question: 'How would you describe yourself as an engineer?',
+    sectionId: 'journey',
+  },
+  ...(firstProject
+    ? [
+        {
+          id: `project-${firstProject.id}`,
+          question: `Tell me about ${firstProject.name}`,
+          sectionId: 'projects',
+        },
+      ]
+    : []),
+  {
+    id: 'strengths',
+    question: 'What are you best at?',
+    sectionId: 'journey',
+  },
+  {
+    id: 'availability',
+    question: profile.availability.open
+      ? 'Are you available for work?'
+      : 'How can I reach you?',
+    sectionId: 'contact',
+  },
+  ...otherProjects.map((project) => ({
     id: `project-${project.id}`,
     question: `Tell me about ${project.name}`,
     sectionId: 'projects',
   })),
+  {
+    id: 'why-hire',
+    question: 'Why should I hire you?',
+    sectionId: 'contact',
+  },
+  {
+    id: 'limits',
+    question: 'What are your weak spots?',
+    sectionId: 'journey',
+  },
   {
     id: 'experience',
     question: 'What is your experience?',
@@ -42,13 +85,6 @@ export const suggestions: readonly Suggestion[] = [
         ]
       : []
   }),
-  {
-    id: 'availability',
-    question: profile.availability.open
-      ? 'Are you available for work?'
-      : 'How can I reach you?',
-    sectionId: 'contact',
-  },
 ]
 
 /**

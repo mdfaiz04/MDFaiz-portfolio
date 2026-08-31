@@ -1,3 +1,5 @@
+import type { IntentId } from '@/content'
+
 /**
  * Shared shapes for the portfolio assistant.
  *
@@ -34,11 +36,26 @@ export type Hit = {
   score: number
 }
 
+/** One labelled line of an explanation. */
+export type Point = {
+  /** Short lead-in — "What it is", a project name, a role. Optional. */
+  label?: string
+  value: string
+}
+
 export type AnswerBlock =
+  /** A full sentence of prose. Typed out character by character. */
   | { type: 'text'; value: string }
+  /**
+   * The explanation format. Short labelled lines beat a paragraph when
+   * somebody is scanning, which on a portfolio is always.
+   */
+  | { type: 'points'; values: readonly Point[] }
   | { type: 'chips'; values: readonly string[] }
   | { type: 'jump'; label: string; sectionId: string }
   | { type: 'link'; label: string; href: string }
+  /** A quieter aside: a caveat, or an admission about how a query was read. */
+  | { type: 'note'; value: string }
 
 export type Answer = {
   blocks: readonly AnswerBlock[]
@@ -47,5 +64,7 @@ export type Answer = {
   /** Passage ids the answer was built from: provable grounding. */
   sources: readonly string[]
   /** Which intent produced this, for the fixture suite to assert on. */
-  intent: string
+  intent: IntentId
 }
+
+export type { IntentId }

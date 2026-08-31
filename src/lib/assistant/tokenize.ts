@@ -46,7 +46,7 @@ export function normalise(input: string): string {
  * Crude suffix stripping. A full stemmer would be heavier than this corpus
  * justifies; the aim is only that "projects" and "project" agree.
  */
-function stem(token: string): string {
+export function stem(token: string): string {
   if (token.length <= 4) return token
   if (token.endsWith('ies')) return `${token.slice(0, -3)}y`
   if (token.endsWith('sses')) return token.slice(0, -2)
@@ -73,6 +73,18 @@ export function tokenise(input: string): string[] {
 
     const stemmed = stem(raw)
     tokens.push(stemmed)
+
+    // A compound indexes as itself AND as its parts. The CV writes
+    // "production-ready"; a visitor asking about "production" should still
+    // reach it, and without this they reached whichever passage happened to
+    // contain the word "system".
+    if (raw.includes('-')) {
+      for (const part of raw.split('-')) {
+        if (part === '' || STOPWORDS.has(part)) continue
+        const partStem = stem(part)
+        if (partStem !== stemmed) tokens.push(partStem)
+      }
+    }
 
     // Expansion adds *different* terms, never a repeat of the word it came
     // from. Without this, "project" expands to its own canonical and yields

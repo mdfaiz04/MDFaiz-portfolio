@@ -86,8 +86,9 @@ export function Assistant({ placeholder, opening }: AssistantProps) {
     return () => window.clearTimeout(timer)
   }, [thinking, turns, reduced])
 
-  // Typewriter. Text blocks reveal by character; everything else appears
-  // whole, because there is nothing to "type" about a chip row.
+  // Typewriter. Prose reveals by character and an explanation reveals a line
+  // at a time; everything else lands whole, because there is nothing to
+  // "type" about a chip row.
   useEffect(() => {
     if (latest?.role !== 'assistant') return
     if (progress.block >= latest.answer.blocks.length) return
@@ -95,25 +96,32 @@ export function Assistant({ placeholder, opening }: AssistantProps) {
     const block = latest.answer.blocks[progress.block]
     if (!block) return
 
-    if (block.type !== 'text') {
+    const steps =
+      block.type === 'text'
+        ? block.value.length
+        : block.type === 'points'
+          ? block.values.length
+          : 0
+
+    if (progress.char >= steps) {
       const timer = window.setTimeout(
         () => setProgress({ block: progress.block + 1, char: 0 }),
-        typewriter.charDelay * 4,
+        typewriter.charDelay * (block.type === 'text' ? 6 : 4),
       )
       return () => window.clearTimeout(timer)
     }
 
-    if (progress.char >= block.value.length) {
-      const timer = window.setTimeout(
-        () => setProgress({ block: progress.block + 1, char: 0 }),
-        typewriter.charDelay * 6,
-      )
-      return () => window.clearTimeout(timer)
-    }
+    const isProse = block.type === 'text'
 
-    const timer = window.setTimeout(() => {
-      setProgress({ block: progress.block, char: progress.char + 4 })
-    }, typewriter.charDelay)
+    const timer = window.setTimeout(
+      () => {
+        setProgress({
+          block: progress.block,
+          char: progress.char + (isProse ? 4 : 1),
+        })
+      },
+      typewriter.charDelay * (isProse ? 1 : 10),
+    )
 
     return () => window.clearTimeout(timer)
   }, [latest, progress])
@@ -240,6 +248,43 @@ function AnswerView({
           return (
             <p key={key} className="text-ink-muted text-sm">
               {shown}
+            </p>
+          )
+        }
+
+        if (block.type === 'points') {
+          const shown =
+            index < progress.block ? block.values.length : progress.char
+
+          return (
+            <ul
+              key={key}
+              className="border-rule-soft flex flex-col gap-3 border-l pl-4"
+            >
+              {block.values.slice(0, shown).map((point, position) => (
+                <li
+                  key={point.label ?? `point-${position}`}
+                  className="enter flex flex-col gap-1"
+                >
+                  {point.label ? (
+                    <span className="text-accent-bright font-mono text-xs tracking-wider">
+                      {point.label}
+                    </span>
+                  ) : null}
+                  <span className="text-ink-muted text-sm">{point.value}</span>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+
+        if (block.type === 'note') {
+          return (
+            <p
+              key={key}
+              className="border-accent/30 text-ink-ghost border-l-2 pl-3 font-mono text-xs"
+            >
+              {block.value}
             </p>
           )
         }

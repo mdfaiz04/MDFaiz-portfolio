@@ -5,8 +5,11 @@ import {
   formatRange,
   profile,
   projectCategoryLabels,
+  intentCues,
   projects,
+  questionWords,
   skills,
+  stopwords,
 } from '@/content'
 
 import type { Passage } from './types'
@@ -118,3 +121,47 @@ function buildPassages(): Passage[] {
 }
 
 export const passages: readonly Passage[] = buildPassages()
+
+/**
+ * Every word the corpus actually contains, unstemmed.
+ *
+ * This is the dictionary the spell repairer checks against, which is why it
+ * is built from the raw text rather than from the search index: the index
+ * stores "compan", and repairing "compnay" to "compan" would be worse than
+ * leaving it alone. Question words are folded in so ordinary English asked
+ * about the portfolio is never mistaken for a typo.
+ */
+export const corpusVocabulary: ReadonlySet<string> = new Set(
+  [
+    ...passages.flatMap((passage) =>
+      `${passage.title} ${passage.text} ${passage.tags.join(' ')}`
+        .toLowerCase()
+        .replace(/[^a-z0-9+#.\s-]/g, ' ')
+        .split(/\s+/)
+        // "competition." would otherwise enter the dictionary with its full
+        // stop attached, and every clean "competition" would look misspelt.
+        .map((word) => word.replace(/^[.\-]+|[.\-]+$/g, '')),
+    ),
+    ...questionWords,
+    ...stopwords,
+  ].filter((word) => word !== ''),
+)
+
+/**
+ * Every word the engine recognises, corpus and router alike.
+ *
+ * A word in here is never treated as a typo. It is deliberately wider than
+ * the repair dictionary above: "competent" and "weakness" are real words the
+ * router listens for, but they appear nowhere in the CV, and correcting them
+ * toward something that does appear there is worse than useless.
+ */
+export const recognisedWords: ReadonlySet<string> = new Set([
+  ...corpusVocabulary,
+  ...Object.values(intentCues).flatMap((cues) =>
+    [
+      ...(cues.words ?? []),
+      ...(cues.prefixes ?? []),
+      ...(cues.phrases ?? []),
+    ].flatMap(([term]) => term.split(' ')),
+  ),
+])
