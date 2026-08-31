@@ -133,6 +133,12 @@
   --duration-base: 450ms;
   --duration-slow: 700ms;
 
+  /* --- stage ------------------------------------------------------------ */
+  /* The hero visual's frame. Wider than square because the scene is a
+     laptop on a floor, not a floating object — the extra width is where the
+     grid and the orbiting tiles live. */
+  --aspect-stage: 7 / 5;
+
   /* --- depth ------------------------------------------------------------ */
   /* Two radii languages on purpose. `edge` is the hairline, technical
      treatment the lower sections use; `card` and `pill` are the softer,
@@ -312,6 +318,18 @@
     clip-path: none;
     transition: none;
   }
+
+  /*
+    The hero's own entrance was missing from this list, so a visitor who had
+    asked for less motion still got the whole thing sliding and fading in —
+    the one screen where the effect is largest. `animation: none` rather than
+    a zero duration, so the element never holds the from-state at all.
+  */
+  .enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /**
@@ -379,8 +397,16 @@
 }
 
 @keyframes enter-rise {
+  /*
+    Starts fractionally above zero, not at it.
+    An element painted at exactly `opacity: 0` is not a largest-contentful-paint
+    candidate, and because every piece of hero text carries this animation the
+    page emitted no LCP at all — Lighthouse scored the whole performance
+    category zero for want of a metric. Two per cent is invisible on this
+    ground and makes the element real.
+  */
   from {
-    opacity: 0;
+    opacity: 0.02;
     transform: translateY(var(--enter-distance));
   }
   to {

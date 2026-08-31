@@ -4,6 +4,7 @@ import { motion } from 'motion/react'
 import { ArrowUpRight, Menu, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
+import { Logo } from '@/components/ui/Logo'
 import { duration, ease, spring } from '@/config/motion'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { useScrollSpy } from '@/hooks/useScrollSpy'
@@ -16,8 +17,8 @@ type NavItem = {
 type NavProps = {
   /** Comes from the section registry — this component never declares links. */
   items: readonly NavItem[]
-  /** The name, already split: the first word is set in gradient. */
-  wordmark: { lead: string; rest: string }
+  /** Accessible name for the mark. The component itself names nobody (R1). */
+  owner: string
   /** Where the standing call to action points, and what it says. */
   action: { label: string; sectionId: string }
 }
@@ -33,7 +34,7 @@ type NavProps = {
  * items rather than fading — one continuous object moving, which reads as a
  * mechanism rather than an effect.
  */
-export function Nav({ items, wordmark, action }: NavProps) {
+export function Nav({ items, owner, action }: NavProps) {
   const reduced = useReducedMotion()
   const ids = useMemo(() => items.map((item) => item.id), [items])
   const activeId = useScrollSpy(ids)
@@ -60,11 +61,10 @@ export function Nav({ items, wordmark, action }: NavProps) {
       >
         <a
           href="#top"
-          className="font-display text-lg font-extrabold tracking-tight"
+          className="hover:opacity-80 inline-flex items-center transition-opacity duration-fast"
           onClick={() => setMenuOpen(false)}
         >
-          <span className="text-gradient">{wordmark.lead}</span>{' '}
-          <span className="text-ink">{wordmark.rest}</span>
+          <Logo title={owner} />
         </a>
 
         {/* Desktop */}

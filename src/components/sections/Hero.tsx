@@ -1,12 +1,8 @@
 import {
   ArrowUpRight,
-  BrainCircuit,
   Calendar,
-  Cloud,
   Code2,
-  Database,
   FolderOpen,
-  Layers,
   Mouse,
   Sparkles,
   Trophy,
@@ -15,14 +11,8 @@ import {
 import type { CSSProperties } from 'react'
 
 import { BrandMark } from '@/components/ui/BrandMark'
-import { NeuralBrain } from '@/components/visuals/NeuralBrain'
-
-/** A capability the hero leads with. */
-type Feature = {
-  id: string
-  title: string
-  detail: string
-}
+import { Workstation } from '@/components/visuals/Workstation'
+import type { Glyph } from '@/lib/visuals/workstation/scene'
 
 /** A headline figure. `unit` is set only where the number needs one. */
 type Stat = {
@@ -47,7 +37,8 @@ type HeroProps = {
   /** Words of `tagline` to accent, chosen in src/content/profile.ts. */
   taglineHighlights: readonly string[]
   summary: string
-  features: readonly Feature[]
+  /** One orbiting tile each, in the hero scene. */
+  glyphs: readonly Glyph[]
   stats: readonly Stat[]
   brands: readonly Brand[]
   brandsHeading: string
@@ -81,8 +72,7 @@ const ENTER = {
   tagline: 3,
   summary: 4,
   actions: 5,
-  brain: 3,
-  features: 5,
+  scene: 3,
   stats: 8,
   brands: 9,
   scrollCue: 10,
@@ -94,20 +84,12 @@ function delay(index: number): CSSProperties {
 }
 
 /**
- * Which mark stands for which capability and which figure.
+ * Which mark stands for which figure.
  *
- * Keyed by content id, so adding a cluster without an icon degrades to the
- * neutral fallback rather than crashing. A mapping, not a fact — the words
- * themselves all arrive as props.
+ * Keyed by content id, so a new stat without an icon degrades to the neutral
+ * fallback rather than crashing. A mapping, not a fact — the words themselves
+ * all arrive as props.
  */
-const FEATURE_ICONS: Record<string, LucideIcon> = {
-  'artificial-intelligence': BrainCircuit,
-  'backend-engineering': Code2,
-  'frontend-engineering': Layers,
-  'data-and-storage': Database,
-  'cloud-and-devops': Cloud,
-}
-
 const STAT_ICONS: Record<string, LucideIcon> = {
   experience: Calendar,
   technologies: Code2,
@@ -133,7 +115,7 @@ export function Hero({
   tagline,
   taglineHighlights,
   summary,
-  features,
+  glyphs,
   stats,
   brands,
   brandsHeading,
@@ -239,40 +221,11 @@ export function Hero({
 
         {/* --- the object ------------------------------------------------ */}
         <div
-          style={delay(ENTER.brain)}
-          className="enter flex w-full min-w-0 justify-center lg:col-span-4"
+          style={delay(ENTER.scene)}
+          className="enter flex w-full min-w-0 justify-center lg:col-span-7"
         >
-          <NeuralBrain />
+          <Workstation glyphs={glyphs} />
         </div>
-
-        {/* --- what he actually does ------------------------------------- */}
-        <ul
-          style={delay(ENTER.features)}
-          className="enter grid min-w-0 gap-3 sm:grid-cols-2 lg:col-span-3 lg:grid-cols-1"
-        >
-          {features.map((feature) => {
-            const Icon = FEATURE_ICONS[feature.id] ?? Sparkles
-
-            return (
-              <li
-                key={feature.id}
-                className="panel panel-interactive hover:border-accent/60 flex items-center gap-3 p-3 hover:-translate-y-0.5"
-              >
-                <span className="tile text-accent-bright flex size-11 shrink-0 items-center justify-center">
-                  <Icon size={20} aria-hidden="true" />
-                </span>
-                <span className="flex min-w-0 flex-col gap-0.5">
-                  <span className="text-ink text-sm font-semibold">
-                    {feature.title}
-                  </span>
-                  <span className="text-ink-faint text-xs leading-snug">
-                    {feature.detail}
-                  </span>
-                </span>
-              </li>
-            )
-          })}
-        </ul>
       </div>
 
       {/* --- the numbers -------------------------------------------------- */}

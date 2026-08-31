@@ -7,7 +7,7 @@ import {
   allTechnologies,
 } from '@/content'
 
-import { joinWithin, splitName } from './text'
+import { splitName } from './text'
 
 /**
  * The hero derives more from content than any other section — a split name, a
@@ -32,35 +32,6 @@ describe('splitName', () => {
   it('renders the real name back exactly as content spells it', () => {
     const { lead, rest } = splitName(profile.name)
     expect(`${lead} ${rest}`.trim()).toBe(profile.name)
-  })
-})
-
-describe('joinWithin', () => {
-  it('takes as many items as the budget allows', () => {
-    expect(joinWithin(['one', 'two', 'three'], 12)).toBe('one, two')
-  })
-
-  it('never returns nothing, even when the first item busts the budget', () => {
-    expect(joinWithin(['a-very-long-single-item'], 5)).toBe(
-      'a-very-long-single-item',
-    )
-  })
-
-  it('returns an empty string only for an empty list', () => {
-    expect(joinWithin([], 20)).toBe('')
-  })
-
-  /**
-   * A fixed slice(0, 3) overflowed the card the moment one technology had a
-   * long name — which is exactly what "Retrieval-Augmented Generation" is.
-   */
-  it('keeps every hero card detail to one line', () => {
-    for (const cluster of featuredSkills) {
-      const detail = joinWithin(cluster.items, 34)
-      expect(detail.length).toBeGreaterThan(0)
-      expect(cluster.items[0]).toBeDefined()
-      expect(detail.startsWith(cluster.items[0] ?? '')).toBe(true)
-    }
   })
 })
 

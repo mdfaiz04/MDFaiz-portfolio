@@ -69,6 +69,12 @@ export const brain = {
    * smaller and the device has less to give.
    */
   pointCount: { desktop: 1100, mobile: 320 },
+  /**
+   * Points on the hero globe. Far fewer than the cloud above needed: a
+   * wireframe sphere reads as a sphere from a hundred points, where an organ
+   * needed a thousand to read as solid.
+   */
+  globeNodes: { desktop: 150, mobile: 84 },
   /** Hard cap on drawn synapses; the limiting factor for frame rate. */
   edgeCap: { desktop: 2000, mobile: 520 },
   /** Milliseconds between signal pulses travelling an edge. */

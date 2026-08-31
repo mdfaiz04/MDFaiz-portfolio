@@ -8,7 +8,6 @@ import { ScrollProgress } from '@/components/chrome/ScrollProgress'
 import { searchIndexable } from '@/config/env'
 import { profile, visibleSections } from '@/content'
 import { palette } from '@/lib/brand/palette'
-import { splitName } from '@/lib/text'
 import { jsonLdScript } from '@/lib/seo/jsonLd'
 import {
   siteDescription,
@@ -148,7 +147,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ScrollProgress />
         <Nav
           items={visibleSections}
-          wordmark={splitName(profile.name)}
+          owner={profile.name}
           action={{ label: 'Get in touch', sectionId: 'contact' }}
         />
 

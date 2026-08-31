@@ -20,7 +20,24 @@ import {
   splitDuration,
   visibleSections,
 } from '@/content'
-import { joinWithin, splitName } from '@/lib/text'
+import { splitName } from '@/lib/text'
+import type { Glyph } from '@/lib/visuals/workstation/scene'
+
+/**
+ * Which mark orbits the hero scene for each capability area.
+ *
+ * A presentation mapping keyed by content id, so a new cluster without one
+ * simply does not appear rather than breaking the scene. The capabilities
+ * themselves are content; which glyph stands for each is a design decision,
+ * and this is the assembly layer where the two meet.
+ */
+const CAPABILITY_GLYPHS: Record<string, Glyph> = {
+  'artificial-intelligence': 'chat',
+  'backend-engineering': 'code',
+  'frontend-engineering': 'terminal',
+  'data-and-storage': 'database',
+  'cloud-and-devops': 'cloud',
+}
 
 /**
  * The page maps over the section registry rather than listing sections, so
@@ -58,17 +75,11 @@ export default function HomePage() {
     { id: 'placements', value: String(counts.placements), label: 'Placements' },
   ]
 
-  /**
-   * Hero capability cards.
-   *
-   * The detail line is as many of the cluster's own tools as fit on one line,
-   * so a long technology name shortens the list instead of wrapping the card.
-   */
-  const heroFeatures = featuredSkills.map((cluster) => ({
-    id: cluster.id,
-    title: cluster.title,
-    detail: joinWithin(cluster.items, 34),
-  }))
+  // One orbiting tile per featured capability area.
+  const heroGlyphs = featuredSkills.flatMap((cluster) => {
+    const glyph = CAPABILITY_GLYPHS[cluster.id]
+    return glyph ? [glyph] : []
+  })
 
   const name = splitName(profile.name)
 
@@ -163,7 +174,7 @@ export default function HomePage() {
                   greeting="Hi, I'm"
                   name={name}
                   taglineHighlights={profile.taglineHighlights}
-                  features={heroFeatures}
+                  glyphs={heroGlyphs}
                   stats={heroStats}
                   brands={brandedTechnologies}
                   brandsHeading="Technologies I work with"
