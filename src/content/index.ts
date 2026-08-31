@@ -1,12 +1,14 @@
 import { z } from 'zod'
 
 import { achievements as rawAchievements } from './achievements'
+import { brands as rawBrands } from './brands'
 import { education as rawEducation } from './education'
 import { experience as rawExperience } from './experience'
 import { profile as rawProfile } from './profile'
 import { projects as rawProjects } from './projects'
 import {
   AchievementSchema,
+  BrandMarkSchema,
   EducationSchema,
   ExperienceSchema,
   ProfileSchema,
@@ -78,6 +80,11 @@ export const sections = parseOrThrow(
   'sections',
   z.array(SectionSchema).min(1),
   rawSections,
+)
+export const brands = parseOrThrow(
+  'brands',
+  z.array(BrandMarkSchema),
+  rawBrands,
 )
 
 // ---------------------------------------------------------------------------
@@ -177,9 +184,12 @@ export {
 } from './interpretation'
 export type { Cue, Cues, IntentId } from './interpretation'
 export {
+  allTechnologies,
+  brandedTechnologies,
   careerStart,
   counts,
   experienceSince,
+  featuredSkills,
   technologies,
   visibleSections,
 } from './derived'
@@ -190,5 +200,6 @@ export {
   formatMonth,
   formatRange,
   monthsBetween,
+  splitDuration,
 } from './format'
 export type * from './schema'

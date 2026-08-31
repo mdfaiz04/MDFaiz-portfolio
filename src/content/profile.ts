@@ -9,6 +9,8 @@ export const profile = {
   shortName: 'Faiz',
   role: 'AI & Software Engineer',
   tagline: 'Building intelligent systems with code and AI.',
+  /** The two words the hero picks out of the line above. */
+  taglineHighlights: ['code', 'AI.'],
   summary:
     'Computer Science Engineering student specialising in Artificial Intelligence. I build AI-powered applications with large language models, agentic systems, and retrieval-augmented generation, and the backend services that carry them to production.',
   location: {

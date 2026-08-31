@@ -68,6 +68,25 @@ export function monthsBetween(
   return Math.max(0, months)
 }
 
+/**
+ * `6` → `{ value: '6', unit: 'months' }`; `13` → `{ value: '1', unit: 'year' }`
+ *
+ * The hero prints the number large and the unit small, so it needs them
+ * apart. Deriving both from the same count keeps them from disagreeing —
+ * "1 years" is the classic way that breaks.
+ */
+export function splitDuration(months: number): {
+  value: string
+  unit: string
+} {
+  if (months < 12) {
+    return { value: String(months), unit: months === 1 ? 'month' : 'months' }
+  }
+
+  const years = Math.floor(months / 12)
+  return { value: String(years), unit: years === 1 ? 'year' : 'years' }
+}
+
 /** `6` → `"6 months"`; `13` → `"1 year 1 month"` */
 export function formatDuration(months: number): string {
   if (months < 12) {

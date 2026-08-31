@@ -1,4 +1,5 @@
 import { achievements } from './achievements'
+import { brands } from './brands'
 import { experience } from './experience'
 import { formatDuration, monthsBetween } from './format'
 import { projects } from './projects'
@@ -22,6 +23,36 @@ export const visibleSections = sections
 export const technologies = [
   ...new Set(projects.flatMap((project) => project.stack)),
 ].sort((a, b) => a.localeCompare(b))
+
+/**
+ * Every technology named ANYWHERE — projects, roles and capability clusters.
+ *
+ * Wider than `technologies` above, which counts only what the shipped work
+ * runs on. The assistant answers "do you know X?" against this list, and the
+ * logo strip is checked against it, so a brand mark can never advertise
+ * something the CV does not claim.
+ */
+export const allTechnologies = [
+  ...new Set([
+    ...projects.flatMap((project) => project.stack),
+    ...experience.flatMap((role) => role.stack),
+    ...skills.flatMap((cluster) => cluster.items),
+  ]),
+].sort((a, b) => a.localeCompare(b))
+
+/**
+ * Logos to show, in the curated order brands.ts defines.
+ *
+ * Filtered against the technologies above rather than trusted: the generated
+ * file is the only place in the project where a technology name is written
+ * twice, so this is where the two copies are made to agree.
+ */
+export const brandedTechnologies = brands.filter((brand) =>
+  allTechnologies.includes(brand.technology),
+)
+
+/** Capability clusters the hero leads with. */
+export const featuredSkills = skills.filter((cluster) => cluster.featured)
 
 /** Counts that do not depend on the current date. */
 export const counts = {

@@ -1,5 +1,6 @@
 import {
   achievements,
+  allTechnologies,
   education,
   experience,
   formatRange,
@@ -25,14 +26,14 @@ import type { Passage } from './types'
  * assistant able to answer questions about it with no code change at all.
  */
 
-/** Every technology named anywhere — the vocabulary for "do you know X?". */
-export const knownTechnologies: readonly string[] = [
-  ...new Set([
-    ...projects.flatMap((project) => project.stack),
-    ...experience.flatMap((role) => role.stack),
-    ...skills.flatMap((cluster) => cluster.items),
-  ]),
-].sort((a, b) => a.localeCompare(b))
+/**
+ * Every technology named anywhere — the vocabulary for "do you know X?".
+ *
+ * Re-exported rather than recomputed: the logo strip needs the same list, and
+ * two copies of "everything the CV mentions" is exactly the duplication the
+ * content layer exists to prevent (R5).
+ */
+export const knownTechnologies: readonly string[] = allTechnologies
 
 function buildPassages(): Passage[] {
   const built: Passage[] = []

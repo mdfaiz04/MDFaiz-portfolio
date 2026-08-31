@@ -41,21 +41,70 @@ export function NeuralBrain() {
 
     const isSmallScreen = window.innerWidth < MOBILE_BREAKPOINT
 
-    const geometry = createBrainGeometry(
-      isSmallScreen ? brain.pointCount.mobile : brain.pointCount.desktop,
-      SEED,
-      isSmallScreen ? brain.edgeCap.mobile : brain.edgeCap.desktop,
-    )
+    /**
+     * Built on first sight, and only when the browser has a moment.
+     *
+     * Carving the model and its edge list is the single most expensive thing
+     * this page does. Two things follow from that, and the canvas is
+     * decorative, so both are worth having:
+     *
+     *   - it is not built until the canvas is actually on screen, and
+     *   - it is not built while the browser could instead be responding to
+     *     the visitor.
+     *
+     * The cost was measurable: most of the main-thread time before first
+     * interaction on a throttled phone. A decoration should never be what
+     * makes a button feel slow.
+     */
+    let renderer: BrainRenderer | null = null
+    let idleHandle: number | null = null
 
-    const renderer: BrainRenderer = createBrainRenderer(
-      ctx,
-      geometry,
-      readBrainPalette(host),
-      {
+    const ensureRenderer = (): BrainRenderer => {
+      if (renderer) return renderer
+
+      const geometry = createBrainGeometry(
+        isSmallScreen ? brain.pointCount.mobile : brain.pointCount.desktop,
+        SEED,
+        isSmallScreen ? brain.edgeCap.mobile : brain.edgeCap.desktop,
+      )
+
+      renderer = createBrainRenderer(ctx, geometry, readBrainPalette(host), {
         rotationSpeed: brain.rotationSpeed,
         pulseInterval: brain.pulseInterval,
-      },
-    )
+      })
+
+      applySize()
+      return renderer
+    }
+
+    /**
+     * Queue the build for the next idle moment.
+     *
+     * The timeout is the safety net: if the main thread never goes idle the
+     * browser runs it anyway, so a busy page still gets its hero rather than
+     * an empty square. Where `requestIdleCallback` is missing — Safari, at
+     * time of writing — a timeout of zero at least yields to the current
+     * task before starting.
+     */
+    const buildWhenIdle = () => {
+      if (renderer !== null || idleHandle !== null) return
+
+      const run = () => {
+        idleHandle = null
+        const built = ensureRenderer()
+        if (reduced) built.still()
+        else evaluateRunState()
+      }
+
+      // Checked through a boolean rather than `in window`: the DOM types
+      // declare requestIdleCallback as always present, so `in` narrows the
+      // else branch to `never` and the fallback stops compiling.
+      const supportsIdle = typeof window.requestIdleCallback === 'function'
+
+      idleHandle = supportsIdle
+        ? window.requestIdleCallback(run, { timeout: brain.buildTimeout })
+        : window.setTimeout(run, 0)
+    }
 
     let frameId: number | null = null
     let lastTime = 0
@@ -75,13 +124,29 @@ export function NeuralBrain() {
       canvas.style.width = `${rect.width}px`
       canvas.style.height = `${rect.height}px`
 
-      renderer.resize(rect.width, rect.height, dpr)
+      renderer?.resize(rect.width, rect.height, dpr)
     }
 
+    const minFrame = isSmallScreen
+      ? brain.frameInterval.mobile
+      : brain.frameInterval.desktop
+
+    // Time skipped by a dropped frame is carried into the next one, so the
+    // rotation runs at the same speed however often it is drawn.
+    let owed = 0
+
     const tick = (time: number) => {
+      if (!renderer) return
+
       const elapsed = lastTime === 0 ? 16 : time - lastTime
       lastTime = time
-      renderer.frame(elapsed)
+      owed += elapsed
+
+      if (owed >= minFrame) {
+        renderer.frame(owed)
+        owed = 0
+      }
+
       frameId = requestAnimationFrame(tick)
     }
 
@@ -98,27 +163,26 @@ export function NeuralBrain() {
     }
 
     const evaluateRunState = () => {
-      if (reduced) return
+      // Nothing to run until the model exists; the build schedules its own
+      // re-evaluation when it finishes.
+      if (reduced || !renderer) return
       if (onScreen && !document.hidden) start()
       else stop()
     }
 
     applySize()
 
-    if (reduced) {
-      // Not a slower animation — a single composed frame, drawn once.
-      renderer.still()
-    }
-
     const resizeObserver = new ResizeObserver(() => {
       applySize()
-      if (reduced) renderer.still()
+      if (reduced && renderer) renderer.still()
     })
     resizeObserver.observe(host)
 
     const intersectionObserver = new IntersectionObserver(
       (entries) => {
         onScreen = entries[0]?.isIntersecting ?? false
+
+        if (onScreen) buildWhenIdle()
         evaluateRunState()
       },
       { threshold: 0 },
@@ -132,6 +196,7 @@ export function NeuralBrain() {
     // Tokens can change under the visitor (a future theme switch), so the
     // palette is re-read rather than captured once at mount.
     const themeObserver = new MutationObserver(() => {
+      if (!renderer) return
       renderer.setPalette(readBrainPalette(host))
       if (reduced) renderer.still()
     })
@@ -146,6 +211,15 @@ export function NeuralBrain() {
 
     return () => {
       stop()
+
+      if (idleHandle !== null) {
+        if (typeof window.cancelIdleCallback === 'function') {
+          window.cancelIdleCallback(idleHandle)
+        } else {
+          window.clearTimeout(idleHandle)
+        }
+      }
+
       resizeObserver.disconnect()
       intersectionObserver.disconnect()
       themeObserver.disconnect()

@@ -44,6 +44,13 @@ export const ProfileSchema = z.object({
   /** The single line that carries the hero. */
   tagline: z.string().min(1),
   summary: z.string().min(1),
+  /**
+   * Words in `tagline` to accent. Matched case-insensitively and ignoring
+   * trailing punctuation, so "AI." here catches "AI." in the sentence.
+   * Which words carry the line is an editorial call, so it lives with the
+   * copy rather than in the component that renders it.
+   */
+  taglineHighlights: z.array(z.string().min(1)).default([]),
   location: z.object({
     city: z.string().min(1),
     region: z.string().min(1),
@@ -132,6 +139,11 @@ export const SkillClusterSchema = z.object({
    * the bar treatment stays one edit away.
    */
   level: z.number().min(0).max(100).optional(),
+  /**
+   * Surfaced as a card in the hero. Off by default: the hero shows what the
+   * work leads with, not everything the CV lists.
+   */
+  featured: z.boolean().default(false),
 })
 
 // ---------------------------------------------------------------------------
@@ -210,3 +222,21 @@ export type Achievement = z.infer<typeof AchievementSchema>
 export type Education = z.infer<typeof EducationSchema>
 export type Section = z.infer<typeof SectionSchema>
 export type JourneyStage = z.infer<typeof JourneyStageSchema>
+
+// ---------------------------------------------------------------------------
+// Brand marks
+// ---------------------------------------------------------------------------
+
+/**
+ * A technology logo. GENERATED into brands.ts — see scripts/generate-brands.mjs.
+ *
+ * `technology` is checked against the technologies the CV actually names, so
+ * a logo for something unused cannot reach the page.
+ */
+export const BrandMarkSchema = z.object({
+  technology: z.string().min(1),
+  hex: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'must be a hex colour'),
+  path: z.string().min(1),
+})
+
+export type BrandMark = z.infer<typeof BrandMarkSchema>

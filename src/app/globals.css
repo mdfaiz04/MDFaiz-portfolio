@@ -29,13 +29,20 @@
   --color-ink: #e8e8f5;
   --color-ink-muted: #a9a7c8;
   --color-ink-faint: #8e8cb4;
-  --color-ink-ghost: #5d5b80;
+  /* Lightened from #5d5b80, which measured 3.06:1 on the ground and failed
+     WCAG AA for small text. A tier meant to be quiet is still meant to be
+     read. Now 5.06:1 on ground, 4.74:1 on surface. */
+  --color-ink-ghost: #7f7da8;
 
   /* --- accent ----------------------------------------------------------- */
   --color-accent: #7c5cff;
   --color-accent-bright: #9b8cff;
   --color-accent-glow: #35d6f5;
   --color-accent-deep: #4a32b8;
+  /* The accent, taken just dark enough to carry white text at AA (4.70:1).
+     `--color-accent` itself measures 3.57:1 under ink and fails, so filled
+     buttons use this and the brighter tone stays for borders and large type. */
+  --color-accent-solid: #6a4be0;
 
   /* --- structure -------------------------------------------------------- */
   --color-rule: #26264a;
@@ -75,6 +82,21 @@
   --text-display--line-height: 1.02;
   --text-display--letter-spacing: -0.035em;
 
+  /* The hero's own scale. Every step is capped against viewport HEIGHT as
+     well as width, so a short laptop window compresses the type instead of
+     pushing the buttons below the fold. */
+  --text-hero: clamp(2.5rem, min(6.2vw, 9vh), 5.25rem);
+  --text-hero--line-height: 0.95;
+  --text-hero--letter-spacing: -0.04em;
+
+  --text-hero-line: clamp(1.45rem, min(3.1vw, 4.6vh), 2.3rem);
+  --text-hero-line--line-height: 1.18;
+  --text-hero-line--letter-spacing: -0.025em;
+
+  --text-hero-role: clamp(1.05rem, min(1.9vw, 2.8vh), 1.5rem);
+  --text-hero-role--line-height: 1.2;
+  --text-hero-role--letter-spacing: -0.01em;
+
   --text-headline: clamp(1.75rem, 4vw, 2.75rem);
   --text-headline--line-height: 1.08;
   --text-headline--letter-spacing: -0.03em;
@@ -98,7 +120,7 @@
   /* Page shell. Wider than Tailwind's 6xl so a large display does not leave
      a broad dead margin on either side of the content. Prose still wraps at
      --container-measure, so the extra width goes to layout, not line length. */
-  --container-shell: 84rem;
+  --container-shell: 90rem;
 
   /* --- motion ----------------------------------------------------------- */
   /* Mirrors src/config/motion.ts. CSS transitions read these; Framer Motion
@@ -112,8 +134,98 @@
   --duration-slow: 700ms;
 
   /* --- depth ------------------------------------------------------------ */
+  /* Two radii languages on purpose. `edge` is the hairline, technical
+     treatment the lower sections use; `card` and `pill` are the softer,
+     product-like treatment the hero leads with. Mixing them within one
+     element would read as an accident — between regions it reads as
+     hierarchy. */
   --radius-edge: 2px;
   --radius-soft: 6px;
+  --radius-card: 14px;
+  --radius-tile: 12px;
+  --radius-pill: 9999px;
+}
+
+/**
+ * Accent text, as a gradient.
+ *
+ * `background-clip: text` needs a transparent fill, and the two together are
+ * meaningless apart — so they are one utility rather than three classes a
+ * component has to remember to use together.
+ */
+@utility text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-accent-bright) 0%,
+    var(--color-accent) 45%,
+    var(--color-accent-glow) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/**
+ * The hero's raised surfaces: feature cards, the stat bar, the logo strip.
+ *
+ * A single hairline border plus a barely-there vertical wash. On a ground
+ * this dark a shadow does nothing, so depth has to come from the edge and a
+ * lighter top face instead.
+ */
+@utility panel {
+  border: 1px solid color-mix(in oklab, var(--color-rule) 70%, transparent);
+  border-radius: var(--radius-card);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-surface) 55%, transparent) 0%,
+    color-mix(in oklab, var(--color-ground) 70%, transparent) 100%
+  );
+}
+
+/**
+ * The primary call to action.
+ *
+ * `background-color` carries the real colour and the gradient only adds a
+ * sheen over it — which matters because a contrast checker samples the
+ * computed background-color, and because the button must stay legible if the
+ * gradient fails to paint.
+ *
+ * The hover state lifts rather than lightens: every violet bright enough to
+ * read as "brighter" is too light to carry white text at AA.
+ */
+@utility button-primary {
+  border-radius: var(--radius-tile);
+  background-color: var(--color-accent-solid);
+  background-image: linear-gradient(
+    140deg,
+    color-mix(in oklab, var(--color-accent-bright) 38%, transparent) 0%,
+    transparent 62%
+  );
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+/** Icon plate inside a panel — one step brighter than the panel it sits on. */
+@utility tile {
+  border: 1px solid color-mix(in oklab, var(--color-accent) 28%, transparent);
+  border-radius: var(--radius-tile);
+  background-image: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--color-accent) 22%, transparent) 0%,
+    color-mix(in oklab, var(--color-accent-glow) 8%, transparent) 100%
+  );
+}
+
+/**
+ * A feature card's hover state.
+ *
+ * Transitioning `border-color` and `background` separately would stagger,
+ * because they resolve at different speeds through color-mix. One transition
+ * on all of it keeps the card moving as a single object.
+ */
+@utility panel-interactive {
+  transition:
+    border-color var(--duration-fast) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo);
 }
 
 /**

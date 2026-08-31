@@ -8,6 +8,7 @@ import { ScrollProgress } from '@/components/chrome/ScrollProgress'
 import { searchIndexable } from '@/config/env'
 import { profile, visibleSections } from '@/content'
 import { palette } from '@/lib/brand/palette'
+import { splitName } from '@/lib/text'
 import { jsonLdScript } from '@/lib/seo/jsonLd'
 import {
   siteDescription,
@@ -28,7 +29,11 @@ import './globals.css'
  */
 const sora = Sora({
   subsets: ['latin'],
-  weight: ['300', '400', '600', '800'],
+  // 700 is used by five headings — the hero's line, every section heading,
+  // project titles — and was missing, so the browser was synthesising a fake
+  // bold for all of them. 300 was loaded and used nowhere. Swapping the two
+  // costs no extra bytes and fixes the type everywhere at once.
+  weight: ['400', '600', '700', '800'],
   variable: '--font-sora',
   display: 'swap',
 })
@@ -141,7 +146,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </a>
 
         <ScrollProgress />
-        <Nav items={visibleSections} wordmark={profile.name} />
+        <Nav
+          items={visibleSections}
+          wordmark={splitName(profile.name)}
+          action={{ label: 'Get in touch', sectionId: 'contact' }}
+        />
 
         <div id="top" className="relative z-10 flex flex-1 flex-col">
           {children}

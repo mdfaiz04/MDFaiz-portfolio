@@ -68,9 +68,9 @@ export const brain = {
    * scattered specks. Mobile takes roughly half, since the canvas is
    * smaller and the device has less to give.
    */
-  pointCount: { desktop: 1100, mobile: 450 },
+  pointCount: { desktop: 1100, mobile: 320 },
   /** Hard cap on drawn synapses; the limiting factor for frame rate. */
-  edgeCap: { desktop: 2000, mobile: 800 },
+  edgeCap: { desktop: 2000, mobile: 520 },
   /** Milliseconds between signal pulses travelling an edge. */
   pulseInterval: 520,
   /**
@@ -79,6 +79,23 @@ export const brain = {
    */
   /** Retina is worth it; beyond 2x is invisible and expensive. */
   dprCap: 2,
+  /**
+   * Minimum milliseconds between rendered frames.
+   *
+   * Zero on a desktop: render every frame the browser offers. On a phone the
+   * loop was costing about 65ms per frame under CPU throttling — enough long
+   * tasks, back to back, to keep the browser from answering a tap. Thirty
+   * frames a second is indistinguishable for a slow rotation and halves the
+   * work. Rotation speed is unaffected: skipped time is accumulated and
+   * handed to the next frame.
+   */
+  frameInterval: { desktop: 0, mobile: 1000 / 30 },
+  /**
+   * How long the model may wait for an idle moment before it is built
+   * anyway. Long enough to stay out of the way of first interaction, short
+   * enough that a busy page still shows its hero.
+   */
+  buildTimeout: 2500,
 } as const
 
 /** The portfolio assistant (Phase 5). */

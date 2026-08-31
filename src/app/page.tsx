@@ -6,17 +6,21 @@ import { Projects } from '@/components/sections/Projects'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import {
   achievements,
+  brandedTechnologies,
   counts,
   education,
   experience,
+  experienceSince,
+  featuredSkills,
   formatRange,
   profile,
   projectCategoryLabels,
   projects,
-  experienceSince,
   skills,
+  splitDuration,
   visibleSections,
 } from '@/content'
+import { joinWithin, splitName } from '@/lib/text'
 
 /**
  * The page maps over the section registry rather than listing sections, so
@@ -29,14 +33,44 @@ import {
 export default function HomePage() {
   // Time-dependent, so it is read here rather than on the client, where the
   // server and browser could disagree and trigger a hydration mismatch.
-  const tenure = experienceSince(new Date())
+  const worked = splitDuration(experienceSince(new Date()).months)
 
-  const stats = [
-    { label: 'Experience', value: tenure.label },
-    { label: 'Projects', value: String(counts.projects) },
-    { label: 'Technologies', value: String(counts.technologies) },
-    { label: 'Placements', value: String(counts.placements) },
+  /**
+   * The headline figures.
+   *
+   * `id` drives the icon; the numbers come from the counters, which are
+   * derived from the content itself. Experience carries a unit because it is
+   * the only one whose noun changes — months become years on their own.
+   */
+  const heroStats = [
+    {
+      id: 'experience',
+      value: worked.value,
+      unit: worked.unit,
+      label: 'Experience',
+    },
+    {
+      id: 'technologies',
+      value: String(counts.technologies),
+      label: 'Technologies',
+    },
+    { id: 'projects', value: String(counts.projects), label: 'Projects' },
+    { id: 'placements', value: String(counts.placements), label: 'Placements' },
   ]
+
+  /**
+   * Hero capability cards.
+   *
+   * The detail line is as many of the cluster's own tools as fit on one line,
+   * so a long technology name shortens the list instead of wrapping the card.
+   */
+  const heroFeatures = featuredSkills.map((cluster) => ({
+    id: cluster.id,
+    title: cluster.title,
+    detail: joinWithin(cluster.items, 34),
+  }))
+
+  const name = splitName(profile.name)
 
   const roles = experience.map((role) => ({
     id: role.id,
@@ -126,11 +160,18 @@ export default function HomePage() {
                   role={profile.role}
                   tagline={profile.tagline}
                   summary={profile.summary}
-                  stats={stats}
+                  greeting="Hi, I'm"
+                  name={name}
+                  taglineHighlights={profile.taglineHighlights}
+                  features={heroFeatures}
+                  stats={heroStats}
+                  brands={brandedTechnologies}
+                  brandsHeading="Technologies I work with"
+                  scrollCue="Scroll to explore"
+                  primaryAction="View my work"
+                  secondaryAction="Get in touch"
                   projectsSectionId="projects"
                   contactSectionId="contact"
-                  assistantSectionId="assistant"
-                  assistantPrompt="Ask me anything about my work"
                 />
               ) : (
                 <div className="flex flex-col gap-12">

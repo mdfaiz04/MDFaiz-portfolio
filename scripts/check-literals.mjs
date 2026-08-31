@@ -85,8 +85,40 @@ function strippable(line) {
       // Without the lookbehind, `https://…` swallows the rest of the line
       // and hides every finding after it.
       .replace(/(?<!:)\/\/.*$/, '')
-      .replace(/\/\*.*?\*\//g, '')
   )
+}
+
+/**
+ * Remove block comments, including ones that span several lines.
+ *
+ * Returns the surviving text and whether a comment is still open, so the
+ * caller can carry that state to the next line. Without it, a JSX comment
+ * that explains markup reads as prose sitting between two tags and fails the
+ * scan. A comment is never content, whatever it happens to mention.
+ */
+function stripBlockComments(line, open) {
+  let out = ''
+  let index = 0
+
+  while (index < line.length) {
+    if (open) {
+      const end = line.indexOf('*/', index)
+      if (end === -1) break
+      index = end + 2
+      open = false
+    } else {
+      const start = line.indexOf('/*', index)
+      if (start === -1) {
+        out += line.slice(index)
+        break
+      }
+      out += line.slice(index, start)
+      index = start + 2
+      open = true
+    }
+  }
+
+  return { text: out, open }
 }
 
 /** Detect prose sitting between JSX tags, e.g. `<p>Hello there friend now</p>`. */
@@ -107,12 +139,18 @@ const files = walk(SCAN_DIR)
 for (const file of files) {
   const lines = readFileSync(file, 'utf8').split(/\r?\n/)
 
+  // Block comments carry across lines, so the state has to as well.
+  let openComment = false
+
   lines.forEach((rawLine, index) => {
+    const stripped = stripBlockComments(rawLine, openComment)
+    openComment = stripped.open
+
     const previous = index > 0 ? lines[index - 1] : ''
     if (rawLine.includes(ALLOW_MARKER) || previous.includes(ALLOW_MARKER))
       return
 
-    const line = strippable(rawLine)
+    const line = strippable(stripped.text)
     if (!line.trim()) return
 
     // Report every rule a line breaks, not just the first — one line can
