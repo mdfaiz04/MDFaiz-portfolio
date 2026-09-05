@@ -1,12 +1,34 @@
 'use client'
 
+import {
+  Award,
+  Box,
+  BrainCircuit,
+  CalendarDays,
+  ChevronRight,
+  Plane,
+  Rocket,
+  Search,
+  Server,
+  Sparkles,
+  Target,
+  Users,
+  type LucideIcon,
+} from 'lucide-react'
 import { motion, useScroll, useSpring, useTransform } from 'motion/react'
+import type { ReactNode } from 'react'
 import { useRef } from 'react'
 
+import { BrandMark } from '@/components/ui/BrandMark'
 import { Chip } from '@/components/ui/Chip'
 import { Reveal, RevealItem } from '@/components/ui/Reveal'
 import { spring } from '@/config/motion'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
+
+type Impact = {
+  icon: string
+  text: string
+}
 
 type Role = {
   id: string
@@ -14,8 +36,30 @@ type Role = {
   role: string
   period: string
   summary: string
+  icon: string
   highlights: readonly string[]
-  stack: readonly string[]
+  impact: readonly Impact[]
+  impactLabel?: string
+  /** Stack entries already paired with a logo where one exists. */
+  stack: readonly { name: string; mark?: { hex: string; path: string } }[]
+}
+
+/**
+ * Which glyph stands for each mark in the content.
+ *
+ * Keyed by the content's own enum, so a mark without an entry degrades to the
+ * neutral fallback rather than crashing. A mapping, not a fact.
+ */
+const MARKS: Record<string, LucideIcon> = {
+  ai: BrainCircuit,
+  rocket: Rocket,
+  search: Search,
+  server: Server,
+  team: Users,
+  plane: Plane,
+  target: Target,
+  cube: Box,
+  award: Award,
 }
 
 type Cluster = {
@@ -47,6 +91,10 @@ type Award = {
 }
 
 type JourneyProps = {
+  /** The section's own heading block, so this owns the layout beside it. */
+  header: ReactNode
+  /** The illustration that sits beside the heading. */
+  illustration: ReactNode
   roles: readonly Role[]
   clusters: readonly Cluster[]
   studies: readonly Study[]
@@ -64,6 +112,8 @@ type JourneyProps = {
  * the clearest tell of a generated page.
  */
 export function Journey({
+  header,
+  illustration,
   roles,
   clusters,
   studies,
@@ -85,8 +135,14 @@ export function Journey({
 
   return (
     <div className="flex flex-col gap-16">
+      {/* --- the heading, and the climb ------------------------------- */}
+      <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
+        {header}
+        <div className="hidden min-w-0 lg:block">{illustration}</div>
+      </div>
+
       {/* --- timeline --- */}
-      <div ref={railRef} className="relative flex flex-col gap-10 pl-8">
+      <div ref={railRef} className="relative flex flex-col gap-8 pl-8">
         {/* Track and the drawn line share a position, so the line always
             travels exactly the length of the timeline. */}
         <div className="bg-rule-soft absolute top-2 bottom-2 left-0 w-px" />
@@ -95,54 +151,143 @@ export function Journey({
           className="from-accent to-accent-glow absolute top-2 bottom-2 left-0 w-px origin-top bg-gradient-to-b"
         />
 
-        {roles.map((role) => (
-          <Reveal
-            key={role.id}
-            stagger
-            className="relative flex flex-col gap-3"
-          >
-            <span className="border-ground bg-accent absolute top-2 -left-8 size-2.5 -translate-x-1/2 rounded-full border-2" />
+        {roles.map((role) => {
+          const RoleMark = MARKS[role.icon] ?? Sparkles
 
-            <RevealItem>
-              <p className="text-accent-bright font-mono text-eyebrow uppercase">
-                {role.period}
-              </p>
-            </RevealItem>
+          return (
+            <Reveal key={role.id} className="relative">
+              <span className="border-ground bg-accent absolute top-8 -left-8 size-3 -translate-x-1/2 rounded-pill border-2" />
 
-            <RevealItem>
-              <h3 className="font-display text-title text-ink font-semibold">
-                {role.role}
-                <span className="text-ink-faint"> · {role.org}</span>
-              </h3>
-            </RevealItem>
+              <article className="panel flex flex-col gap-6 p-5 sm:p-6">
+                <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8">
+                  {/* --- who and when ---------------------------------- */}
+                  <div className="flex flex-col gap-5">
+                    <div className="flex items-center gap-3">
+                      <span className="tile text-accent-bright flex size-11 shrink-0 items-center justify-center">
+                        <CalendarDays size={19} aria-hidden="true" />
+                      </span>
+                      <span className="text-accent-bright font-mono text-eyebrow uppercase">
+                        {role.period}
+                      </span>
+                    </div>
 
-            <RevealItem>
-              <p className="text-ink-muted max-w-measure">{role.summary}</p>
-            </RevealItem>
+                    <div className="flex items-center gap-4 lg:flex-col lg:items-start">
+                      <span className="tile text-accent-bright flex size-20 shrink-0 items-center justify-center">
+                        <RoleMark size={34} aria-hidden="true" />
+                      </span>
 
-            <RevealItem>
-              <ul className="flex max-w-measure flex-col gap-2 pt-1">
-                {role.highlights.map((highlight) => (
-                  <li
-                    key={highlight}
-                    className="text-ink-faint flex gap-3 text-sm"
-                  >
-                    <span className="text-accent shrink-0 font-mono">—</span>
-                    {highlight}
-                  </li>
-                ))}
-              </ul>
-            </RevealItem>
+                      <span className="flex min-w-0 flex-col items-start gap-2">
+                        <span className="text-ink text-base font-semibold">
+                          {role.org}
+                        </span>
+                        <span className="border-accent/40 text-accent-bright rounded-pill border px-3 py-1 text-xs">
+                          {role.role}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
 
-            <RevealItem>
-              <div className="flex flex-wrap gap-2 pt-2">
-                {role.stack.map((item) => (
-                  <Chip key={item} label={item} />
-                ))}
-              </div>
-            </RevealItem>
-          </Reveal>
-        ))}
+                  {/* --- what it was ----------------------------------- */}
+                  <div className="flex min-w-0 flex-col gap-5">
+                    <div className="flex flex-col gap-2">
+                      <h3 className="font-display text-title font-semibold">
+                        <span className="text-ink">{role.role}</span>
+                        <span className="text-ink-ghost"> · </span>
+                        <span className="text-gradient">{role.org}</span>
+                      </h3>
+                      <p className="text-ink-muted max-w-measure">
+                        {role.summary}
+                      </p>
+                    </div>
+
+                    <div className="border-rule-soft grid gap-6 border-t pt-5 lg:grid-cols-2 lg:gap-8">
+                      {/* What was done. */}
+                      <div className="flex min-w-0 flex-col gap-3">
+                        <h4 className="text-accent-bright font-mono text-eyebrow uppercase">
+                          What I did
+                        </h4>
+                        <ul className="flex flex-col gap-2.5">
+                          {role.highlights.map((highlight) => (
+                            <li
+                              key={highlight}
+                              className="text-ink-muted flex gap-2 text-sm leading-snug"
+                            >
+                              <ChevronRight
+                                size={14}
+                                aria-hidden="true"
+                                className="text-accent mt-0.5 shrink-0"
+                              />
+                              {highlight}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* And what came of it. */}
+                      {role.impact.length > 0 ? (
+                        <div className="flex min-w-0 flex-col gap-3">
+                          <h4 className="text-accent-glow font-mono text-eyebrow uppercase">
+                            {role.impactLabel ?? 'Impact'}
+                          </h4>
+                          <ul className="flex flex-col">
+                            {role.impact.map((entry) => {
+                              const Mark = MARKS[entry.icon] ?? Sparkles
+
+                              return (
+                                <li
+                                  key={entry.text}
+                                  className="border-rule-soft/60 flex items-center gap-3 py-2.5 not-last:border-b"
+                                >
+                                  <span className="tile text-accent-glow flex size-10 shrink-0 items-center justify-center">
+                                    <Mark size={17} aria-hidden="true" />
+                                  </span>
+                                  <span className="text-ink-muted text-sm leading-snug">
+                                    {entry.text}
+                                  </span>
+                                </li>
+                              )
+                            })}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+
+                {/* --- and what it ran on ----------------------------- */}
+                <div className="border-rule-soft flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-start sm:gap-6">
+                  <h4 className="text-ink-ghost shrink-0 font-mono text-eyebrow uppercase sm:pt-1.5">
+                    Technologies
+                  </h4>
+
+                  <ul className="flex flex-wrap gap-2">
+                    {role.stack.map((item) => (
+                      <li
+                        key={item.name}
+                        className="border-rule-soft text-ink-muted flex items-center gap-2 rounded-tile border px-3 py-1.5 text-xs"
+                      >
+                        {item.mark ? (
+                          <BrandMark
+                            title={item.name}
+                            path={item.mark.path}
+                            hex={item.mark.hex}
+                            size={15}
+                          />
+                        ) : (
+                          <span
+                            aria-hidden="true"
+                            className="bg-accent size-1.5 shrink-0 rounded-pill"
+                          />
+                        )}
+                        {item.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            </Reveal>
+          )
+        })}
       </div>
 
       {/* --- capabilities --- */}

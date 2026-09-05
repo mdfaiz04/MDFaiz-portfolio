@@ -73,6 +73,25 @@ export const ProfileSchema = z.object({
 // Experience
 // ---------------------------------------------------------------------------
 
+/**
+ * The marks a role or an outcome may carry.
+ *
+ * A closed set rather than free text: a typo in an icon name should fail the
+ * build, not render a blank square. Which glyph each one maps to is a design
+ * decision and lives in the component.
+ */
+export const MarkSchema = z.enum([
+  'ai',
+  'rocket',
+  'search',
+  'server',
+  'team',
+  'plane',
+  'target',
+  'cube',
+  'award',
+])
+
 export const ExperienceSchema = z
   .object({
     id: Slug,
@@ -84,7 +103,29 @@ export const ExperienceSchema = z
     end: YearMonth.nullable(),
     location: z.string().optional(),
     summary: z.string().min(1),
+    /** The mark shown on the role's card. */
+    icon: MarkSchema,
+    /** What was done. */
     highlights: z.array(z.string().min(1)).min(1),
+    /**
+     * What came of it, stated as outcomes rather than activities.
+     *
+     * Kept separate from `highlights` because they answer different
+     * questions, and a reader scanning for "so what" should not have to
+     * infer it from a list of verbs. Every line here must be supported by
+     * the CV — this is the one place in the content layer where a claim
+     * could be inflated without anything catching it.
+     */
+    impact: z
+      .array(
+        z.object({
+          icon: MarkSchema,
+          text: z.string().min(1),
+        }),
+      )
+      .default([]),
+    /** Heading for the column above. Differs by role, so it is content. */
+    impactLabel: z.string().min(1).optional(),
     stack: z.array(z.string().min(1)).default([]),
   })
   .refine((role) => role.end === null || role.end >= role.start, {

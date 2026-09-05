@@ -15,6 +15,32 @@ export const experience = [
     end: null,
     summary:
       'Building production AI applications and the backend services behind them.',
+    icon: 'ai',
+    impactLabel: 'Impact',
+    /**
+     * Each line restates a highlight below as an outcome. Nothing here claims
+     * a result the CV does not — no user numbers, no percentages, no "improved
+     * X by Y". Those would be the easiest thing in the world to write and the
+     * hardest to defend in an interview.
+     */
+    impact: [
+      {
+        icon: 'ai',
+        text: 'Production AI applications running on large language models.',
+      },
+      {
+        icon: 'search',
+        text: 'Retrieval pipelines that find the right document.',
+      },
+      {
+        icon: 'server',
+        text: 'The backend APIs and microservices carrying them.',
+      },
+      {
+        icon: 'team',
+        text: 'Third-party platforms reached through Model Context Protocol.',
+      },
+    ],
     highlights: [
       'Developed AI-powered applications using large language models, agentic AI, and retrieval-augmented generation.',
       'Built RAG pipelines for intelligent document retrieval.',
@@ -48,6 +74,26 @@ export const experience = [
     end: '2026-03',
     summary:
       'A 45-day intensive in drone and aerospace engineering, ending in a full parametric aircraft model.',
+    icon: 'rocket',
+    impactLabel: 'Key outcome',
+    impact: [
+      {
+        icon: 'plane',
+        text: 'A complete parametric aircraft model, built in OpenVSP.',
+      },
+      {
+        icon: 'target',
+        text: 'Aerodynamics, propulsion and structures applied to one configuration.',
+      },
+      {
+        icon: 'cube',
+        text: 'The design visualised as a full three-dimensional configuration.',
+      },
+      {
+        icon: 'award',
+        text: 'A working foundation in conceptual aircraft design.',
+      },
+    ],
     highlights: [
       'Completed a hands-on internship focused on drone and aerospace technology.',
       'Studied aerodynamics, propulsion systems, and aircraft structures.',

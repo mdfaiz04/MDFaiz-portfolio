@@ -2,11 +2,13 @@ import { Assistant } from '@/components/sections/Assistant'
 import { Contact } from '@/components/sections/Contact'
 import { Hero } from '@/components/sections/Hero'
 import { Journey } from '@/components/sections/Journey'
+import { SummitPath } from '@/components/visuals/SummitPath'
 import { Projects } from '@/components/sections/Projects'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import {
   achievements,
   brandedTechnologies,
+  brands,
   counts,
   education,
   experience,
@@ -85,14 +87,33 @@ export default function HomePage() {
 
   const name = splitName(profile.name)
 
+  /**
+   * Technology name to logo, built once rather than searched per chip.
+   *
+   * A technology with no mark is normal — AWS and the AI terms have none —
+   * and simply renders with a neutral dot instead.
+   */
+  const markByTechnology = new Map(
+    brands.map((brand) => [
+      brand.technology,
+      { hex: brand.hex, path: brand.path },
+    ]),
+  )
+
   const roles = experience.map((role) => ({
     id: role.id,
     org: role.org,
     role: role.role,
     period: formatRange(role.start, role.end),
     summary: role.summary,
+    icon: role.icon,
     highlights: role.highlights,
-    stack: role.stack,
+    impact: role.impact,
+    impactLabel: role.impactLabel,
+    stack: role.stack.map((name) => ({
+      name,
+      mark: markByTechnology.get(name),
+    })),
   }))
 
   // Evidence ids are resolved to names here so the Journey component never
@@ -202,7 +223,8 @@ export default function HomePage() {
                     it has to run the full height of the column. Every other
                     section takes the shared header above its content.
                   */}
-                  {section.id === 'contact' ? null : (
+                  {section.id === 'contact' ||
+                  section.id === 'journey' ? null : (
                     <SectionHeader
                       index={index}
                       stage={section.stage}
@@ -216,6 +238,19 @@ export default function HomePage() {
 
                   {section.id === 'journey' ? (
                     <Journey
+                      header={
+                        <SectionHeader
+                          index={index}
+                          stage={section.stage}
+                          heading={markWords(
+                            section.heading ?? section.navLabel,
+                            section.headingHighlights ?? [],
+                          )}
+                          lede={section.lede}
+                          rule="short"
+                        />
+                      }
+                      illustration={<SummitPath />}
                       roles={roles}
                       clusters={clusters}
                       studies={studies}

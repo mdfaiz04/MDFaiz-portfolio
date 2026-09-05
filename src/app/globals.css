@@ -193,6 +193,32 @@
 }
 
 /**
+ * A light travelling up the summit route.
+ *
+ * A dash pattern whose offset animates — the cheapest way to move something
+ * along a path, and it runs on the compositor rather than through a render
+ * loop. Paused for anyone who has asked for less motion.
+ */
+@keyframes summit-travel {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -200;
+  }
+}
+
+.summit-spark {
+  animation: summit-travel 9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .summit-spark {
+    animation: none;
+  }
+}
+
+/**
  * The primary call to action.
  *
  * `background-color` carries the real colour and the gradient only adds a

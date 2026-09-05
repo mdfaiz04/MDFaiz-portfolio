@@ -26,6 +26,7 @@ export const sections = [
     order: 1,
     stage: 'understanding',
     heading: 'The path so far',
+    headingHighlights: ['so', 'far'],
     lede: 'Two internships in two very different fields, and the engineering that carries across both.',
     enabled: true,
   },
