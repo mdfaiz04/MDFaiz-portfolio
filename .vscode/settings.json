@@ -1,0 +1,43 @@
+{
+  // Build output and installed dependencies. All of it is gitignored, none of
+  // it is in the repository, and none of it can be deleted — `node_modules`
+  // is the 350 installed packages and `.next` is the compiled site. Hiding
+  // them here leaves the Explorer showing only files that are actually part
+  // of the project.
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/tsconfig.tsbuildinfo": true,
+    "**/next-env.d.ts": true,
+    "**/.husky/_": true
+  },
+
+  // Keep the same noise out of search results, so a project-wide find returns
+  // this codebase rather than a thousand copies of someone else's.
+  "search.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/package-lock.json": true
+  },
+
+  // Watching node_modules on Windows costs real CPU and gains nothing.
+  "files.watcherExclude": {
+    "**/.next/**": true,
+    "**/node_modules/**": true
+  },
+
+  // Use the TypeScript version this project pins, not the editor's own. A
+  // mismatch shows errors in the IDE that the build does not have, and vice
+  // versa — which is worse than either being wrong on its own.
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // Tailwind v4 keeps its theme in CSS, so the language server needs pointing
+  // at the stylesheet rather than at a config file that no longer exists.
+  "tailwindCSS.experimental.configFile": "src/app/globals.css"
+}
