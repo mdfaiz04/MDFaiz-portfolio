@@ -2,8 +2,10 @@ import { Assistant } from '@/components/sections/Assistant'
 import { Contact } from '@/components/sections/Contact'
 import { Hero } from '@/components/sections/Hero'
 import { Journey } from '@/components/sections/Journey'
+import { DataStack } from '@/components/visuals/DataStack'
 import { SummitPath } from '@/components/visuals/SummitPath'
 import { Projects } from '@/components/sections/Projects'
+import { Skills } from '@/components/sections/Skills'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import {
   achievements,
@@ -125,6 +127,7 @@ export default function HomePage() {
     title: cluster.title,
     blurb: cluster.blurb,
     items: cluster.items,
+    icon: cluster.icon,
     level: cluster.level,
     evidence: cluster.evidence.flatMap((id) => {
       const name = projectNames.get(id)
@@ -223,11 +226,12 @@ export default function HomePage() {
                     it has to run the full height of the column. Every other
                     section takes the shared header above its content.
                   */}
-                  {section.id === 'contact' ||
-                  section.id === 'journey' ? null : (
+                  {['journey', 'skills', 'contact'].includes(
+                    section.id,
+                  ) ? null : (
                     <SectionHeader
                       index={index}
-                      stage={section.stage}
+                      stage={section.eyebrow ?? section.stage}
                       heading={markWords(
                         section.heading ?? section.navLabel,
                         section.headingHighlights ?? [],
@@ -241,7 +245,7 @@ export default function HomePage() {
                       header={
                         <SectionHeader
                           index={index}
-                          stage={section.stage}
+                          stage={section.eyebrow ?? section.stage}
                           heading={markWords(
                             section.heading ?? section.navLabel,
                             section.headingHighlights ?? [],
@@ -252,9 +256,27 @@ export default function HomePage() {
                       }
                       illustration={<SummitPath />}
                       roles={roles}
-                      clusters={clusters}
                       studies={studies}
                       awards={awards}
+                    />
+                  ) : null}
+
+                  {section.id === 'skills' ? (
+                    <Skills
+                      header={
+                        <SectionHeader
+                          index={index}
+                          stage={section.eyebrow ?? section.stage}
+                          heading={markWords(
+                            section.heading ?? section.navLabel,
+                            section.headingHighlights ?? [],
+                          )}
+                          lede={section.lede}
+                          rule="short"
+                        />
+                      }
+                      illustration={<DataStack />}
+                      clusters={clusters}
                       projectsSectionId="projects"
                     />
                   ) : null}
@@ -268,7 +290,7 @@ export default function HomePage() {
                       header={
                         <SectionHeader
                           index={index}
-                          stage={section.stage}
+                          stage={section.eyebrow ?? section.stage}
                           heading={markWords(
                             section.heading ?? section.navLabel,
                             section.headingHighlights ?? [],

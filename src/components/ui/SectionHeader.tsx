@@ -1,7 +1,14 @@
 import { Reveal } from '@/components/ui/Reveal'
 
 type SectionHeaderProps = {
-  /** The journey stage this section serves — real information, not decoration. */
+  /**
+   * What is printed above the heading.
+   *
+   * The section registry keeps `stage` — which step of the visitor journey a
+   * section serves — as real information, and an optional `eyebrow` for when
+   * the caption should read differently. The page decides between them; this
+   * component just prints what it is handed.
+   */
   stage: string
   /** Already split into words, with the accented ones marked. */
   heading: readonly { word: string; isHighlight: boolean }[]

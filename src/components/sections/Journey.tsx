@@ -20,8 +20,7 @@ import type { ReactNode } from 'react'
 import { useRef } from 'react'
 
 import { BrandMark } from '@/components/ui/BrandMark'
-import { Chip } from '@/components/ui/Chip'
-import { Reveal, RevealItem } from '@/components/ui/Reveal'
+import { Reveal } from '@/components/ui/Reveal'
 import { spring } from '@/config/motion'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 
@@ -62,16 +61,6 @@ const MARKS: Record<string, LucideIcon> = {
   award: Award,
 }
 
-type Cluster = {
-  id: string
-  title: string
-  blurb: string
-  items: readonly string[]
-  /** Resolved project names, so this component never looks anything up. */
-  evidence: readonly { id: string; name: string }[]
-  level?: number
-}
-
 type Study = {
   id: string
   qualification: string
@@ -96,10 +85,8 @@ type JourneyProps = {
   /** The illustration that sits beside the heading. */
   illustration: ReactNode
   roles: readonly Role[]
-  clusters: readonly Cluster[]
   studies: readonly Study[]
   awards: readonly Award[]
-  projectsSectionId: string
 }
 
 /**
@@ -115,10 +102,8 @@ export function Journey({
   header,
   illustration,
   roles,
-  clusters,
   studies,
   awards,
-  projectsSectionId,
 }: JourneyProps) {
   const reduced = useReducedMotion()
   const railRef = useRef<HTMLDivElement>(null)
@@ -289,41 +274,6 @@ export function Journey({
           )
         })}
       </div>
-
-      {/* --- capabilities --- */}
-      <Reveal stagger className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {clusters.map((cluster) => (
-          <RevealItem key={cluster.id}>
-            <article className="border-rule-soft bg-surface/40 flex h-full flex-col gap-3 rounded-edge border p-5">
-              <h3 className="font-display text-ink font-semibold">
-                {cluster.title}
-              </h3>
-              <p className="text-ink-faint text-sm">{cluster.blurb}</p>
-
-              <div className="flex flex-wrap gap-2 pt-1">
-                {cluster.items.map((item) => (
-                  <Chip key={item} label={item} />
-                ))}
-              </div>
-
-              {cluster.evidence.length > 0 ? (
-                <p className="border-rule-soft mt-auto flex flex-wrap gap-x-2 gap-y-1 border-t pt-3 font-mono text-xs">
-                  <span className="text-ink-ghost">Proven in</span>
-                  {cluster.evidence.map((project) => (
-                    <a
-                      key={project.id}
-                      href={`#${projectsSectionId}`}
-                      className="text-accent-bright hover:text-accent-glow underline underline-offset-4 transition-colors duration-fast"
-                    >
-                      {project.name}
-                    </a>
-                  ))}
-                </p>
-              ) : null}
-            </article>
-          </RevealItem>
-        ))}
-      </Reveal>
 
       {/* --- education and recognition, deliberately understated --- */}
       <Reveal className="border-rule-soft grid gap-10 border-t pt-10 md:grid-cols-2">

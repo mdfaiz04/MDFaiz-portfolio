@@ -31,9 +31,27 @@ export const sections = [
     enabled: true,
   },
   {
+    /**
+     * Its own section rather than a block inside the journey.
+     *
+     * The timeline answers "where has he been"; this answers "what can he
+     * do". They served one heading because they were written at the same
+     * time, not because a reader wants them as one thing.
+     */
+    id: 'skills',
+    navLabel: 'Skills',
+    order: 2,
+    stage: 'understanding',
+    eyebrow: 'What I work with',
+    heading: 'Skills & Expertise',
+    headingHighlights: ['Expertise'],
+    lede: 'A blend of AI, backend, and modern engineering practices to build scalable, intelligent, and reliable systems.',
+    enabled: true,
+  },
+  {
     id: 'projects',
     navLabel: 'Projects',
-    order: 2,
+    order: 3,
     stage: 'proof',
     heading: "Things I've built",
     lede: 'Each one started with a problem worth solving. Here is the problem, the approach, and what came out of it.',
@@ -50,7 +68,7 @@ export const sections = [
      */
     id: 'assistant',
     navLabel: 'Ask',
-    order: 3,
+    order: 4,
     stage: 'interaction',
     heading: 'Ask about my work',
     lede: 'Answers come straight from this portfolio — no guessing, and nothing invented.',
@@ -59,7 +77,7 @@ export const sections = [
   {
     id: 'contact',
     navLabel: 'Contact',
-    order: 4,
+    order: 5,
     stage: 'connection',
     heading: "Let's build something amazing.",
     headingHighlights: ['amazing.'],
@@ -74,7 +92,7 @@ export const sections = [
      */
     id: 'writing',
     navLabel: 'Writing',
-    order: 5,
+    order: 6,
     stage: 'understanding',
     enabled: false,
   },

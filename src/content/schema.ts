@@ -90,6 +90,10 @@ export const MarkSchema = z.enum([
   'target',
   'cube',
   'award',
+  'code',
+  'monitor',
+  'database',
+  'cloud',
 ])
 
 export const ExperienceSchema = z
@@ -174,6 +178,8 @@ export const SkillClusterSchema = z.object({
    * project list at import — a broken reference fails the build.
    */
   evidence: z.array(Slug).default([]),
+  /** The mark shown on the cluster's card. */
+  icon: MarkSchema,
   /**
    * Optional self-assessed percentage. Left unset by default: an unverifiable
    * number reads as decoration next to the evidence links above. Present so
@@ -251,6 +257,15 @@ export const SectionSchema = z.object({
    * do not each carry an empty array to satisfy the type.
    */
   headingHighlights: z.array(z.string().min(1)).optional(),
+  /**
+   * Label printed above the heading, when it should differ from `stage`.
+   *
+   * `stage` records which step of the visitor journey a section serves and is
+   * real information — two sections can serve the same step. What gets
+   * printed above the heading is a caption, and sometimes the caption reads
+   * better than the machinery. Absent, the stage is printed.
+   */
+  eyebrow: z.string().min(1).optional(),
   lede: z.string().min(1).optional(),
   /** Sections ship dark until their content exists. */
   enabled: z.boolean().default(true),

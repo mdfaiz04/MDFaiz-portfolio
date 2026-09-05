@@ -25,6 +25,7 @@ export const skills = [
       'OpenCV',
     ],
     evidence: ['news-sentiment-analysis', 'gesture-media-controller'],
+    icon: 'ai',
     featured: true,
   },
   {
@@ -42,6 +43,7 @@ export const skills = [
       'Microservices',
     ],
     evidence: ['api-monitoring-platform'],
+    icon: 'code',
     featured: true,
   },
   {
@@ -51,6 +53,7 @@ export const skills = [
       'Typed React applications and dashboards that stay readable as they grow.',
     items: ['Next.js', 'React', 'TypeScript', 'JavaScript', 'HTML', 'CSS'],
     evidence: ['api-monitoring-platform'],
+    icon: 'monitor',
     // Real, but not what the work leads with — and the hero shows four.
     featured: false,
   },
@@ -61,6 +64,7 @@ export const skills = [
       'Relational and document stores, chosen to match the shape of the data rather than habit.',
     items: ['PostgreSQL', 'MongoDB', 'SQL', 'NoSQL'],
     evidence: ['api-monitoring-platform'],
+    icon: 'database',
     featured: true,
   },
   {
@@ -80,6 +84,7 @@ export const skills = [
       'Linux',
     ],
     evidence: ['api-monitoring-platform'],
+    icon: 'cloud',
     featured: true,
   },
 ] satisfies SkillCluster[]
