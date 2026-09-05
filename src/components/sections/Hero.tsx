@@ -13,7 +13,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { BrandMark } from '@/components/ui/BrandMark'
 import { Reveal } from '@/components/ui/Reveal'
 import { Workstation } from '@/components/visuals/Workstation'
-import type { Glyph } from '@/lib/visuals/workstation/scene'
+import type { Glyph } from '@/lib/visuals/workstation'
 
 /** A headline figure. `unit` is set only where the number needs one. */
 type Stat = {

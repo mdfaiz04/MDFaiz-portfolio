@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  profile,
-  featuredSkills,
-  brandedTechnologies,
   allTechnologies,
+  brandedTechnologies,
+  featuredSkills,
+  profile,
+  splitName,
 } from '@/content'
-
-import { splitName } from './text'
 
 /**
  * The hero derives more from content than any other section — a split name, a

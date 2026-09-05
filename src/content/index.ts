@@ -201,5 +201,6 @@ export {
   formatRange,
   monthsBetween,
   splitDuration,
+  splitName,
 } from './format'
 export type * from './schema'

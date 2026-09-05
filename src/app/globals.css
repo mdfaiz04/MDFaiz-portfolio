@@ -52,13 +52,13 @@
      Graded by depth so the cloud reads as a solid object: near points burn
      close to white, mid points are cyan, and the far side falls back to
      indigo instead of dissolving into the page. */
-  --color-brain-near: #e8fbff;
-  --color-brain-mid: #4bc9f5;
-  --color-brain-far: #4733b0;
-  --color-brain-edge: #5aa9ff;
-  --color-brain-pulse: #ffffff;
-  --color-brain-halo: #6b5cff;
-  --color-brain-base: #35d6f5;
+  --color-scene-near: #e8fbff;
+  --color-scene-mid: #4bc9f5;
+  --color-scene-far: #4733b0;
+  --color-scene-edge: #5aa9ff;
+  --color-scene-pulse: #ffffff;
+  --color-scene-halo: #6b5cff;
+  --color-scene-base: #35d6f5;
 
   /* --- semantic (kept separate from the accent) ------------------------- */
   --color-positive: #3fd39a;
@@ -397,8 +397,8 @@
  * aspect-square canvas sized only by width grows tall enough on a short
  * window to push the hero's actions below the fold.
  */
-@utility brain-cap {
-  max-height: var(--brain-max-height);
+@utility stage-cap {
+  max-height: var(--stage-max-height);
 }
 
 @utility duration-instant {
@@ -424,7 +424,7 @@
   --enter-distance: 1.25rem;
 
   /** Hero canvas ceiling, so a short window shrinks it instead of scrolling. */
-  --brain-max-height: 60vh;
+  --stage-max-height: 60vh;
 }
 
 @keyframes enter-rise {

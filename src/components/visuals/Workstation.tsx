@@ -2,14 +2,14 @@
 
 import { useEffect, useRef } from 'react'
 
-import { brain } from '@/config/motion'
+import { scene } from '@/config/motion'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
-import { readBrainPalette } from '@/lib/visuals/brain/palette'
+import { readScenePalette } from '@/lib/visuals/palette'
 import {
   createWorkstationRenderer,
   type Glyph,
   type WorkstationRenderer,
-} from '@/lib/visuals/workstation/scene'
+} from '@/lib/visuals/workstation'
 
 type WorkstationProps = {
   /** One orbiting tile per glyph. Chosen by the page from the content layer. */
@@ -58,12 +58,12 @@ export function Workstation({ glyphs }: WorkstationProps) {
     const ensureRenderer = (): WorkstationRenderer => {
       if (renderer) return renderer
 
-      renderer = createWorkstationRenderer(ctx, readBrainPalette(host), {
-        rotationSpeed: brain.rotationSpeed,
+      renderer = createWorkstationRenderer(ctx, readScenePalette(host), {
+        rotationSpeed: scene.rotationSpeed,
         nodeCount: isSmallScreen
-          ? brain.globeNodes.mobile
-          : brain.globeNodes.desktop,
-        edgeCap: isSmallScreen ? brain.edgeCap.mobile : brain.edgeCap.desktop,
+          ? scene.globeNodes.mobile
+          : scene.globeNodes.desktop,
+        edgeCap: isSmallScreen ? scene.edgeCap.mobile : scene.edgeCap.desktop,
         glyphs: wanted,
       })
 
@@ -96,7 +96,7 @@ export function Workstation({ glyphs }: WorkstationProps) {
       const supportsIdle = typeof window.requestIdleCallback === 'function'
 
       idleHandle = supportsIdle
-        ? window.requestIdleCallback(run, { timeout: brain.buildTimeout })
+        ? window.requestIdleCallback(run, { timeout: scene.buildTimeout })
         : window.setTimeout(run, 0)
     }
 
@@ -111,7 +111,7 @@ export function Workstation({ glyphs }: WorkstationProps) {
       const rect = host.getBoundingClientRect()
       if (rect.width === 0 || rect.height === 0) return
 
-      const dpr = Math.min(window.devicePixelRatio || 1, brain.dprCap)
+      const dpr = Math.min(window.devicePixelRatio || 1, scene.dprCap)
 
       canvas.width = Math.round(rect.width * dpr)
       canvas.height = Math.round(rect.height * dpr)
@@ -122,8 +122,8 @@ export function Workstation({ glyphs }: WorkstationProps) {
     }
 
     const minFrame = isSmallScreen
-      ? brain.frameInterval.mobile
-      : brain.frameInterval.desktop
+      ? scene.frameInterval.mobile
+      : scene.frameInterval.desktop
 
     // Time skipped by a dropped frame is carried into the next one, so the
     // motion runs at the same speed however often it is drawn.
@@ -191,7 +191,7 @@ export function Workstation({ glyphs }: WorkstationProps) {
     // palette is re-read rather than captured once at mount.
     const themeObserver = new MutationObserver(() => {
       if (!renderer) return
-      renderer.setPalette(readBrainPalette(host))
+      renderer.setPalette(readScenePalette(host))
       if (reduced) renderer.still()
     })
     themeObserver.observe(document.documentElement, {
@@ -227,7 +227,7 @@ export function Workstation({ glyphs }: WorkstationProps) {
       /* Height-capped as well as width-capped: on a short window a canvas
          sized only by width is what pushes the hero's actions below the
          fold. */
-      className="brain-cap pointer-events-none relative aspect-stage w-full"
+      className="stage-cap pointer-events-none relative aspect-stage w-full"
     >
       {/*
         Decorative. The hero states the same thing in text directly beside

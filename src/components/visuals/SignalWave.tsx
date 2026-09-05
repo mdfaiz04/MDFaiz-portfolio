@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 
-import { brain } from '@/config/motion'
+import { scene } from '@/config/motion'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { createWaveRenderer, type WaveRenderer } from '@/lib/visuals/wave'
 
@@ -44,7 +44,7 @@ export function SignalWave() {
       const rect = host.getBoundingClientRect()
       if (rect.width === 0 || rect.height === 0) return
 
-      const dpr = Math.min(window.devicePixelRatio || 1, brain.dprCap)
+      const dpr = Math.min(window.devicePixelRatio || 1, scene.dprCap)
 
       canvas.width = Math.round(rect.width * dpr)
       canvas.height = Math.round(rect.height * dpr)

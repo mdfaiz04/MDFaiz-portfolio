@@ -1,4 +1,4 @@
-import { palette } from './palette'
+import { palette } from './tokens'
 
 /**
  * The app mark, for the favicon and the home-screen icon.

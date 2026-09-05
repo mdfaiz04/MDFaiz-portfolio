@@ -18,10 +18,10 @@ import {
   projects,
   skills,
   splitDuration,
+  splitName,
   visibleSections,
 } from '@/content'
-import { splitName } from '@/lib/text'
-import type { Glyph } from '@/lib/visuals/workstation/scene'
+import type { Glyph } from '@/lib/visuals/workstation'
 
 /**
  * Which mark orbits the hero scene for each capability area.

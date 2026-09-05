@@ -101,3 +101,16 @@ export function formatDuration(months: number): string {
 
   return `${yearPart} ${remainder} ${remainder === 1 ? 'month' : 'months'}`
 }
+
+/**
+ * Split a name into the part that takes the accent and the part that does not.
+ *
+ * The hero and the wordmark set the first word in gradient and the rest in
+ * ink. Deriving the split from the name means a change in profile.ts flows
+ * through to both, and a single-word name still renders correctly with an
+ * empty second half.
+ */
+export function splitName(name: string): { lead: string; rest: string } {
+  const [lead = name, ...rest] = name.trim().split(/\s+/)
+  return { lead, rest: rest.join(' ') }
+}

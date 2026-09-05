@@ -4,9 +4,9 @@
  * Three offset sine curves rather than one: a single wave reads as a
  * decoration, several drifting against each other read as a signal.
  *
- * Kept out of the React component for the same reason as the brain — this is
- * imperative canvas work with its own state, and mixing it into a component
- * would mean a re-render per frame.
+ * Kept out of the React component for the same reason as the workstation:
+ * this is imperative canvas work with its own state, and mixing it into a
+ * component would mean a re-render per frame.
  */
 
 export type WaveRenderer = {

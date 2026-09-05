@@ -56,6 +56,7 @@ social card and the structured data all derive from these files.
 | `vocabulary.ts`     | Search synonyms for the assistant                           |
 | `interpretation.ts` | How the assistant recognises a question                     |
 | `schema.ts`         | The rules every file above must satisfy                     |
+| `format.ts`         | Dates, durations and names, formatted for display           |
 
 ### Things that are derived, so never type them twice
 
@@ -82,6 +83,54 @@ section is off, waiting for something to publish.)
 only place colours, spacing and motion timings are defined. Changing a token
 changes the site, the browser theme colour, the app icon and the social card,
 because all four read from that file.
+
+---
+
+## Project layout
+
+Four layers, and the dependency arrow only ever points one way:
+
+**content → lib → components → app**
+
+Nothing in `content/` knows a component exists. Nothing in `components/` knows
+a fact. `app/` only composes.
+
+```
+src/
+  app/            Routes and generated metadata. Composition only, no logic.
+    layout.tsx      Fonts, metadata, structured data, page chrome
+    page.tsx        Builds the view models and hands them to sections
+    icon · apple-icon · opengraph-image     Generated at build time
+    robots · sitemap                        Generated at build time
+
+  content/        THE SOURCE OF TRUTH. Every fact about the owner.
+    schema.ts       Zod contract — invalid content fails the build
+    index.ts        The only entry point; validates on import
+    derived.ts      Counters and lists computed from the above (R5)
+    format.ts       Dates, durations and names formatted for display
+    *.ts            profile, experience, projects, skills, education, …
+
+  lib/            Logic that has nothing to do with React.
+    assistant/      The in-browser retrieval engine
+    seo/            Metadata and JSON-LD, derived from content
+    brand/          The mark, and the design tokens read at build time
+    visuals/        Canvas renderers: workstation, wave, runtime palette
+
+  components/     Rendering. Holds no facts — the literal scan proves it.
+    sections/       One per section of the page
+    chrome/         Nav, footer, scroll progress
+    ui/             Small shared pieces
+    visuals/        Canvas hosts: lifecycle only, no drawing
+
+  config/         Environment and motion tokens
+  hooks/          Two: reduced motion, scroll spy
+
+scripts/          Build-time tools (the literal scan, the logo generator)
+docs/             Design and implementation documents
+```
+
+Tests sit next to what they test (`*.test.ts`), so a file and its proof move
+together and nothing can be deleted while leaving its tests orphaned.
 
 ---
 
@@ -120,7 +169,11 @@ understand.ts     intent scoring: cues + entities + retrieval + shape
 assess.ts         judgement, derived — each claim carries its evidence
 explain.ts        long CV prose → short, plain lines
 answer.ts         composition
+suggest.ts        the opening questions, generated from content
 ```
+
+It lives in the hero rather than in a section of its own: at the foot of the
+page almost nobody reached it.
 
 It **cannot invent a fact**, because there is no generative step to invent
 with. When something is not in the portfolio it says so.

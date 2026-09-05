@@ -2,9 +2,9 @@ import {
   mixRgb,
   rgbaString,
   toRgb,
-  type BrainPalette,
+  type ScenePalette,
   type Rgb,
-} from '../brain/palette'
+} from './palette'
 
 /**
  * The hero object: a workstation, built and drawn in perspective.
@@ -41,7 +41,7 @@ export type WorkstationRenderer = {
   frame(elapsed: number): void
   still(): void
   resize(width: number, height: number, dpr: number): void
-  setPalette(palette: BrainPalette): void
+  setPalette(palette: ScenePalette): void
 }
 
 type Vec3 = { x: number; y: number; z: number }
@@ -383,7 +383,7 @@ function drawGlyph(
 
 export function createWorkstationRenderer(
   ctx: CanvasRenderingContext2D,
-  initialPalette: BrainPalette,
+  initialPalette: ScenePalette,
   config: WorkstationConfig,
 ): WorkstationRenderer {
   const globe = buildGlobe(config.nodeCount, config.edgeCap)
@@ -405,7 +405,7 @@ export function createWorkstationRenderer(
    * leaving a canvas that had already been cleared. A blank hero and no
    * error in sight.
    */
-  function readTones(source: BrainPalette): Record<keyof BrainPalette, Rgb> {
+  function readTones(source: ScenePalette): Record<keyof ScenePalette, Rgb> {
     return {
       near: toRgb(source.near),
       mid: toRgb(source.mid),

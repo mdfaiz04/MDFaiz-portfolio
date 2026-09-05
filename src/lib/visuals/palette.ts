@@ -4,10 +4,10 @@
  * page that ignores the design system.
  *
  * Instead the renderer reads the computed token values off its host element,
- * so changing a token in globals.css recolours the brain with everything else.
+ * so changing a token in globals.css recolours the scene with everything else.
  */
 
-export type BrainPalette = {
+export type ScenePalette = {
   /** Nearest points, close to white. */
   near: string
   /** Mid-depth body colour. */
@@ -36,7 +36,7 @@ export type BrainPalette = {
 export type Rgb = { r: number; g: number; b: number }
 
 /** Only used in the instant before styles resolve. */
-const FALLBACK: BrainPalette = {
+const FALLBACK: ScenePalette = {
   near: '#e8fbff',
   mid: '#4bc9f5',
   far: '#4733b0',
@@ -49,23 +49,23 @@ const FALLBACK: BrainPalette = {
   rule: '#26264a',
 }
 
-const TOKENS: Record<keyof BrainPalette, string> = {
-  near: '--color-brain-near',
-  mid: '--color-brain-mid',
-  far: '--color-brain-far',
-  edge: '--color-brain-edge',
-  pulse: '--color-brain-pulse',
-  halo: '--color-brain-halo',
-  base: '--color-brain-base',
+const TOKENS: Record<keyof ScenePalette, string> = {
+  near: '--color-scene-near',
+  mid: '--color-scene-mid',
+  far: '--color-scene-far',
+  edge: '--color-scene-edge',
+  pulse: '--color-scene-pulse',
+  halo: '--color-scene-halo',
+  base: '--color-scene-base',
   shell: '--color-surface-raised',
   shellDeep: '--color-ground-deep',
   rule: '--color-rule',
 }
 
-export function readBrainPalette(host: Element): BrainPalette {
+export function readScenePalette(host: Element): ScenePalette {
   const styles = getComputedStyle(host)
 
-  const read = (key: keyof BrainPalette): string => {
+  const read = (key: keyof ScenePalette): string => {
     const value = styles.getPropertyValue(TOKENS[key]).trim()
     return value === '' ? FALLBACK[key] : value
   }

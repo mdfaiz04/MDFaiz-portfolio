@@ -59,30 +59,18 @@ export const reveal = {
   once: true,
 } as const
 
-/** The hero neural point cloud (Phase 3). */
-export const brain = {
+/** The hero canvas scene: the workstation, its globe, and the signal wave. */
+export const scene = {
   /** Radians per frame — one full rotation in roughly 42 seconds. */
   rotationSpeed: 0.0025,
   /**
-   * Density is what makes the cloud read as an organ rather than as
-   * scattered specks. Mobile takes roughly half, since the canvas is
-   * smaller and the device has less to give.
-   */
-  pointCount: { desktop: 1100, mobile: 320 },
-  /**
-   * Points on the hero globe. Far fewer than the cloud above needed: a
-   * wireframe sphere reads as a sphere from a hundred points, where an organ
-   * needed a thousand to read as solid.
+   * Points on the hero globe. A wireframe sphere reads as a sphere from about
+   * a hundred of them; mobile takes roughly half, since the canvas is smaller
+   * and the device has less to give.
    */
   globeNodes: { desktop: 150, mobile: 84 },
-  /** Hard cap on drawn synapses; the limiting factor for frame rate. */
+  /** Hard cap on drawn connections; the limiting factor for frame rate. */
   edgeCap: { desktop: 2000, mobile: 520 },
-  /** Milliseconds between signal pulses travelling an edge. */
-  pulseInterval: 520,
-  /**
-   * No cursor interaction: the brain turns on its own and ignores the
-   * pointer. Removed by request after the orbit proved distracting.
-   */
   /** Retina is worth it; beyond 2x is invisible and expensive. */
   dprCap: 2,
   /**

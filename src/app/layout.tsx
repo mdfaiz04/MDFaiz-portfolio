@@ -7,7 +7,7 @@ import { Nav } from '@/components/chrome/Nav'
 import { ScrollProgress } from '@/components/chrome/ScrollProgress'
 import { searchIndexable } from '@/config/env'
 import { profile, visibleSections } from '@/content'
-import { palette } from '@/lib/brand/palette'
+import { palette } from '@/lib/brand/tokens'
 import { jsonLdScript } from '@/lib/seo/jsonLd'
 import {
   siteDescription,

@@ -2,7 +2,13 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 /**
- * The design tokens, read from the stylesheet that defines them.
+ * The design tokens, read at BUILD TIME from the stylesheet that defines them.
+ *
+ * Not to be confused with lib/visuals/palette.ts, which reads the same tokens
+ * at RUNTIME off a live element. Two readers because there are two moments:
+ * the social card is rendered by Node during `next build`, where there is no
+ * document to compute styles against, and the canvas is drawn in a browser,
+ * where there is no stylesheet to parse.
  *
  * The Open Graph image and the browser theme colour both need the palette in
  * TypeScript, and globals.css is where the palette lives (R2). Copying three

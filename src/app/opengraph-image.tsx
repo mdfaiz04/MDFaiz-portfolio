@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 import { profile } from '@/content'
-import { palette } from '@/lib/brand/palette'
+import { palette } from '@/lib/brand/tokens'
 import { cardAlt, cardStats, sectionTrail, siteUrl } from '@/lib/seo/site'
 
 /**
