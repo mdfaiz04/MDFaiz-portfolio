@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 import { Footer } from '@/components/chrome/Footer'
 import { Nav } from '@/components/chrome/Nav'
+import { PointerField } from '@/components/chrome/PointerField'
 import { ScrollProgress } from '@/components/chrome/ScrollProgress'
 import { ThemeToggle } from '@/components/chrome/ThemeToggle'
 import { searchIndexable } from '@/config/env'
@@ -179,6 +180,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </a>
 
         <ScrollProgress />
+        <PointerField />
         <Nav
           items={visibleSections}
           owner={profile.name}

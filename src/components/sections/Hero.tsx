@@ -240,7 +240,10 @@ export function Hero({
         read straight through.
       */}
       <Reveal pop>
-        <ul className="panel grid grid-cols-2 overflow-hidden lg:grid-cols-4">
+        <ul
+          data-glow
+          className="panel grid grid-cols-2 overflow-hidden lg:grid-cols-4"
+        >
           {stats.map((stat, index) => {
             const Icon = STAT_ICONS[stat.id] ?? Sparkles
 
@@ -248,7 +251,7 @@ export function Hero({
               <li
                 key={stat.id}
                 style={delay(index)}
-                className="border-rule/60 flex items-center gap-4 px-5 py-5 lg:border-l lg:first:border-l-0"
+                className="rise border-rule/60 flex items-center gap-4 px-5 py-5 lg:border-l lg:first:border-l-0"
               >
                 <span className="tile text-accent-bright flex size-11 shrink-0 items-center justify-center">
                   <Icon size={20} aria-hidden="true" />
@@ -275,6 +278,7 @@ export function Hero({
       {/* --- the toolkit -------------------------------------------------- */}
       <section
         aria-label={brandsHeading}
+        data-glow
         className="panel flex flex-col gap-5 px-6 py-6"
       >
         <h2 className="text-ink text-base font-semibold">{brandsHeading}</h2>
@@ -285,7 +289,7 @@ export function Hero({
               <li
                 key={brand.technology}
                 style={delay(index)}
-                className="flex w-16 flex-col items-center gap-2 text-center"
+                className="rise flex w-16 flex-col items-center gap-2 text-center"
               >
                 <BrandMark
                   title={brand.technology}

@@ -187,13 +187,13 @@ export function Assistant({
               type="button"
               onClick={() => ask(suggestion.question)}
               disabled={thinking || isTyping}
-              className="border-rule-soft/70 text-ink-muted hover:border-accent hover:text-ink group flex items-center justify-between gap-3 rounded-tile border px-4 py-3 text-left text-sm leading-snug transition-colors duration-fast disabled:opacity-40"
+              className="chip-interactive border-rule-soft/70 text-ink-muted hover:text-ink group flex items-center justify-between gap-3 rounded-tile border px-4 py-3 text-left text-sm leading-snug disabled:opacity-40"
             >
               {suggestion.question}
               <ArrowRight
                 size={16}
                 aria-hidden="true"
-                className="text-ink-ghost group-hover:text-accent-bright shrink-0 transition-colors duration-fast"
+                className="nudge text-ink-ghost group-hover:text-accent-bright shrink-0 transition-colors duration-fast"
               />
             </button>
           ))}

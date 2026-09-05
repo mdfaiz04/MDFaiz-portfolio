@@ -84,7 +84,8 @@ export function Contact({
             <a
               href={`mailto:${email}`}
               style={{ '--enter-index': 0 } as React.CSSProperties}
-              className="panel panel-interactive hover:border-accent/60 group flex items-center gap-4 p-4 hover:-translate-y-0.5"
+              data-glow
+              className="panel panel-interactive group flex items-center gap-4 p-4"
             >
               <span className="tile text-accent-bright flex size-12 shrink-0 items-center justify-center rounded-pill">
                 <Mail size={20} aria-hidden="true" />
@@ -101,7 +102,7 @@ export function Contact({
 
               <span
                 aria-hidden="true"
-                className="border-rule-soft text-ink-faint group-hover:text-accent-bright ml-auto flex size-9 shrink-0 items-center justify-center rounded-tile border transition-colors duration-fast"
+                className="nudge-out border-rule-soft text-ink-faint group-hover:border-accent group-hover:text-accent-bright ml-auto flex size-9 shrink-0 items-center justify-center rounded-tile border transition-colors duration-fast"
               >
                 <ExternalLink size={15} />
               </span>
@@ -144,7 +145,7 @@ export function Contact({
                     href={link.href}
                     target={isMail ? undefined : '_blank'}
                     rel={isMail ? undefined : 'noopener noreferrer'}
-                    className="panel panel-interactive text-ink hover:border-accent/60 group inline-flex items-center gap-2.5 px-4 py-3 text-sm font-semibold hover:-translate-y-0.5"
+                    className="panel panel-interactive text-ink group inline-flex items-center gap-2.5 px-4 py-3 text-sm font-semibold"
                   >
                     {mark ? (
                       <BrandMark

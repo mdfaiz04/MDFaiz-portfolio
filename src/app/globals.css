@@ -198,9 +198,11 @@
   border-radius: var(--radius-card);
   background-image: linear-gradient(
     180deg,
-    color-mix(in oklab, var(--color-surface) 55%, transparent) 0%,
-    color-mix(in oklab, var(--color-ground) 70%, transparent) 100%
+    color-mix(in oklab, var(--color-surface) 62%, transparent) 0%,
+    color-mix(in oklab, var(--color-ground) 74%, transparent) 100%
   );
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--color-rule) 45%, transparent)
+    inset;
 }
 
 /**
@@ -253,13 +255,15 @@
 
 /** Icon plate inside a panel — one step brighter than the panel it sits on. */
 @utility tile {
-  border: 1px solid color-mix(in oklab, var(--color-accent) 28%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 32%, transparent);
   border-radius: var(--radius-tile);
   background-image: linear-gradient(
     145deg,
-    color-mix(in oklab, var(--color-accent) 22%, transparent) 0%,
-    color-mix(in oklab, var(--color-accent-glow) 8%, transparent) 100%
+    color-mix(in oklab, var(--color-accent) 26%, transparent) 0%,
+    color-mix(in oklab, var(--color-accent-glow) 12%, transparent) 100%
   );
+  box-shadow: 0 1px 0
+    color-mix(in oklab, var(--color-accent-bright) 30%, transparent) inset;
 }
 
 /**
@@ -272,7 +276,253 @@
 @utility panel-interactive {
   transition:
     border-color var(--duration-fast) var(--ease-out-expo),
+    box-shadow var(--duration-fast) var(--ease-out-expo),
     transform var(--duration-fast) var(--ease-out-expo);
+}
+
+/* --- interaction --------------------------------------------------------- */
+
+/**
+ * The lift, written once instead of at every call site.
+ *
+ * Two pixels and a shadow. Any more and a grid of cards becomes restless as
+ * the cursor crosses it: the effect has to be clear while the pointer rests
+ * on one card and unnoticeable while it is only travelling between them.
+ *
+ * Confined to devices with a real pointer. On a touch screen `:hover` sticks
+ * after a tap, so the last card touched would stay raised for good.
+ */
+@media (hover: hover) {
+  .panel-interactive:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--color-accent) 55%, transparent);
+    box-shadow:
+      0 1px 0 color-mix(in oklab, var(--color-accent-bright) 26%, transparent)
+        inset,
+      0 14px 34px -14px
+        color-mix(in oklab, var(--color-accent) 50%, transparent);
+  }
+
+  /* The mark inside a card leans in with it, a beat behind the card itself. */
+  .panel-interactive .tile,
+  .panel-interactive .lift-mark {
+    transition: transform var(--duration-base) var(--ease-out-back);
+  }
+
+  .panel-interactive:hover .tile,
+  .panel-interactive:hover .lift-mark {
+    transform: scale(1.07);
+  }
+}
+
+/**
+ * The light a card catches from the cursor.
+ *
+ * The position arrives as two custom properties, set by the single delegated
+ * listener in PointerField — custom properties rather than inline geometry so
+ * the browser can repaint this without React re-rendering for a moving mouse.
+ *
+ * Opt in with `data-glow`: something that cannot be interacted with should
+ * not light up as though it can.
+ */
+[data-glow] {
+  position: relative;
+}
+
+[data-glow]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-out-expo);
+  background: radial-gradient(
+    16rem circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+    color-mix(in oklab, var(--color-accent) 14%, transparent),
+    transparent 68%
+  );
+}
+
+@media (hover: hover) {
+  [data-glow]:hover::before {
+    opacity: 1;
+  }
+}
+
+/**
+ * The lit top edge.
+ *
+ * A hairline of accent along the top of a card is what light does to a real
+ * raised edge, and it is most of the difference between a bordered rectangle
+ * and something that looks lifted off the page. It stays faint until the
+ * card is under the cursor.
+ */
+.panel[data-glow]::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  pointer-events: none;
+  opacity: 0.4;
+  transition: opacity var(--duration-base) var(--ease-out-expo);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--color-accent-bright) 55%, transparent) 24%,
+    color-mix(in oklab, var(--color-accent-glow) 45%, transparent) 76%,
+    transparent
+  );
+}
+
+@media (hover: hover) {
+  .panel[data-glow]:hover::after {
+    opacity: 1;
+  }
+}
+
+/**
+ * Chips lift a third as far as cards. They are small and there are dozens on
+ * a screen, so the card's two pixels would read as the row shivering.
+ */
+@utility chip-interactive {
+  transition:
+    border-color var(--duration-fast) var(--ease-out-expo),
+    color var(--duration-fast) var(--ease-out-expo),
+    background-color var(--duration-fast) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo);
+}
+
+@media (hover: hover) {
+  /* Not while disabled: the assistant's prompts use this and go inert while
+     an answer is being written, and an inert control that still reacts to
+     the cursor is a promise the interface cannot keep. */
+  .chip-interactive:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: color-mix(in oklab, var(--color-accent) 65%, transparent);
+    background-color: color-mix(in oklab, var(--color-accent) 12%, transparent);
+    color: var(--color-ink);
+  }
+}
+
+/**
+ * The primary button's lift, with the glow that goes with it.
+ *
+ * Paired with the `hover:-translate-y-0.5` already on the call to action —
+ * this adds only the light the movement should cast, so the two together
+ * read as the button rising off the page rather than sliding up it.
+ */
+@media (hover: hover) {
+  .button-primary {
+    transition:
+      transform var(--duration-fast) var(--ease-out-expo),
+      box-shadow var(--duration-fast) var(--ease-out-expo);
+  }
+
+  .button-primary:hover {
+    box-shadow: 0 12px 30px -12px
+      color-mix(in oklab, var(--color-accent) 75%, transparent);
+  }
+}
+
+/**
+ * Switching theme, animated only while it is happening.
+ *
+ * A standing colour transition on every element would tax every hover and
+ * every reveal for the sake of one button. The toggle adds this class,
+ * flips the attribute, then drops it — so the cross-fade costs nothing for
+ * the rest of the visit.
+ */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition:
+    background-color var(--duration-base) var(--ease-out-expo),
+    border-color var(--duration-base) var(--ease-out-expo),
+    box-shadow var(--duration-base) var(--ease-out-expo),
+    color var(--duration-base) var(--ease-out-expo) !important;
+}
+
+/*
+  R8. The global reduced-motion block shortens transitions to nothing, which
+  turns each of the lifts above into an instant jump rather than removing it.
+  Movement is the thing being declined, so the movement itself goes.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .panel-interactive:hover,
+  .chip-interactive:hover:not(:disabled),
+  .button-primary:hover,
+  .panel-interactive:hover .tile,
+  .panel-interactive:hover .lift-mark {
+    transform: none;
+  }
+
+  [data-glow]::before {
+    display: none;
+  }
+}
+
+/**
+ * An underline that draws itself.
+ *
+ * A background gradient sized to nothing and grown on hover, rather than a
+ * `text-decoration` that can only appear all at once, or a pseudo-element
+ * that would have to be positioned per call site. It also breaks correctly
+ * across two lines, which a positioned bar does not.
+ */
+@utility link-quiet {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition:
+    background-size var(--duration-fast) var(--ease-out-expo),
+    color var(--duration-fast) var(--ease-out-expo);
+}
+
+@media (hover: hover) {
+  .link-quiet:hover {
+    background-size: 100% 1px;
+  }
+}
+
+/**
+ * An arrow that leans the way it points when its group is hovered.
+ *
+ * The travel is deliberately smaller than the eye can name — enough to make
+ * a static glyph feel like it is about to take you somewhere, not enough to
+ * become the thing you are looking at.
+ */
+@utility nudge {
+  transition: transform var(--duration-fast) var(--ease-out-back);
+}
+
+/** The same gesture for an arrow that points out of the page. */
+@utility nudge-out {
+  transition: transform var(--duration-fast) var(--ease-out-back);
+}
+
+@media (hover: hover) {
+  .group:hover .nudge {
+    transform: translateX(2px);
+  }
+
+  .group:hover .nudge-out {
+    transform: translate(2px, -2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .nudge,
+  .group:hover .nudge-out {
+    transform: none;
+  }
+
+  .link-quiet:hover {
+    background-size: 0% 1px;
+  }
 }
 
 /**
@@ -351,7 +601,30 @@ html[data-theme='light'] .stage-plate {
     var(--color-stage-deep) 0%,
     var(--color-stage) 100%
   );
-  box-shadow: 0 10px 40px rgb(22 21 44 / 0.14);
+  /*
+    Three layers, in the order light reaches the eye: a bright inner rim where
+    the plate's edge catches the page, a violet ring just outside it, and a
+    wide coloured pool beneath. Without the ring and the pool the plate reads
+    as a hole punched in the page; with them it reads as a lit display resting
+    on it — which is the difference the second look at light mode was about.
+  */
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.06) inset,
+    0 0 0 1px rgb(91 63 217 / 0.16),
+    0 2px 6px rgb(22 21 44 / 0.08),
+    0 28px 64px -24px rgb(63 42 168 / 0.42);
+}
+
+/*
+  And the scene's own ground warms toward indigo in light mode. Near-black
+  beside a violet-white page is the one value that cannot be made to look
+  deliberate; a deep indigo belongs to the same palette as everything around
+  it while still being dark enough for the machine's shell to stand out
+  against — the shell tokens are untouched, so that separation is preserved.
+*/
+html[data-theme='light'] {
+  --color-stage: #14112f;
+  --color-stage-deep: #0d0b22;
 }
 
 /**
@@ -372,12 +645,47 @@ html[data-theme='light'] .panel {
 }
 
 html[data-theme='light'] .tile {
-  border-color: color-mix(in oklab, var(--color-accent) 22%, transparent);
+  border-color: color-mix(in oklab, var(--color-accent) 26%, transparent);
   background-image: linear-gradient(
     145deg,
-    color-mix(in oklab, var(--color-accent) 12%, transparent) 0%,
-    color-mix(in oklab, var(--color-accent-glow) 6%, transparent) 100%
+    color-mix(in oklab, var(--color-accent) 14%, transparent) 0%,
+    color-mix(in oklab, var(--color-accent-glow) 8%, transparent) 100%
   );
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.7) inset;
+}
+
+/**
+ * The lift, restated for light.
+ *
+ * The dark rules above put a violet glow under a raised card, which on white
+ * reads as a smudge rather than a shadow. Here the card climbs on a darker,
+ * tighter shadow — the same gesture, drawn the way light actually behaves on
+ * a pale ground.
+ */
+@media (hover: hover) {
+  html[data-theme='light'] .panel-interactive:hover {
+    box-shadow:
+      0 2px 4px rgb(22 21 44 / 0.06),
+      0 18px 40px -16px rgb(91 63 217 / 0.34);
+  }
+}
+
+/* White is not a surface until something sits above it. */
+html[data-theme='light'] [data-glow]::before {
+  background: radial-gradient(
+    16rem circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+    color-mix(in oklab, var(--color-accent) 9%, transparent),
+    transparent 70%
+  );
+}
+
+/*
+  Divider rules on white can go finer than on black without disappearing;
+  at the dark weight they read as pencil lines ruled across the page.
+*/
+html[data-theme='light'] {
+  --color-rule: #dedbec;
+  --color-rule-soft: #ecebf4;
 }
 
 /**
@@ -515,31 +823,26 @@ html[data-theme='light'] .tile {
 }
 
 /**
- * A soft light that follows the pointer across a project row. The position
- * arrives as CSS custom properties set by a pointermove handler, so tracking
- * the cursor costs no React renders.
+ * A small rise, for things too plain to carry a border.
+ *
+ * The logo strip and the stat row are lists of bare marks — no card to lift,
+ * no edge to light. Two pixels of travel is enough to say the cursor is on
+ * one of them, and it is the only feedback they can carry without inventing
+ * a surface for them to sit on.
  */
-.project-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity var(--duration-base) var(--ease-out-expo);
-  background: radial-gradient(
-    22rem circle at var(--pointer-x) var(--pointer-y),
-    color-mix(in oklab, var(--color-accent) 12%, transparent),
-    transparent 70%
-  );
+@utility rise {
+  transition: transform var(--duration-fast) var(--ease-out-back);
 }
 
-.project-card:hover::before {
-  opacity: 1;
+@media (hover: hover) {
+  .rise:hover {
+    transform: translateY(-2px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .project-card::before {
-    display: none;
+  .rise:hover {
+    transform: none;
   }
 }
 
@@ -643,6 +946,33 @@ body::before {
     );
 }
 
+/*
+  Light mode carries more of it, and a third pool.
+
+  On a dark ground the wash only has to stop the page reading as flat black,
+  so it stays at a whisper. On white it is doing the actual work of colour —
+  a white page with two faint tints is the "little normal" look; the same
+  page with three overlapping pools has somewhere for the eye to travel.
+*/
+html[data-theme='light'] body::before {
+  background:
+    radial-gradient(
+      64% 52% at 82% 4%,
+      color-mix(in oklab, var(--color-accent) 22%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      52% 44% at 4% 32%,
+      color-mix(in oklab, var(--color-accent-glow) 15%, transparent) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      70% 55% at 26% 96%,
+      color-mix(in oklab, var(--color-accent-deep) 16%, transparent) 0%,
+      transparent 64%
+    );
+}
+
 /* Fine grain, so large dark areas read as a surface rather than a void. */
 body::after {
   content: '';
@@ -652,6 +982,10 @@ body::after {
   z-index: 0;
   opacity: 0.025;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+html[data-theme='light'] body::after {
+  opacity: 0.014;
 }
 
 /* --- focus --------------------------------------------------------------- */

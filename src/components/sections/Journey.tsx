@@ -204,7 +204,10 @@ export function Journey({
             <Reveal key={role.id} className="relative">
               <span className="border-ground bg-accent absolute top-8 -left-8 size-3 -translate-x-1/2 rounded-pill border-2" />
 
-              <article className="panel flex flex-col gap-6 p-5 sm:p-6">
+              <article
+                data-glow
+                className="panel panel-interactive flex flex-col gap-6 p-5 sm:p-6"
+              >
                 <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8">
                   {/* --- who and when ---------------------------------- */}
                   <div className="flex flex-col gap-5">
@@ -359,10 +362,11 @@ export function Journey({
               return (
                 <article
                   key={study.id}
-                  className="panel relative flex flex-col gap-4 py-7 pr-7 pl-36"
+                  data-glow
+                  className="panel panel-interactive relative flex flex-col gap-4 py-7 pr-7 pl-36"
                 >
                   <span
-                    className={`absolute top-7 left-6 flex size-24 items-center justify-center rounded-pill border ${tone.ring}`}
+                    className={`lift-mark absolute top-7 left-6 flex size-24 items-center justify-center rounded-pill border ${tone.ring}`}
                   >
                     <Mark size={40} aria-hidden="true" />
                   </span>
@@ -421,10 +425,11 @@ export function Journey({
               return (
                 <li
                   key={award.id}
-                  className={`panel flex items-start gap-6 border-l-4 p-7 ${tone.edge}`}
+                  data-glow
+                  className={`panel panel-interactive flex items-start gap-6 border-l-4 p-7 ${tone.edge}`}
                 >
                   <span
-                    className={`flex size-20 shrink-0 items-center justify-center rounded-pill border ${tone.ring}`}
+                    className={`lift-mark flex size-20 shrink-0 items-center justify-center rounded-pill border ${tone.ring}`}
                   >
                     <Mark size={34} aria-hidden="true" />
                   </span>

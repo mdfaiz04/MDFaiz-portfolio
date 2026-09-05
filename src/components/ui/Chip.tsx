@@ -16,7 +16,7 @@ export function Chip({ label, tone = 'plain' }: ChipProps) {
 
   return (
     <span
-      className={`rounded-edge border px-2.5 py-1 font-mono text-xs tracking-wider ${skin}`}
+      className={`chip-interactive rounded-edge border px-2.5 py-1 font-mono text-xs tracking-wider ${skin}`}
     >
       {label}
     </span>

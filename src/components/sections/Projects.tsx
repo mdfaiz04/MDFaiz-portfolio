@@ -1,11 +1,7 @@
-'use client'
-
 import { ArrowUpRight } from 'lucide-react'
-import type { CSSProperties, PointerEvent } from 'react'
 
 import { Chip } from '@/components/ui/Chip'
 import { Reveal } from '@/components/ui/Reveal'
-import { useReducedMotion } from '@/hooks/useReducedMotion'
 
 type ProjectLink = {
   label: string
@@ -38,35 +34,20 @@ type ProjectsProps = {
  *
  * Entrance is a clip-path wipe, distinct from the timeline's drawn rail and
  * the hero's staggered rise.
+ *
+ * A Server Component. It used to carry a pointer handler for the light that
+ * follows the cursor across a row; that now lives in PointerField, one
+ * listener for the whole page, so this file ships no JavaScript at all.
  */
 export function Projects({ projects }: ProjectsProps) {
-  const reduced = useReducedMotion()
-
-  /**
-   * A soft light follows the pointer across the row. Written to CSS custom
-   * properties rather than React state — a state update per mouse move would
-   * re-render the whole list on every frame.
-   */
-  function trackPointer(event: PointerEvent<HTMLElement>) {
-    if (reduced || event.pointerType !== 'mouse') return
-
-    const card = event.currentTarget
-    const box = card.getBoundingClientRect()
-    card.style.setProperty('--pointer-x', `${event.clientX - box.left}px`)
-    card.style.setProperty('--pointer-y', `${event.clientY - box.top}px`)
-  }
-
   return (
     <ol className="flex flex-col">
       {projects.map((project, index) => (
         <li key={project.id}>
           <Reveal wipe>
             <article
-              onPointerMove={trackPointer}
-              style={
-                { '--pointer-x': '50%', '--pointer-y': '50%' } as CSSProperties
-              }
-              className="project-card border-rule-soft relative border-t py-10 lg:py-14"
+              data-glow
+              className="border-rule-soft border-t py-10 lg:py-14"
             >
               <div className="relative grid gap-6 lg:grid-cols-[7rem_minmax(0,1fr)]">
                 <div className="flex flex-row items-baseline gap-3 lg:flex-col lg:gap-2">
@@ -127,10 +108,14 @@ export function Projects({ projects }: ProjectsProps) {
                           href={link.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-accent-bright hover:text-accent-glow inline-flex items-center gap-1.5 font-mono text-xs tracking-widest uppercase transition-colors duration-fast"
+                          className="group text-accent-bright hover:text-accent-glow inline-flex items-center gap-1.5 font-mono text-xs tracking-widest uppercase transition-colors duration-fast"
                         >
-                          {link.label}
-                          <ArrowUpRight size={13} aria-hidden="true" />
+                          <span className="link-quiet">{link.label}</span>
+                          <ArrowUpRight
+                            size={13}
+                            aria-hidden="true"
+                            className="nudge-out"
+                          />
                         </a>
                       ))}
                     </div>

@@ -85,14 +85,15 @@ export function Skills({
               <li
                 key={cluster.id}
                 style={{ '--enter-index': index } as React.CSSProperties}
+                data-glow
                 className={
                   isLonelyLast
-                    ? 'panel panel-interactive hover:border-accent/50 flex flex-col gap-5 p-6 lg:col-span-2'
-                    : 'panel panel-interactive hover:border-accent/50 flex flex-col gap-5 p-6'
+                    ? 'panel panel-interactive flex flex-col gap-5 p-6 lg:col-span-2'
+                    : 'panel panel-interactive flex flex-col gap-5 p-6'
                 }
               >
                 <div className="flex items-start gap-5">
-                  <span className="border-accent/40 text-accent-bright bg-accent/10 flex size-14 shrink-0 items-center justify-center rounded-pill border">
+                  <span className="lift-mark border-accent/40 text-accent-bright bg-accent/10 flex size-14 shrink-0 items-center justify-center rounded-pill border">
                     <Mark size={26} aria-hidden="true" />
                   </span>
 
@@ -115,14 +116,14 @@ export function Skills({
                 </ul>
 
                 {cluster.evidence.length > 0 ? (
-                  <p className="border-rule-soft mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 border-t pt-4 text-sm">
+                  <p className="group border-rule-soft mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 border-t pt-4 text-sm">
                     <span className="text-ink-ghost">Proven in</span>
 
                     {cluster.evidence.map((project) => (
                       <a
                         key={project.id}
                         href={`#${projectsSectionId}`}
-                        className="text-accent-bright hover:text-accent-glow font-medium transition-colors duration-fast"
+                        className="link-quiet text-accent-bright hover:text-accent-glow font-medium"
                       >
                         {project.name}
                       </a>
@@ -131,7 +132,7 @@ export function Skills({
                     <ArrowUpRight
                       size={16}
                       aria-hidden="true"
-                      className="text-ink-ghost ml-auto shrink-0"
+                      className="nudge-out text-ink-ghost ml-auto shrink-0"
                     />
                   </p>
                 ) : null}

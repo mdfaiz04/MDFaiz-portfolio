@@ -14,6 +14,26 @@ const ATTRIBUTE = 'data-theme'
 const STORAGE_KEY = 'theme'
 
 /**
+ * The class that makes the switch a cross-fade, and the token that says how
+ * long to leave it on.
+ *
+ * The stylesheet only animates colour while this class is present, so the
+ * rest of the visit pays nothing for it. Reading the length from the token
+ * rather than writing a number here keeps R3 intact: change the duration in
+ * globals.css and the class comes off in step with the fade it is timing.
+ */
+const SWITCHING = 'theme-switching'
+const DURATION_TOKEN = '--duration-base'
+
+/** `450ms` and `0.45s` are both legal values for a time token. */
+function readDuration(element: Element) {
+  const raw = getComputedStyle(element).getPropertyValue(DURATION_TOKEN).trim()
+  const seconds = raw.endsWith('ms') ? 0.001 : 1
+  const value = Number.parseFloat(raw)
+  return Number.isFinite(value) ? value * seconds * 1000 : 0
+}
+
+/**
  * The document element IS the store.
  *
  * An inline script in the layout sets the theme before first paint, so by the
@@ -52,7 +72,17 @@ export function ThemeToggle({ toDark, toLight }: ThemeToggleProps) {
 
   function toggle() {
     const next = isLight ? 'dark' : 'light'
-    document.documentElement.setAttribute(ATTRIBUTE, next)
+    const root = document.documentElement
+
+    // Fade rather than cut. Every colour on the page changes at once, and an
+    // instantaneous swap of the whole screen is a jolt — the one moment where
+    // animating a page-wide property is worth what it costs.
+    root.classList.add(SWITCHING)
+    root.setAttribute(ATTRIBUTE, next)
+    window.setTimeout(
+      () => root.classList.remove(SWITCHING),
+      readDuration(root),
+    )
 
     // A private window can refuse storage. Losing the preference is a small
     // thing; throwing on click is not.
@@ -68,7 +98,7 @@ export function ThemeToggle({ toDark, toLight }: ThemeToggleProps) {
       type="button"
       onClick={toggle}
       aria-label={isLight ? toDark : toLight}
-      className="border-rule text-ink-muted hover:border-accent hover:text-ink flex size-10 shrink-0 items-center justify-center rounded-tile border transition-colors duration-fast"
+      className="border-rule text-ink-muted hover:border-accent hover:text-ink hover:bg-accent/10 flex size-10 shrink-0 items-center justify-center rounded-tile border transition-colors duration-fast"
     >
       {/*
         The mark shows what pressing it DOES, not what is currently on: a moon
