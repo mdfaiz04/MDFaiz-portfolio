@@ -13,15 +13,26 @@
  * file is the only place the look can be changed — and changing it here
  * changes the whole site at once.
  *
- * Deliberately dark-only. The palette IS the identity; a light variant would
- * be a different design rather than the same one inverted. The token
- * structure supports adding one later without touching a component.
+ * Dark is the default and the identity. The light palette below is a second
+ * set of values for the same token names — no component, no canvas and no
+ * utility changes for it, which is the whole return on having built the token
+ * layer in the first place.
  */
 
 @theme {
   /* --- ground & surface ------------------------------------------------ */
   --color-ground: #0a0a16;
   --color-ground-deep: #06060f;
+
+  /* The canvas stage, and the machine standing on it.
+     Deliberately NOT overridden in light mode — see the `stage-plate`
+     utility. The scene keeps its own ground, so it keeps its own materials
+     too: a laptop that turned white on a dark plate would be a different
+     object, not the same one under different lighting. */
+  --color-stage: #0a0a16;
+  --color-stage-deep: #06060f;
+  --color-stage-shell: #1a1a38;
+  --color-stage-rule: #26264a;
   --color-surface: #12122a;
   --color-surface-raised: #1a1a38;
 
@@ -262,6 +273,111 @@
   transition:
     border-color var(--duration-fast) var(--ease-out-expo),
     transform var(--duration-fast) var(--ease-out-expo);
+}
+
+/**
+ * Light mode.
+ *
+ * Not the dark palette inverted — an inverted dark theme is how a light mode
+ * ends up grey, muddy and tiring. This is designed from its own ground up:
+ *
+ *   - The page is a barely-violet off-white, never pure white. Pure white
+ *     next to saturated violet glares, and every surface above it then has
+ *     nowhere brighter to go; here the cards can be actual white and still
+ *     read as raised.
+ *   - The accent darkens. #7c5cff carries white text on a dark ground and
+ *     fails completely as text on a light one, so the violet used for type
+ *     drops to a shade that clears AA, while the brighter tone stays for
+ *     borders and large display type where the threshold is 3:1.
+ *   - The cyan darkens much further. A #35d6f5 on white is invisible; a teal
+ *     at #0f7f96 reads as the same accent family and passes.
+ *   - The scene colours go deep rather than luminous. The canvases composite
+ *     additively, which on a light ground accumulates toward white and washes
+ *     out — so their tokens start dark enough that the accumulation lands in
+ *     a mid-tone instead.
+ *
+ * Every value here was checked against its background for contrast, not
+ * picked because it looked pleasant in isolation.
+ */
+html[data-theme='light'] {
+  color-scheme: light;
+
+  --color-ground: #f6f5fb;
+  --color-ground-deep: #eceaf5;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+
+  --color-ink: #16152c;
+  --color-ink-muted: #474563;
+  --color-ink-faint: #5d5b7a;
+  --color-ink-ghost: #6f6d8c;
+
+  --color-accent: #5b3fd9;
+  --color-accent-bright: #6d4ae8;
+  /* 5.0:1 on the page ground. At #0f7f96 it measured 4.31 and missed AA. */
+  --color-accent-glow: #0d7387;
+  --color-accent-deep: #3f2aa8;
+  --color-accent-solid: #5b3fd9;
+
+  --color-rule: #d9d7e8;
+  --color-rule-soft: #e8e6f2;
+
+  --color-positive: #0f7a52;
+  --color-caution: #a25f16;
+}
+
+/**
+ * The canvas scenes keep their dark ground in both modes.
+ *
+ * They are drawn with additive compositing, which is what makes overlapping
+ * light accumulate into hot spots — and which on a white page accumulates
+ * straight to white and disappears. Re-tinting every scene token for light
+ * mode does not fix it either: the laptop needs a dark body and light
+ * highlights, while the globe above it needs the opposite, and one set of
+ * tokens cannot be both.
+ *
+ * So the picture keeps its own ground and becomes a plate on the light page.
+ * That is not a workaround — it is what a printed page does with a
+ * photograph, and it keeps the one part of this site that IS the identity
+ * looking identical in both modes.
+ */
+@utility stage-plate {
+  border-radius: var(--radius-card);
+}
+
+html[data-theme='light'] .stage-plate {
+  background-image: linear-gradient(
+    160deg,
+    var(--color-stage-deep) 0%,
+    var(--color-stage) 100%
+  );
+  box-shadow: 0 10px 40px rgb(22 21 44 / 0.14);
+}
+
+/**
+ * The panel's depth cue changes with the mode.
+ *
+ * On a dark ground a raised surface is LIGHTER than the page and needs no
+ * shadow. On a light ground it is the same white as everything else, so the
+ * only thing that lifts it is a shadow and a firmer edge — which is why this
+ * cannot simply be the same rule with different colours.
+ */
+html[data-theme='light'] .panel {
+  border-color: var(--color-rule);
+  background-image: none;
+  background-color: var(--color-surface);
+  box-shadow:
+    0 1px 2px rgb(22 21 44 / 0.04),
+    0 8px 24px rgb(22 21 44 / 0.06);
+}
+
+html[data-theme='light'] .tile {
+  border-color: color-mix(in oklab, var(--color-accent) 22%, transparent);
+  background-image: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--color-accent) 12%, transparent) 0%,
+    color-mix(in oklab, var(--color-accent-glow) 6%, transparent) 100%
+  );
 }
 
 /**

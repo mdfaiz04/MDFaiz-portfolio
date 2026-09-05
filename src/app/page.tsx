@@ -207,15 +207,6 @@ export default function HomePage() {
                   brands={brandedTechnologies}
                   brandsHeading="Technologies I work with"
                   scrollCue="Scroll to explore"
-                  assistant={
-                    <Assistant
-                      heading="Ask me anything"
-                      status="Online"
-                      placeholder="Type your question..."
-                      sendLabel="Send question"
-                      opening={`Hi! I'm ${profile.shortName}'s portfolio assistant. Ask me anything about my work, skills, projects, or experience.`}
-                    />
-                  }
                   primaryAction="View my work"
                   secondaryAction="Get in touch"
                   projectsSectionId="projects"
@@ -285,6 +276,17 @@ export default function HomePage() {
 
                   {section.id === 'projects' ? (
                     <Projects projects={projectViews} />
+                  ) : null}
+
+                  {section.id === 'assistant' ? (
+                    <Assistant
+                      heading="Ask me anything"
+                      status="Online"
+                      placeholder="Ask about a project, a technology, or my experience"
+                      sendLabel="Send question"
+                      emptyHint="Pick a question, or type your own."
+                      opening={`Hi! I'm ${profile.shortName}'s portfolio assistant. Ask me anything about my work, skills, projects, or experience.`}
+                    />
                   ) : null}
 
                   {section.id === 'contact' ? (

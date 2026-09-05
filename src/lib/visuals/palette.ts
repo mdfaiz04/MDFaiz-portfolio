@@ -57,9 +57,9 @@ const TOKENS: Record<keyof ScenePalette, string> = {
   pulse: '--color-scene-pulse',
   halo: '--color-scene-halo',
   base: '--color-scene-base',
-  shell: '--color-surface-raised',
-  shellDeep: '--color-ground-deep',
-  rule: '--color-rule',
+  shell: '--color-stage-shell',
+  shellDeep: '--color-stage-deep',
+  rule: '--color-stage-rule',
 }
 
 export function readScenePalette(host: Element): ScenePalette {

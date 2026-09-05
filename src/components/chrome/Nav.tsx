@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react'
 import { ArrowUpRight, Menu, X } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 
 import { Logo } from '@/components/ui/Logo'
@@ -21,6 +22,8 @@ type NavProps = {
   owner: string
   /** Where the standing call to action points, and what it says. */
   action: { label: string; sectionId: string }
+  /** Passed in as a slot, so this file stays free of theme logic. */
+  themeToggle: ReactNode
 }
 
 /**
@@ -34,7 +37,7 @@ type NavProps = {
  * items rather than fading — one continuous object moving, which reads as a
  * mechanism rather than an effect.
  */
-export function Nav({ items, owner, action }: NavProps) {
+export function Nav({ items, owner, action, themeToggle }: NavProps) {
   const reduced = useReducedMotion()
   const ids = useMemo(() => items.map((item) => item.id), [items])
   const activeId = useScrollSpy(ids)
@@ -130,6 +133,8 @@ export function Nav({ items, owner, action }: NavProps) {
         </ul>
 
         <div className="flex items-center gap-2">
+          {themeToggle}
+
           <a
             href={`#${action.sectionId}`}
             className="border-accent/60 text-ink hover:bg-accent-solid hidden items-center gap-1.5 rounded-tile border px-4 py-2 text-sm font-semibold transition-colors duration-fast md:inline-flex"

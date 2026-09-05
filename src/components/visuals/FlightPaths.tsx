@@ -138,7 +138,7 @@ export function FlightPaths() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none relative aspect-stage w-full"
+      className="stage-plate pointer-events-none relative aspect-stage w-full"
     >
       {/*
         Decorative. The section states where he is and how to reach him in

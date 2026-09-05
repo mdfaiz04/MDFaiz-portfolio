@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { Footer } from '@/components/chrome/Footer'
 import { Nav } from '@/components/chrome/Nav'
 import { ScrollProgress } from '@/components/chrome/ScrollProgress'
+import { ThemeToggle } from '@/components/chrome/ThemeToggle'
 import { searchIndexable } from '@/config/env'
 import { profile, visibleSections } from '@/content'
 import { palette } from '@/lib/brand/tokens'
@@ -98,12 +99,45 @@ export const metadata: Metadata = {
     : { index: false, follow: false },
 }
 
+/**
+ * Runs before the browser paints anything.
+ *
+ * Two jobs, and both have to happen here rather than in a component. Marking
+ * that scripting is available gates every hidden entrance state, so a blocked
+ * bundle leaves the page readable instead of blank. Setting the theme decides
+ * the page's colour before it is drawn — do it on mount instead and a visitor
+ * who prefers light gets a flash of the dark site while the bundle loads,
+ * which is worse than not offering the choice.
+ *
+ * Wrapped in try/catch because a private window can refuse localStorage, and
+ * a theme preference is not worth an uncaught exception before first paint.
+ */
+const THEME_SCRIPT = `
+document.documentElement.classList.add('js');
+try {
+  var stored = localStorage.getItem('theme');
+  var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  document.documentElement.setAttribute(
+    'data-theme',
+    stored || (prefersLight ? 'light' : 'dark')
+  );
+} catch (error) {
+  document.documentElement.setAttribute('data-theme', 'dark');
+}
+`
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  // Read from the stylesheet that defines it, so the browser chrome and the
-  // page can never be two different shades of the same colour.
-  themeColor: palette.ground,
+  /*
+    One per scheme, read from the stylesheet that defines them, so the browser
+    chrome and the page can never be two different shades of the same colour
+    — in either mode.
+  */
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: palette.ground },
+    { media: '(prefers-color-scheme: light)', color: palette.lightGround },
+  ],
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -121,7 +155,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `document.documentElement.classList.add('js')`,
+            __html: THEME_SCRIPT,
           }}
         />
 
@@ -149,6 +183,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           items={visibleSections}
           owner={profile.name}
           action={{ label: 'Get in touch', sectionId: 'contact' }}
+          themeToggle={
+            <ThemeToggle
+              toDark="Switch to dark mode"
+              toLight="Switch to light mode"
+            />
+          }
         />
 
         <div id="top" className="relative z-10 flex flex-1 flex-col">

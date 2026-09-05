@@ -59,20 +59,24 @@ export const sections = [
   },
   {
     /**
-     * Off as a section, because it now lives in the hero.
+     * After the proof, before the contact.
      *
-     * At the foot of the page almost nobody reached it — the one genuinely
-     * interactive thing here was the last thing anyone would find. Beside the
-     * introduction it is the second thing they see. The stage it serves is
-     * unchanged; only where it happens has moved.
+     * It spent a while at the foot of the page, where almost nobody reached
+     * it, and then in the corner of the hero, where it was visible but too
+     * small to read an answer in. Here is where it was always meant to go:
+     * by this point a visitor has seen the evidence and has questions, and
+     * once they are answered they are ready to write. That is what the
+     * "interaction" stage means.
      */
     id: 'assistant',
     navLabel: 'Ask',
     order: 4,
     stage: 'interaction',
+    eyebrow: 'Interaction',
     heading: 'Ask about my work',
+    headingHighlights: ['work'],
     lede: 'Answers come straight from this portfolio — no guessing, and nothing invented.',
-    enabled: false,
+    enabled: true,
   },
   {
     id: 'contact',

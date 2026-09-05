@@ -21,6 +21,8 @@ import { join } from 'node:path'
  */
 
 const THEME_BLOCK = /@theme\s*\{([\s\S]*?)\n\}/
+/** The light overrides live outside @theme, in their own block. */
+const LIGHT_BLOCK = /html\[data-theme='light'\]\s*\{([\s\S]*?)\n\}/
 const TOKEN = /--(color-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g
 
 function readTokens(): Map<string, string> {
@@ -36,6 +38,16 @@ function readTokens(): Map<string, string> {
   const tokens = new Map<string, string>()
   for (const [, name, value] of block.matchAll(TOKEN)) {
     if (name && value) tokens.set(name, value)
+  }
+
+  // Light values are stored under a `light-` prefix rather than replacing the
+  // dark ones: the social card and the icons are drawn once, in the identity
+  // palette, and only the browser chrome needs to know both.
+  const light = LIGHT_BLOCK.exec(css)?.[1]
+  if (light) {
+    for (const [, name, value] of light.matchAll(TOKEN)) {
+      if (name && value) tokens.set(`light-${name}`, value)
+    }
   }
 
   return tokens
@@ -76,6 +88,7 @@ export const palette = {
   accentBright: colour('color-accent-bright'),
   accentGlow: colour('color-accent-glow'),
   rule: colour('color-rule'),
+  lightGround: colour('light-color-ground'),
 } as const
 
 export type Palette = typeof palette

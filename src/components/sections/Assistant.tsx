@@ -21,6 +21,8 @@ type AssistantProps = {
   placeholder: string
   opening: string
   sendLabel: string
+  /** Shown in the empty transcript, before anything has been asked. */
+  emptyHint: string
 }
 
 /** How many characters of the current text block are shown. */
@@ -46,6 +48,7 @@ export function Assistant({
   placeholder,
   opening,
   sendLabel,
+  emptyHint,
 }: AssistantProps) {
   const reduced = useReducedMotion()
   const [turns, setTurns] = useState<Turn[]>([])
@@ -142,116 +145,127 @@ export function Assistant({
     })
   }, [turns, progress, reduced])
 
-  const openingSuggestions = suggestions.slice(0, 3)
-
-  // Prompts only while there is nothing to read. Once a conversation starts
-  // they are clutter competing with the answer.
-  const showSuggestions = turns.length === 0 && !thinking
+  const openingSuggestions = suggestions.slice(0, 5)
 
   return (
-    <div className="panel flex w-full flex-col overflow-hidden">
-      <div className="border-rule-soft/70 flex items-center justify-between gap-3 border-b px-4 py-3">
-        <span className="text-ink flex min-w-0 items-center gap-2 text-sm font-semibold">
-          <Sparkles
-            size={15}
-            aria-hidden="true"
-            className="text-accent-glow shrink-0"
-          />
-          <span className="truncate">{heading}</span>
-        </span>
+    <div className="panel grid overflow-hidden lg:grid-cols-[21rem_minmax(0,1fr)]">
+      {/*
+        Two panes rather than one column.
 
-        <span className="text-ink-faint flex shrink-0 items-center gap-1.5 text-xs">
-          <span
-            aria-hidden="true"
-            className="bg-positive size-1.5 rounded-pill"
-          />
-          {status}
-        </span>
-      </div>
-
-      <div
-        ref={transcriptRef}
-        aria-live="polite"
-        className="flex max-h-64 min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4"
-      >
-        <p className="border-rule-soft/60 bg-surface/50 text-ink-muted rounded-tile border p-3 text-sm leading-relaxed">
-          {opening}
-        </p>
-
-        {turns.map((turn) =>
-          turn.role === 'visitor' ? (
-            <p
-              key={turn.id}
-              className="bg-accent-solid/25 border-accent/30 text-ink w-fit self-end rounded-tile border px-3 py-2 text-sm"
-            >
-              {turn.text}
-            </p>
-          ) : (
-            <AnswerView
-              key={turn.id}
-              answer={turn.answer}
-              progress={turn === latest ? progress : COMPLETE}
+        In a narrow box the prompts pushed the answer out of sight and the
+        answer scrolled in a letterbox — the reader could see either what to
+        ask or what was said, never both. Side by side, the prompts stay put
+        while the conversation runs beside them, which is how a person
+        actually uses this: read an answer, glance left, ask the next thing.
+      */}
+      <aside className="border-rule-soft flex flex-col gap-6 border-b p-6 lg:border-r lg:border-b-0 lg:p-7">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-ink flex min-w-0 items-center gap-2.5 text-lg font-semibold">
+            <Sparkles
+              size={20}
+              aria-hidden="true"
+              className="text-accent-glow shrink-0"
             />
-          ),
-        )}
+            <span className="truncate">{heading}</span>
+          </span>
 
-        {thinking ? (
-          <p className="text-ink-ghost flex gap-1 font-mono text-xs">
-            <span className="dot-pulse">•</span>
-            <span className="dot-pulse dot-pulse-2">•</span>
-            <span className="dot-pulse dot-pulse-3">•</span>
-          </p>
-        ) : null}
-      </div>
+          <span className="text-ink-faint flex shrink-0 items-center gap-2 text-sm">
+            <span
+              aria-hidden="true"
+              className="bg-positive size-2 rounded-pill"
+            />
+            {status}
+          </span>
+        </div>
 
-      {showSuggestions ? (
-        <div className="flex flex-col gap-2 px-4 pb-3">
+        <p className="text-ink-muted text-base leading-relaxed">{opening}</p>
+
+        <div className="flex flex-col gap-2.5">
           {openingSuggestions.map((suggestion) => (
             <button
               key={suggestion.id}
               type="button"
               onClick={() => ask(suggestion.question)}
-              disabled={isTyping}
-              className="border-rule-soft/70 text-ink-muted hover:border-accent hover:text-ink group flex items-center justify-between gap-3 rounded-tile border px-3 py-2.5 text-left text-xs leading-snug transition-colors duration-fast disabled:opacity-40"
+              disabled={thinking || isTyping}
+              className="border-rule-soft/70 text-ink-muted hover:border-accent hover:text-ink group flex items-center justify-between gap-3 rounded-tile border px-4 py-3 text-left text-sm leading-snug transition-colors duration-fast disabled:opacity-40"
             >
               {suggestion.question}
               <ArrowRight
-                size={14}
+                size={16}
                 aria-hidden="true"
                 className="text-ink-ghost group-hover:text-accent-bright shrink-0 transition-colors duration-fast"
               />
             </button>
           ))}
         </div>
-      ) : null}
+      </aside>
 
-      <form
-        onSubmit={(event) => {
-          event.preventDefault()
-          ask(draft)
-        }}
-        className="border-rule-soft/70 flex items-center gap-2 border-t p-3"
-      >
-        <label htmlFor="assistant-input" className="sr-only">
-          {placeholder}
-        </label>
-        <input
-          id="assistant-input"
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          placeholder={placeholder}
-          autoComplete="off"
-          className="border-rule-soft/70 bg-surface/40 text-ink placeholder:text-ink-ghost min-w-0 flex-1 rounded-tile border px-3 py-2 text-sm outline-none focus:border-accent/60"
-        />
-        <button
-          type="submit"
-          aria-label={sendLabel}
-          disabled={draft.trim() === '' || thinking}
-          className="button-primary text-ink inline-flex size-9 shrink-0 items-center justify-center disabled:opacity-40"
+      <div className="flex min-w-0 flex-col">
+        <div
+          ref={transcriptRef}
+          aria-live="polite"
+          className="flex min-h-96 flex-1 flex-col gap-5 overflow-y-auto p-6 lg:p-7"
         >
-          <Send size={15} aria-hidden="true" />
-        </button>
-      </form>
+          {turns.length === 0 ? (
+            <p className="text-ink-ghost m-auto max-w-measure text-center text-base">
+              {emptyHint}
+            </p>
+          ) : null}
+
+          {turns.map((turn) =>
+            turn.role === 'visitor' ? (
+              <p
+                key={turn.id}
+                className="bg-accent-solid/25 border-accent/30 text-ink w-fit max-w-measure self-end rounded-tile border px-4 py-2.5 text-base"
+              >
+                {turn.text}
+              </p>
+            ) : (
+              <AnswerView
+                key={turn.id}
+                answer={turn.answer}
+                progress={turn === latest ? progress : COMPLETE}
+              />
+            ),
+          )}
+
+          {thinking ? (
+            <p className="text-ink-ghost flex gap-1.5 font-mono text-sm">
+              <span className="dot-pulse">•</span>
+              <span className="dot-pulse dot-pulse-2">•</span>
+              <span className="dot-pulse dot-pulse-3">•</span>
+            </p>
+          ) : null}
+        </div>
+
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            ask(draft)
+          }}
+          className="border-rule-soft flex items-center gap-3 border-t p-4 lg:p-5"
+        >
+          <label htmlFor="assistant-input" className="sr-only">
+            {placeholder}
+          </label>
+          <input
+            id="assistant-input"
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder={placeholder}
+            autoComplete="off"
+            className="border-rule-soft/70 bg-surface/40 text-ink placeholder:text-ink-ghost focus:border-accent/60 min-w-0 flex-1 rounded-tile border px-4 py-3 text-base outline-none"
+          />
+          <button
+            type="submit"
+            aria-label={sendLabel}
+            disabled={draft.trim() === '' || thinking}
+            className="button-primary text-ink inline-flex size-12 shrink-0 items-center justify-center disabled:opacity-40"
+          >
+            <Send size={18} aria-hidden="true" />
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
@@ -278,7 +292,10 @@ function AnswerView({
               : block.value.slice(0, progress.char)
 
           return (
-            <p key={key} className="text-ink-muted text-sm">
+            <p
+              key={key}
+              className="text-ink-muted max-w-measure text-base leading-relaxed"
+            >
               {shown}
             </p>
           )

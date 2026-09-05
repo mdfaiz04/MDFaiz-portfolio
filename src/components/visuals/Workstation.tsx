@@ -227,7 +227,7 @@ export function Workstation({ glyphs }: WorkstationProps) {
       /* Height-capped as well as width-capped: on a short window a canvas
          sized only by width is what pushes the hero's actions below the
          fold. */
-      className="stage-cap pointer-events-none relative aspect-stage w-full"
+      className="stage-cap stage-plate pointer-events-none relative aspect-stage w-full"
     >
       {/*
         Decorative. The hero states the same thing in text directly beside
