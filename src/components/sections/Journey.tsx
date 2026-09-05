@@ -111,8 +111,8 @@ function RecordHeading({
 }) {
   return (
     <div className="flex items-center gap-4">
-      <span className="border-accent/40 text-accent-bright bg-accent/10 flex size-12 shrink-0 items-center justify-center rounded-pill border">
-        <Icon size={22} aria-hidden="true" />
+      <span className="border-accent/40 text-accent-bright bg-accent/10 flex size-16 shrink-0 items-center justify-center rounded-pill border">
+        <Icon size={28} aria-hidden="true" />
       </span>
       <h3 className="text-ink font-mono text-eyebrow uppercase">{label}</h3>
       <span aria-hidden="true" className="bg-rule-soft h-px flex-1" />
@@ -349,7 +349,7 @@ export function Journey({
             */}
             <span
               aria-hidden="true"
-              className="border-rule absolute top-10 bottom-10 left-9 border-l border-dashed"
+              className="border-rule absolute top-16 bottom-16 left-18 border-l border-dashed"
             />
 
             {studies.map((study, index) => {
@@ -359,44 +359,44 @@ export function Journey({
               return (
                 <article
                   key={study.id}
-                  className="panel relative flex flex-col gap-3 py-5 pr-5 pl-24"
+                  className="panel relative flex flex-col gap-4 py-7 pr-7 pl-36"
                 >
                   <span
-                    className={`absolute top-6 left-2 flex size-14 items-center justify-center rounded-pill border ${tone.ring}`}
+                    className={`absolute top-7 left-6 flex size-24 items-center justify-center rounded-pill border ${tone.ring}`}
                   >
-                    <Mark size={24} aria-hidden="true" />
+                    <Mark size={40} aria-hidden="true" />
                   </span>
                   <span
                     aria-hidden="true"
-                    className={`absolute top-24 left-9 size-2.5 -translate-x-1/2 rounded-pill ${tone.dot}`}
+                    className={`absolute top-36 left-18 size-3 -translate-x-1/2 rounded-pill ${tone.dot}`}
                   />
 
                   <span className="flex flex-col gap-1">
-                    <h4 className="text-ink text-lg font-semibold">
+                    <h4 className="text-ink text-2xl font-semibold">
                       {study.qualification}
                     </h4>
                     {study.field ? (
-                      <span className={`font-medium ${tone.text}`}>
+                      <span className={`text-lg font-medium ${tone.text}`}>
                         {study.field}
                       </span>
                     ) : null}
-                    <span className="text-ink-muted text-sm">
+                    <span className="text-ink-muted pt-1 text-base">
                       {study.institution}
                     </span>
                   </span>
 
-                  <span className="flex flex-wrap gap-2 pt-1">
-                    <span className="border-rule-soft text-ink-muted flex items-center gap-2 rounded-tile border px-3 py-1.5 text-xs">
+                  <span className="flex flex-wrap gap-3 pt-1">
+                    <span className="border-rule-soft text-ink-muted flex items-center gap-2.5 rounded-tile border px-4 py-2.5 text-sm">
                       <CalendarDays
-                        size={14}
+                        size={16}
                         aria-hidden="true"
                         className={tone.text}
                       />
                       {study.period}
                     </span>
-                    <span className="border-rule-soft text-ink-muted flex items-center gap-2 rounded-tile border px-3 py-1.5 text-xs">
+                    <span className="border-rule-soft text-ink-muted flex items-center gap-2.5 rounded-tile border px-4 py-2.5 text-sm">
                       <BarChart3
-                        size={14}
+                        size={16}
                         aria-hidden="true"
                         className={tone.text}
                       />
@@ -421,29 +421,29 @@ export function Journey({
               return (
                 <li
                   key={award.id}
-                  className={`panel flex items-start gap-5 border-l-2 p-5 ${tone.edge}`}
+                  className={`panel flex items-start gap-6 border-l-4 p-7 ${tone.edge}`}
                 >
                   <span
-                    className={`flex size-14 shrink-0 items-center justify-center rounded-pill border ${tone.ring}`}
+                    className={`flex size-20 shrink-0 items-center justify-center rounded-pill border ${tone.ring}`}
                   >
-                    <Mark size={24} aria-hidden="true" />
+                    <Mark size={34} aria-hidden="true" />
                   </span>
 
                   <span className="flex min-w-0 flex-col gap-1.5">
-                    <h4 className="text-ink text-lg font-semibold">
+                    <h4 className="text-ink text-2xl font-semibold">
                       {award.title}
                     </h4>
-                    <span className={`font-medium ${tone.text}`}>
+                    <span className={`text-lg font-medium ${tone.text}`}>
                       {award.event}
                     </span>
-                    <span className="text-ink-muted text-sm leading-relaxed">
+                    <span className="text-ink-muted pt-1 text-base leading-relaxed">
                       {award.detail}
                     </span>
 
                     <span
-                      className={`flex flex-wrap items-center gap-2 pt-2 text-sm ${tone.text}`}
+                      className={`flex flex-wrap items-center gap-2.5 pt-3 text-base ${tone.text}`}
                     >
-                      <CalendarDays size={14} aria-hidden="true" />
+                      <CalendarDays size={16} aria-hidden="true" />
                       {award.organisation}
                       <span className="text-ink-ghost">·</span>
                       {award.year}
