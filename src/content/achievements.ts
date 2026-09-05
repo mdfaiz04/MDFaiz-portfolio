@@ -11,6 +11,7 @@ export const achievements = [
     kind: 'placement',
     event: 'Karnataka State IndiaSkills Competition',
     organisation: 'Skills India',
+    icon: 'star',
     year: 2026,
     detail:
       'Selected among the top candidates at the state-level Skills India competition, in Cloud Computing.',
@@ -21,6 +22,7 @@ export const achievements = [
     kind: 'placement',
     event: 'VISAI 2026 International Project Competition',
     organisation: 'Vel Tech University, Chennai',
+    icon: 'award',
     year: 2026,
     detail:
       'Competed against international teams with a News Sentiment Analysis & Summary Generator, built in a team of three.',

@@ -2,16 +2,23 @@
 
 import {
   Award,
+  BarChart3,
+  BookOpen,
   Box,
   BrainCircuit,
   CalendarDays,
   ChevronRight,
+  GraduationCap,
+  Monitor,
   Plane,
   Rocket,
+  ScrollText,
   Search,
   Server,
   Sparkles,
+  Star,
   Target,
+  Trophy,
   Users,
   type LucideIcon,
 } from 'lucide-react'
@@ -59,6 +66,58 @@ const MARKS: Record<string, LucideIcon> = {
   target: Target,
   cube: Box,
   award: Award,
+  monitor: Monitor,
+  book: BookOpen,
+  certificate: ScrollText,
+  star: Star,
+}
+
+/**
+ * Accent tones, cycled by position.
+ *
+ * Derived from order rather than written per entry: the most recent record is
+ * always the brightest, whatever it happens to be, and adding one never means
+ * picking a colour by hand. Class names rather than colour values, so every
+ * tone here is still a design token (R2).
+ */
+const TONES = [
+  {
+    ring: 'border-accent/45 bg-accent/10 text-accent-bright',
+    dot: 'bg-accent',
+    edge: 'border-l-accent',
+    text: 'text-accent-bright',
+  },
+  {
+    ring: 'border-accent-glow/45 bg-accent-glow/10 text-accent-glow',
+    dot: 'bg-accent-glow',
+    edge: 'border-l-accent-glow',
+    text: 'text-accent-glow',
+  },
+  {
+    ring: 'border-positive/45 bg-positive/10 text-positive',
+    dot: 'bg-positive',
+    edge: 'border-l-positive',
+    text: 'text-positive',
+  },
+] as const
+
+/** The heading over a column of records: a mark, a label, and a rule. */
+function RecordHeading({
+  icon: Icon,
+  label,
+}: {
+  icon: LucideIcon
+  label: string
+}) {
+  return (
+    <div className="flex items-center gap-4">
+      <span className="border-accent/40 text-accent-bright bg-accent/10 flex size-12 shrink-0 items-center justify-center rounded-pill border">
+        <Icon size={22} aria-hidden="true" />
+      </span>
+      <h3 className="text-ink font-mono text-eyebrow uppercase">{label}</h3>
+      <span aria-hidden="true" className="bg-rule-soft h-px flex-1" />
+    </div>
+  )
 }
 
 type Study = {
@@ -66,6 +125,7 @@ type Study = {
   qualification: string
   field?: string
   institution: string
+  icon: string
   period: string
   score: string
 }
@@ -75,6 +135,7 @@ type Award = {
   title: string
   event: string
   organisation: string
+  icon: string
   year: number
   detail: string
 }
@@ -275,53 +336,122 @@ export function Journey({
         })}
       </div>
 
-      {/* --- education and recognition, deliberately understated --- */}
-      <Reveal className="border-rule-soft grid gap-10 border-t pt-10 md:grid-cols-2">
-        <div className="flex flex-col gap-4">
-          <h3 className="text-ink-ghost font-mono text-eyebrow uppercase">
-            Education
-          </h3>
-          <ul className="flex flex-col gap-4">
-            {studies.map((study) => (
-              <li key={study.id} className="flex flex-col gap-1">
-                <p className="text-ink text-sm font-semibold">
-                  {study.qualification}
-                  {study.field ? (
-                    <span className="text-ink-faint font-normal">
-                      {' '}
-                      · {study.field}
+      {/* --- what he studied, and what he has been judged on --------- */}
+      <Reveal className="border-rule-soft grid gap-12 border-t pt-12 lg:grid-cols-2 lg:gap-10">
+        {/* Education reads as a sequence, so it is drawn as one. */}
+        <div className="flex flex-col gap-6">
+          <RecordHeading icon={GraduationCap} label="Education" />
+
+          <div className="relative flex flex-col gap-4">
+            {/*
+              The rail runs behind the cards and shows through them, which is
+              what makes three separate panels read as one progression.
+            */}
+            <span
+              aria-hidden="true"
+              className="border-rule absolute top-10 bottom-10 left-9 border-l border-dashed"
+            />
+
+            {studies.map((study, index) => {
+              const tone = TONES[index % TONES.length] ?? TONES[0]
+              const Mark = MARKS[study.icon] ?? Sparkles
+
+              return (
+                <article
+                  key={study.id}
+                  className="panel relative flex flex-col gap-3 py-5 pr-5 pl-24"
+                >
+                  <span
+                    className={`absolute top-6 left-2 flex size-14 items-center justify-center rounded-pill border ${tone.ring}`}
+                  >
+                    <Mark size={24} aria-hidden="true" />
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={`absolute top-24 left-9 size-2.5 -translate-x-1/2 rounded-pill ${tone.dot}`}
+                  />
+
+                  <span className="flex flex-col gap-1">
+                    <h4 className="text-ink text-lg font-semibold">
+                      {study.qualification}
+                    </h4>
+                    {study.field ? (
+                      <span className={`font-medium ${tone.text}`}>
+                        {study.field}
+                      </span>
+                    ) : null}
+                    <span className="text-ink-muted text-sm">
+                      {study.institution}
                     </span>
-                  ) : null}
-                </p>
-                <p className="text-ink-faint text-sm">{study.institution}</p>
-                <p className="text-ink-ghost font-mono text-xs">
-                  {study.period} · {study.score}
-                </p>
-              </li>
-            ))}
-          </ul>
+                  </span>
+
+                  <span className="flex flex-wrap gap-2 pt-1">
+                    <span className="border-rule-soft text-ink-muted flex items-center gap-2 rounded-tile border px-3 py-1.5 text-xs">
+                      <CalendarDays
+                        size={14}
+                        aria-hidden="true"
+                        className={tone.text}
+                      />
+                      {study.period}
+                    </span>
+                    <span className="border-rule-soft text-ink-muted flex items-center gap-2 rounded-tile border px-3 py-1.5 text-xs">
+                      <BarChart3
+                        size={14}
+                        aria-hidden="true"
+                        className={tone.text}
+                      />
+                      {study.score}
+                    </span>
+                  </span>
+                </article>
+              )
+            })}
+          </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <h3 className="text-ink-ghost font-mono text-eyebrow uppercase">
-            Recognition
-          </h3>
+        {/* Recognition is a set of separate results, so it stays separate. */}
+        <div className="flex flex-col gap-6">
+          <RecordHeading icon={Trophy} label="Recognition" />
+
           <ul className="flex flex-col gap-4">
-            {awards.map((award) => (
-              <li key={award.id} className="flex flex-col gap-1">
-                <p className="text-ink text-sm font-semibold">
-                  {award.title}
-                  <span className="text-ink-faint font-normal">
-                    {' '}
-                    · {award.event}
+            {awards.map((award, index) => {
+              const tone = TONES[index % TONES.length] ?? TONES[0]
+              const Mark = MARKS[award.icon] ?? Sparkles
+
+              return (
+                <li
+                  key={award.id}
+                  className={`panel flex items-start gap-5 border-l-2 p-5 ${tone.edge}`}
+                >
+                  <span
+                    className={`flex size-14 shrink-0 items-center justify-center rounded-pill border ${tone.ring}`}
+                  >
+                    <Mark size={24} aria-hidden="true" />
                   </span>
-                </p>
-                <p className="text-ink-faint text-sm">{award.detail}</p>
-                <p className="text-ink-ghost font-mono text-xs">
-                  {award.organisation} · {award.year}
-                </p>
-              </li>
-            ))}
+
+                  <span className="flex min-w-0 flex-col gap-1.5">
+                    <h4 className="text-ink text-lg font-semibold">
+                      {award.title}
+                    </h4>
+                    <span className={`font-medium ${tone.text}`}>
+                      {award.event}
+                    </span>
+                    <span className="text-ink-muted text-sm leading-relaxed">
+                      {award.detail}
+                    </span>
+
+                    <span
+                      className={`flex flex-wrap items-center gap-2 pt-2 text-sm ${tone.text}`}
+                    >
+                      <CalendarDays size={14} aria-hidden="true" />
+                      {award.organisation}
+                      <span className="text-ink-ghost">·</span>
+                      {award.year}
+                    </span>
+                  </span>
+                </li>
+              )
+            })}
           </ul>
         </div>
       </Reveal>

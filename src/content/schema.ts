@@ -94,6 +94,9 @@ export const MarkSchema = z.enum([
   'monitor',
   'database',
   'cloud',
+  'book',
+  'certificate',
+  'star',
 ])
 
 export const ExperienceSchema = z
@@ -203,6 +206,8 @@ export const AchievementSchema = z.object({
   kind: z.enum(['placement', 'award', 'certification']),
   event: z.string().min(1),
   organisation: z.string().min(1),
+  /** The mark shown on the award's card. */
+  icon: MarkSchema,
   year: z.number().int().min(2000).max(2100),
   detail: z.string().min(1),
 })
@@ -213,6 +218,8 @@ export const EducationSchema = z
     qualification: z.string().min(1),
     field: z.string().optional(),
     institution: z.string().min(1),
+    /** The mark shown on the qualification's card. */
+    icon: MarkSchema,
     startYear: z.number().int().min(1900).max(2100),
     endYear: z.number().int().min(1900).max(2100),
     score: z.object({

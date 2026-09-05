@@ -140,7 +140,8 @@ export default function HomePage() {
     qualification: entry.qualification,
     field: entry.field,
     institution: entry.institution,
-    period: `${entry.startYear}–${entry.endYear}`,
+    icon: entry.icon,
+    period: `${entry.startYear} – ${entry.endYear}`,
     score: `${entry.score.label} ${entry.score.value}`,
   }))
 
@@ -149,6 +150,7 @@ export default function HomePage() {
     title: award.title,
     event: award.event,
     organisation: award.organisation,
+    icon: award.icon,
     year: award.year,
     detail: award.detail,
   }))
