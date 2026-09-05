@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { achievements as rawAchievements } from './achievements'
 import { brands as rawBrands } from './brands'
+import { socials as rawSocials } from './socials'
 import { education as rawEducation } from './education'
 import { experience as rawExperience } from './experience'
 import { profile as rawProfile } from './profile'
@@ -9,6 +10,7 @@ import { projects as rawProjects } from './projects'
 import {
   AchievementSchema,
   BrandMarkSchema,
+  SocialMarkSchema,
   EducationSchema,
   ExperienceSchema,
   ProfileSchema,
@@ -85,6 +87,11 @@ export const brands = parseOrThrow(
   'brands',
   z.array(BrandMarkSchema),
   rawBrands,
+)
+export const socials = parseOrThrow(
+  'socials',
+  z.array(SocialMarkSchema),
+  rawSocials,
 )
 
 // ---------------------------------------------------------------------------
@@ -200,6 +207,7 @@ export {
   formatMonth,
   formatRange,
   monthsBetween,
+  markWords,
   splitDuration,
   splitName,
 } from './format'

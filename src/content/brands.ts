@@ -6,12 +6,12 @@ import type { BrandMark } from './schema'
  * GENERATED — do not edit by hand. Run `npm run generate:brands` after
  * changing the list in scripts/generate-brands.mjs.
  *
- * Paths come from Simple Icons (CC0), extracted at build time so the browser
- * receives twelve path strings rather than a three-thousand-logo library.
+ * Paths come from Simple Icons (CC0), extracted at build time so the
+ * browser receives a dozen path strings rather than a three-thousand-logo
+ * library.
  *
  * A mark here only reaches the page if its technology actually appears in
- * src/content — see the referential check in index.ts. The order below is the
- * order the strip renders in.
+ * src/content. The order below is the order the strip renders in.
  */
 export const brands = [
   {

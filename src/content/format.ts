@@ -103,6 +103,27 @@ export function formatDuration(months: number): string {
 }
 
 /**
+ * Mark which words of a sentence should be accented.
+ *
+ * Punctuation is stripped from both sides before comparing, so "amazing." in
+ * the highlight list matches "amazing." in the sentence whether or not the
+ * full stop was typed, and casing never matters. Returning the whole sentence
+ * as marked words — rather than a list of indices — means the caller renders
+ * one span per word and never has to reassemble the original spacing.
+ */
+export function markWords(
+  sentence: string,
+  highlights: readonly string[],
+): { word: string; isHighlight: boolean }[] {
+  const strip = (word: string) => word.toLowerCase().replace(/[^a-z0-9+#]/g, '')
+  const wanted = new Set(highlights.map(strip))
+
+  return sentence
+    .split(' ')
+    .map((word) => ({ word, isHighlight: wanted.has(strip(word)) }))
+}
+
+/**
  * Split a name into the part that takes the accent and the part that does not.
  *
  * The hero and the wordmark set the first word in gradient and the rest in

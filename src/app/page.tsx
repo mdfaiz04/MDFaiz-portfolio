@@ -13,10 +13,12 @@ import {
   experienceSince,
   featuredSkills,
   formatRange,
+  markWords,
   profile,
   projectCategoryLabels,
   projects,
   skills,
+  socials,
   splitDuration,
   splitName,
   visibleSections,
@@ -195,12 +197,22 @@ export default function HomePage() {
                 />
               ) : (
                 <div className="flex flex-col gap-12">
-                  <SectionHeader
-                    index={index}
-                    stage={section.stage}
-                    heading={section.heading ?? section.navLabel}
-                    lede={section.lede}
-                  />
+                  {/*
+                    Contact lays out its own header, because the visual beside
+                    it has to run the full height of the column. Every other
+                    section takes the shared header above its content.
+                  */}
+                  {section.id === 'contact' ? null : (
+                    <SectionHeader
+                      index={index}
+                      stage={section.stage}
+                      heading={markWords(
+                        section.heading ?? section.navLabel,
+                        section.headingHighlights ?? [],
+                      )}
+                      lede={section.lede}
+                    />
+                  )}
 
                   {section.id === 'journey' ? (
                     <Journey
@@ -218,10 +230,25 @@ export default function HomePage() {
 
                   {section.id === 'contact' ? (
                     <Contact
-                      availability={profile.availability.statement}
+                      header={
+                        <SectionHeader
+                          index={index}
+                          stage={section.stage}
+                          heading={markWords(
+                            section.heading ?? section.navLabel,
+                            section.headingHighlights ?? [],
+                          )}
+                          lede={section.lede}
+                          rule="short"
+                        />
+                      }
                       email={profile.email}
                       location={`${profile.location.city}, ${profile.location.region}, ${profile.location.country}`}
                       links={profile.links}
+                      marks={socials}
+                      emailLabel="Email"
+                      locationLabel="Location"
+                      status="Always open to new opportunities"
                     />
                   ) : null}
                 </div>

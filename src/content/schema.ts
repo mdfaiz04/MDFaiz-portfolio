@@ -202,6 +202,14 @@ export const SectionSchema = z.object({
    * ever a literal in markup (R1).
    */
   heading: z.string().min(1).optional(),
+  /**
+   * Words of `heading` to set in the accent gradient. Matched the same way
+   * the hero matches its tagline: case-insensitively, ignoring punctuation.
+   *
+   * Optional rather than defaulted, so the five sections that accent nothing
+   * do not each carry an empty array to satisfy the type.
+   */
+  headingHighlights: z.array(z.string().min(1)).optional(),
   lede: z.string().min(1).optional(),
   /** Sections ship dark until their content exists. */
   enabled: z.boolean().default(true),
@@ -240,3 +248,18 @@ export const BrandMarkSchema = z.object({
 })
 
 export type BrandMark = z.infer<typeof BrandMarkSchema>
+
+/**
+ * A social profile's logo, matched to a link by the host of its URL.
+ *
+ * Host rather than label: a label is free text, and renaming "LinkedIn" to
+ * "LinkedIn profile" should not silently drop the logo.
+ */
+export const SocialMarkSchema = z.object({
+  host: z.string().min(1),
+  title: z.string().min(1),
+  hex: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'must be a hex colour'),
+  path: z.string().min(1),
+})
+
+export type SocialMark = z.infer<typeof SocialMarkSchema>

@@ -4,16 +4,22 @@ import { useEffect, useRef } from 'react'
 
 import { scene } from '@/config/motion'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
-import { createWaveRenderer, type WaveRenderer } from '@/lib/visuals/wave'
+import { createFlightRenderer, type FlightRenderer } from '@/lib/visuals/flight'
+import { readScenePalette } from '@/lib/visuals/palette'
 
 /**
- * Canvas host for the contact-section wave.
+ * Canvas host for the contact visual.
  *
- * Same lifecycle discipline as the neural hero: it stops when off-screen,
- * stops on a backgrounded tab, and renders a single fixed frame under
- * reduced motion rather than a faster animation.
+ * Lifecycle only, not drawing — the same contract as the hero's Workstation:
+ * size the buffer, stop the loop whenever the work would be wasted, and hand
+ * the renderer a fresh palette when the theme changes. Off-screen, hidden tab
+ * and reduced motion are all honoured, because any one of them left out means
+ * a canvas quietly burning a phone battery.
+ *
+ * This one has no expensive model to build, so unlike the hero it draws as
+ * soon as it is seen rather than waiting for an idle moment.
  */
-export function SignalWave() {
+export function FlightPaths() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const reduced = useReducedMotion()
 
@@ -21,24 +27,18 @@ export function SignalWave() {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d', { alpha: true })
     if (!ctx) return
 
     const host = canvas.parentElement ?? canvas
-
-    const readColours = () => {
-      const styles = getComputedStyle(host)
-      return {
-        near: styles.getPropertyValue('--color-accent-glow').trim(),
-        far: styles.getPropertyValue('--color-accent').trim(),
-      }
-    }
-
-    const renderer: WaveRenderer = createWaveRenderer(ctx, readColours())
+    const renderer: FlightRenderer = createFlightRenderer(
+      ctx,
+      readScenePalette(host),
+    )
 
     let frameId: number | null = null
     let lastTime = 0
-    let onScreen = false
+    let onScreen = true
 
     const applySize = () => {
       const rect = host.getBoundingClientRect()
@@ -55,10 +55,25 @@ export function SignalWave() {
       if (reduced) renderer.still()
     }
 
-    const tick = (now: number) => {
-      const elapsed = lastTime === 0 ? 16 : now - lastTime
-      lastTime = now
-      renderer.frame(elapsed)
+    const minFrame =
+      window.innerWidth < 768
+        ? scene.frameInterval.mobile
+        : scene.frameInterval.desktop
+
+    // Time skipped by a dropped frame is carried into the next one, so the
+    // motion runs at the same speed however often it is drawn.
+    let owed = 0
+
+    const tick = (time: number) => {
+      const elapsed = lastTime === 0 ? 16 : time - lastTime
+      lastTime = time
+      owed += elapsed
+
+      if (owed >= minFrame) {
+        renderer.frame(owed)
+        owed = 0
+      }
+
       frameId = requestAnimationFrame(tick)
     }
 
@@ -81,7 +96,6 @@ export function SignalWave() {
     }
 
     applySize()
-    if (reduced) renderer.still()
 
     const resizeObserver = new ResizeObserver(applySize)
     resizeObserver.observe(host)
@@ -89,6 +103,7 @@ export function SignalWave() {
     const intersectionObserver = new IntersectionObserver(
       (entries) => {
         onScreen = entries[0]?.isIntersecting ?? false
+        if (onScreen && reduced) renderer.still()
         evaluateRunState()
       },
       { threshold: 0 },
@@ -96,12 +111,26 @@ export function SignalWave() {
     intersectionObserver.observe(host)
 
     const onVisibilityChange = () => evaluateRunState()
+
+    // Tokens can change under the visitor, so the palette is re-read rather
+    // than captured once at mount.
+    const themeObserver = new MutationObserver(() => {
+      renderer.setPalette(readScenePalette(host))
+      if (reduced) renderer.still()
+    })
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme', 'style'],
+    })
+
     document.addEventListener('visibilitychange', onVisibilityChange)
+    evaluateRunState()
 
     return () => {
       stop()
       resizeObserver.disconnect()
       intersectionObserver.disconnect()
+      themeObserver.disconnect()
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }, [reduced])
@@ -109,9 +138,13 @@ export function SignalWave() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none relative h-32 w-full sm:h-40"
+      className="pointer-events-none relative aspect-stage w-full"
     >
-      {/* Decorative — it carries no information the text does not (R8). */}
+      {/*
+        Decorative. The section states where he is and how to reach him in
+        text directly beside this, so announcing an unlabelled canvas to a
+        screen reader would add noise, not information (R8).
+      */}
       <canvas ref={canvasRef} aria-hidden="true" className="h-full w-full" />
     </div>
   )

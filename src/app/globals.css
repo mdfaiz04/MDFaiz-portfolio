@@ -361,6 +361,15 @@
     opacity: 1;
     transform: none;
   }
+
+  /*
+    And the page itself. Smooth scrolling is motion too: following a nav link
+    sends someone who asked for stillness on a long animated ride down the
+    document, which is exactly the kind of movement that causes trouble.
+  */
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 /**
